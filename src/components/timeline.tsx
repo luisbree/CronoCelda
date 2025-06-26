@@ -235,7 +235,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
   if (milestones.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
-        <h2 className="text-2xl font-semibold font-headline">Bienvenido a ChronoVault</h2>
+        <h2 className="text-2xl font-semibold font-headline">Bienvenido a CronoCelda</h2>
         <p className="mt-2 text-muted-foreground">
           Arrastra y suelta un archivo para empezar o usa el botón de subir.
         </p>

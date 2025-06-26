@@ -226,7 +226,7 @@ export default function Home() {
               />
           ) : (
              <div className="flex flex-col items-center justify-center h-full text-center">
-                <h2 className="text-2xl font-semibold font-headline">Bienvenido a ChronoVault</h2>
+                <h2 className="text-2xl font-semibold font-headline">Bienvenido a CronoCelda</h2>
                 <p className="mt-2 text-muted-foreground">
                   Crea un hito para empezar o arrastra un archivo.
                 </p>

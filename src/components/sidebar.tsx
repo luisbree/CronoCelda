@@ -101,7 +101,7 @@ export function Sidebar({ categories, onUploadClick, onCategoryColorChange, onCa
         </nav>
       </div>
       <div className="p-4 border-t">
-        <p className="text-xs text-muted-foreground">&copy; 2024 ChronoVault</p>
+        <p className="text-xs text-muted-foreground">&copy; 2024 CronoCelda</p>
       </div>
     </aside>
   );

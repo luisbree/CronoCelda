@@ -77,7 +77,7 @@ export function FileUpload({
         <DialogHeader>
           <DialogTitle className="font-headline">Crear un nuevo hito</DialogTitle>
           <DialogDescription>
-            Añade un hito a tu ChronoVault. Describe el evento y adjunta el archivo principal.
+            Añade un hito a tu CronoCelda. Describe el evento y adjunta el archivo principal.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
