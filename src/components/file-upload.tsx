@@ -18,12 +18,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { Textarea } from './ui/textarea';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, X, File as FileIconLucide } from 'lucide-react';
 
 const uploadSchema = z.object({
   name: z.string().min(5, { message: 'El título del hito debe tener al menos 5 caracteres.' }),
   description: z.string().min(10, { message: 'La descripción debe tener al menos 10 caracteres.' }),
-  file: z.instanceof(File).optional(),
+  files: z.array(z.instanceof(File)).optional(),
   categoryId: z.string().min(1, 'Por favor, selecciona una categoría.'),
 });
 
@@ -33,8 +33,7 @@ interface FileUploadProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   categories: Category[];
-  onUpload: (data: { file?: File, categoryId: string, name: string, description: string }) => void;
-  initialFile?: File | null;
+  onUpload: (data: { files?: File[], categoryId: string, name: string, description: string }) => void;
 }
 
 export function FileUpload({
@@ -42,34 +41,47 @@ export function FileUpload({
   onOpenChange,
   categories,
   onUpload,
-  initialFile,
 }: FileUploadProps) {
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
       name: '',
       description: '',
-      file: undefined,
+      files: [],
       categoryId: '',
     },
   });
 
-  const fileRef = form.register("file");
-
   React.useEffect(() => {
-    if (initialFile) {
-      form.setValue('file', initialFile);
-    }
     if (!isOpen) {
       form.reset();
     }
-  }, [initialFile, form, isOpen]);
+  }, [form, isOpen]);
 
   const onSubmit = (data: UploadFormValues) => {
     onUpload(data);
   };
   
-  const selectedFile = form.watch('file');
+  const selectedFiles = form.watch('files') || [];
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = e.target.files ? Array.from(e.target.files) : [];
+    if (newFiles.length === 0) return;
+    
+    const currentFiles = form.getValues('files') || [];
+    form.setValue('files', [...currentFiles, ...newFiles], { shouldValidate: true });
+    // Reset the input value to allow selecting the same file again
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveFile = (indexToRemove: number) => {
+    const currentFiles = form.getValues('files') || [];
+    const updatedFiles = currentFiles.filter((_, index) => index !== indexToRemove);
+    form.setValue('files', updatedFiles, { shouldValidate: true });
+  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -77,7 +89,7 @@ export function FileUpload({
         <DialogHeader>
           <DialogTitle className="font-headline">Crear un nuevo hito</DialogTitle>
           <DialogDescription>
-            Añade un hito a tu CronoCelda. Describe el evento y, si lo deseas, adjunta un archivo.
+            Añade un hito a tu CronoCelda. Describe el evento y, si lo deseas, adjunta uno o más archivos.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -114,26 +126,47 @@ export function FileUpload({
             />
             <FormField
               control={form.control}
-              name="file"
-              render={({ field }) => (
+              name="files"
+              render={() => (
                 <FormItem>
-                  <FormLabel>Archivo Adjunto (Opcional)</FormLabel>
+                  <FormLabel>Archivos Adjuntos (Opcional)</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                       <input id="file-input" type="file" className="hidden" {...fileRef} onChange={(e) => {
-                          field.onChange(e.target.files ? e.target.files[0] : null);
-                        }} />
+                    <div className="space-y-3">
                       <div 
                         className="border-2 border-dashed border-muted-foreground/50 rounded-lg p-6 text-center cursor-pointer hover:bg-accent hover:border-primary"
                         onClick={() => document.getElementById('file-input')?.click()}
                       >
                         <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
                         <p className="mt-2 text-sm text-muted-foreground">
-                            {selectedFile ? selectedFile.name : 'Haz clic o arrastra un archivo'}
+                            Haz clic para seleccionar archivos
                         </p>
+                         <input id="file-input" type="file" className="hidden" multiple onChange={handleFileChange} />
                       </div>
+                      {selectedFiles.length > 0 && (
+                        <div className="space-y-1">
+                          <ul className="max-h-32 overflow-y-auto space-y-2 rounded-md border p-2">
+                            {selectedFiles.map((file, index) => (
+                              <li key={index} className="flex items-center justify-between text-sm p-1.5 bg-secondary/50 rounded-md">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <FileIconLucide className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  <span className="truncate flex-1" title={file.name}>{file.name}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFile(index)}
+                                  className="p-1 rounded-full hover:bg-destructive/10 text-destructive shrink-0"
+                                  aria-label={`Quitar ${file.name}`}
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
