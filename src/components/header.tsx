@@ -12,7 +12,7 @@ import {
 interface HeaderProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  onSetRange: (range: '1M' | '1Y' | 'All') => void;
+  onSetRange: (range: '1D' | '1M' | '1Y' | 'All') => void;
   onOpenSummary: () => void;
 }
 
@@ -44,6 +44,7 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary }:
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
+          <Button size="sm" variant="outline" onClick={() => onSetRange('1D')}>Hoy</Button>
           <Button size="sm" variant="outline" onClick={() => onSetRange('1M')}>1M</Button>
           <Button size="sm" variant="outline" onClick={() => onSetRange('1Y')}>1A</Button>
           <Button size="sm" variant="outline" onClick={() => onSetRange('All')}>Todo</Button>

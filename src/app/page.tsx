@@ -9,7 +9,7 @@ import { type Milestone, type Category, type AssociatedFile } from '@/types';
 import { CATEGORIES } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
-import { addMonths, parseISO, subMonths, subYears } from 'date-fns';
+import { addMonths, endOfDay, parseISO, startOfDay, subMonths, subYears } from 'date-fns';
 import { TrelloSummary } from '@/components/trello-summary';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Loader2, GanttChartSquare } from 'lucide-react';
@@ -193,9 +193,11 @@ export default function Home() {
   };
 
 
-  const handleSetRange = React.useCallback((rangeType: '1M' | '1Y' | 'All') => {
+  const handleSetRange = React.useCallback((rangeType: '1D' | '1M' | '1Y' | 'All') => {
     const now = new Date();
-    if (rangeType === '1M') {
+    if (rangeType === '1D') {
+      setDateRange({ start: startOfDay(now), end: endOfDay(now) });
+    } else if (rangeType === '1M') {
       setDateRange({ start: subMonths(now, 1), end: now });
     } else if (rangeType === '1Y') {
       setDateRange({ start: subYears(now, 1), end: now });
