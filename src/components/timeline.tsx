@@ -26,6 +26,10 @@ interface TimelineData {
 
 export function Timeline({ files }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
+  const [zoomLevel, setZoomLevel] = React.useState(1);
+  const timelineViewportRef = React.useRef<HTMLDivElement>(null);
+  const zoomDataRef = React.useRef<{ point: number; mouseX: number } | null>(null);
+
 
   React.useEffect(() => {
     // This code runs only on the client, after the component has mounted.
@@ -79,6 +83,37 @@ export function Timeline({ files }: TimelineProps) {
     }
   }, [files]);
 
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const viewport = timelineViewportRef.current;
+    if (!viewport) return;
+
+    const contentWidth = viewport.scrollWidth;
+    const mouseX = e.clientX - viewport.getBoundingClientRect().left;
+    const scrollX = viewport.scrollLeft;
+    
+    const newZoomLevel = Math.max(0.5, Math.min(zoomLevel - e.deltaY * 0.005, 5));
+
+    zoomDataRef.current = {
+      point: (scrollX + mouseX) / contentWidth,
+      mouseX: mouseX,
+    };
+
+    setZoomLevel(newZoomLevel);
+  };
+
+  React.useLayoutEffect(() => {
+    const viewport = timelineViewportRef.current;
+    const zoomData = zoomDataRef.current;
+
+    if (viewport && zoomData) {
+      const newContentWidth = viewport.scrollWidth;
+      const newScrollX = zoomData.point * newContentWidth - zoomData.mouseX;
+      viewport.scrollLeft = newScrollX;
+      zoomDataRef.current = null;
+    }
+  }, [zoomLevel]);
+
   if (files.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
@@ -108,11 +143,15 @@ export function Timeline({ files }: TimelineProps) {
 
   const { monthMarkers, filePositions, heights } = timelineData;
 
-  // Using a large fixed width for the timeline to ensure enough space for proportional rendering.
-  const timelineContainerWidth = '3000px';
+  const baseWidth = 3000;
+  const timelineContainerWidth = `${baseWidth * zoomLevel}px`;
 
   return (
-    <div className="w-full h-full flex items-end justify-start overflow-x-auto p-4 sm:p-8 pb-16">
+    <div 
+      className="w-full h-full flex items-end justify-start overflow-x-auto p-4 sm:p-8 pb-16 cursor-grab active:cursor-grabbing"
+      ref={timelineViewportRef}
+      onWheel={handleWheel}
+    >
       <div className="relative h-full" style={{ width: timelineContainerWidth }}>
         {/* The horizontal time axis */}
         <div className="absolute bottom-7 left-0 right-0 h-px bg-gray-400" />
