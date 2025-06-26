@@ -265,12 +265,12 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
                   <TooltipTrigger asChild>
                     <div className="flex flex-col-reverse items-center cursor-pointer group">
                       <div
-                        className="w-2.5 h-2.5 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
-                        style={{ backgroundColor: file.category.color }}
-                      />
-                      <div
                         className="w-px bg-gray-300"
                         style={{ height: `${height}px` }}
+                      />
+                      <div
+                        className="w-2.5 h-2.5 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
+                        style={{ backgroundColor: file.category.color }}
                       />
                     </div>
                   </TooltipTrigger>
