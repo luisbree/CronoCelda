@@ -19,7 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { getCardAttachments } from '@/services/trello';
+import { getCardAttachments, type TrelloCardBasic } from '@/services/trello';
 import { FileUpload } from '@/components/file-upload';
 import { auth } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup, type User } from 'firebase/auth';
@@ -35,7 +35,7 @@ export default function Home() {
   const [selectedMilestone, setSelectedMilestone] = React.useState<Milestone | null>(null);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [isTrelloOpen, setTrelloOpen] = React.useState(false);
-  const [selectedCardId, setSelectedCardId] = React.useState<string | null>(null);
+  const [selectedCard, setSelectedCard] = React.useState<TrelloCardBasic | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [driveUser, setDriveUser] = React.useState<User | null>(null);
@@ -57,9 +57,9 @@ export default function Home() {
     }
   }, [milestones]);
 
-  const handleCardSelect = React.useCallback(async (cardId: string | null) => {
-    setSelectedCardId(cardId);
-    if (!cardId) {
+  const handleCardSelect = React.useCallback(async (card: TrelloCardBasic | null) => {
+    setSelectedCard(card);
+    if (!card) {
       setMilestones([]);
       return;
     }
@@ -68,7 +68,7 @@ export default function Home() {
     setMilestones([]);
 
     try {
-        const attachments = await getCardAttachments(cardId);
+        const attachments = await getCardAttachments(card.id);
         const defaultCategory = categories[1] || CATEGORIES[1];
 
         const newMilestones: Milestone[] = attachments.map(att => {
@@ -327,7 +327,7 @@ export default function Home() {
         onCategoryColorChange={handleCategoryColorChange}
         onCategoryAdd={handleCategoryAdd}
         onCardSelect={handleCardSelect}
-        selectedCardId={selectedCardId}
+        selectedCard={selectedCard}
         onNewMilestoneClick={() => setIsUploadOpen(true)}
         onDriveConnect={handleDriveConnect}
         isDriveConnected={!!driveUser}
@@ -340,6 +340,7 @@ export default function Home() {
           setSearchTerm={setSearchTerm} 
           onSetRange={handleSetRange}
           onOpenSummary={() => setIsSummaryOpen(true)}
+          trelloCardUrl={selectedCard?.url ?? null}
         />
         <main
           className="flex-1 overflow-y-auto p-4 md:p-6"

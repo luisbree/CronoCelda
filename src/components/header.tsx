@@ -1,5 +1,5 @@
 import { Input } from './ui/input';
-import { Search, List } from 'lucide-react';
+import { Search, List, ExternalLink } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import {
@@ -14,9 +14,10 @@ interface HeaderProps {
   setSearchTerm: (term: string) => void;
   onSetRange: (range: '1D' | '1M' | '1Y' | 'All') => void;
   onOpenSummary: () => void;
+  trelloCardUrl: string | null;
 }
 
-export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary }: HeaderProps) {
+export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, trelloCardUrl }: HeaderProps) {
   return (
     <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 w-full shrink-0 gap-4">
       <div className="flex-1">
@@ -41,6 +42,25 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary }:
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>Ver resumen de hitos</p>
+                    </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <a
+                           href={trelloCardUrl ?? undefined}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           aria-disabled={!trelloCardUrl}
+                           tabIndex={!trelloCardUrl ? -1 : undefined}
+                           className={!trelloCardUrl ? 'pointer-events-none' : ''}
+                        >
+                            <Button size="icon" variant="outline" disabled={!trelloCardUrl}>
+                                <ExternalLink className="h-4 w-4" />
+                            </Button>
+                        </a>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Abrir tarjeta en Trello</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>

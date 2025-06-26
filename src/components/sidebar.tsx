@@ -31,14 +31,14 @@ interface SidebarProps {
   categories: Category[];
   onCategoryColorChange: (categoryId: string, color: string) => void;
   onCategoryAdd: (name: string) => void;
-  onCardSelect: (cardId: string | null) => void;
-  selectedCardId: string | null;
+  onCardSelect: (card: TrelloCardBasic | null) => void;
+  selectedCard: TrelloCardBasic | null;
   onNewMilestoneClick: () => void;
   onDriveConnect: () => void;
   isDriveConnected: boolean;
 }
 
-export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCardSelect, selectedCardId, onNewMilestoneClick, onDriveConnect, isDriveConnected }: SidebarProps) {
+export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCardSelect, selectedCard, onNewMilestoneClick, onDriveConnect, isDriveConnected }: SidebarProps) {
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
   const [newCategoryName, setNewCategoryName] = React.useState('');
@@ -151,8 +151,8 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
     setNewCategoryName('');
   };
 
-  const handleCardClick = (cardId: string) => {
-    onCardSelect(cardId);
+  const handleCardClick = (card: TrelloCardBasic) => {
+    onCardSelect(card);
   }
 
   return (
@@ -162,7 +162,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
       </div>
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
         
-        <Button onClick={onNewMilestoneClick} disabled={!selectedCardId} size="sm">
+        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm">
           <UploadCloud className="mr-2 h-4 w-4" />
           Hito nuevo
         </Button>
@@ -170,7 +170,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
         <div className="space-y-2">
             <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground px-1">Proyectos (Trello)</h2>
             <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full h-9">
                 <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
             </SelectTrigger>
             <SelectContent>
@@ -181,7 +181,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
             </Select>
 
             <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full h-9">
                 <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
             </SelectTrigger>
             <SelectContent>
@@ -195,7 +195,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
                 placeholder="Buscar una tarjeta..."
-                className="pl-9"
+                className="pl-9 h-9"
                 value={cardSearchTerm}
                 onChange={(e) => setCardSearchTerm(e.target.value)}
                 disabled={!selectedList || isLoadingCards}
@@ -206,7 +206,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
         {selectedList && (
             <div className="flex-1 flex flex-col min-h-0 border rounded-md">
                 <div className="p-2 border-b shrink-0">
-                    <p className="text-sm font-semibold text-muted-foreground">
+                    <p className="text-xs font-semibold text-muted-foreground">
                         {`Tarjetas (${filteredCards.length})`}
                     </p>
                 </div>
@@ -222,10 +222,10 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
                         filteredCards.map(card => (
                             <button
                                 key={card.id}
-                                onClick={() => handleCardClick(card.id)}
+                                onClick={() => handleCardClick(card)}
                                 className={cn(
                                     "w-full text-left text-sm p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-card-foreground",
-                                    selectedCardId === card.id && "bg-primary text-primary-foreground hover:bg-primary/90"
+                                    selectedCard?.id === card.id && "bg-primary text-primary-foreground hover:bg-primary/90"
                                 )}
                             >
                                 {card.name}

@@ -30,6 +30,7 @@ export interface TrelloListBasic {
 export interface TrelloCardBasic {
   id: string;
   name: string;
+  url: string;
 }
 
 export interface TrelloAttachment {
@@ -111,7 +112,7 @@ export async function getBoardLists(boardId: string): Promise<TrelloListBasic[]>
 
 export async function getCardsInList(listId: string): Promise<TrelloCardBasic[]> {
   const authParams = getTrelloAuthParams();
-  const url = `https://api.trello.com/1/lists/${listId}/cards?fields=name,id&${authParams}`;
+  const url = `https://api.trello.com/1/lists/${listId}/cards?fields=name,id,url&${authParams}`;
 
   try {
     const response = await fetch(url);
