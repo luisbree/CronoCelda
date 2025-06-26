@@ -44,6 +44,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     setPanOffset(0);
 
     const heights = new Map<string, number>();
+    // Generate heights on the client side to avoid hydration mismatch
     files.forEach(file => {
       heights.set(file.id, Math.floor(Math.random() * 101) + 40);
     });
