@@ -50,7 +50,7 @@ export default function Home() {
     }
   }, [milestones]);
 
-  const handleCardSelect = async (cardId: string | null) => {
+  const handleCardSelect = React.useCallback(async (cardId: string | null) => {
     setSelectedCardId(cardId);
     if (!cardId) {
       setMilestones([]);
@@ -121,10 +121,10 @@ export default function Home() {
     } finally {
         setIsLoadingTimeline(false);
     }
-  }
+  }, [categories, toast]);
 
 
-  const handleSetRange = (rangeType: '1M' | '1Y' | 'All') => {
+  const handleSetRange = React.useCallback((rangeType: '1M' | '1Y' | 'All') => {
     const now = new Date();
     if (rangeType === '1M') {
       setDateRange({ start: subMonths(now, 1), end: now });
@@ -141,12 +141,12 @@ export default function Home() {
         });
       }
     }
-  };
+  }, [milestones]);
 
-  const handleMilestoneClick = (milestone: Milestone) => {
+  const handleMilestoneClick = React.useCallback((milestone: Milestone) => {
     setSelectedMilestone(milestone);
     setIsDetailOpen(true);
-  };
+  }, []);
 
   const filteredMilestones = milestones
     .filter(milestone => {
@@ -160,29 +160,36 @@ export default function Home() {
     })
     .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime());
 
-  const handleCategoryColorChange = (categoryId: string, color: string) => {
-    const newCategories = categories.map(c => 
-      c.id === categoryId ? { ...c, color } : c
-    );
-    setCategories(newCategories);
+  const handleCategoryColorChange = React.useCallback((categoryId: string, color: string) => {
+    setCategories(prevCategories => {
+        const newCategories = prevCategories.map(c => 
+          c.id === categoryId ? { ...c, color } : c
+        );
+        
+        setMilestones(prevMilestones => prevMilestones.map(m => {
+          if (m.category.id === categoryId) {
+            const newCategory = newCategories.find(c => c.id === categoryId);
+            if (newCategory) {
+              return { ...m, category: newCategory };
+            }
+          }
+          return m;
+        }));
 
-    const newMilestones = milestones.map(m => {
-      if (m.category.id === categoryId) {
-        return { ...m, category: { ...m.category, color } };
-      }
-      return m;
+        return newCategories;
     });
-    setMilestones(newMilestones);
-  };
+  }, []);
   
-  const handleCategoryAdd = (name: string) => {
-    const newCategory: Category = {
-      id: `cat-${Date.now()}`,
-      name,
-      color: DEFAULT_CATEGORY_COLORS[categories.length % DEFAULT_CATEGORY_COLORS.length],
-    };
-    setCategories(prev => [...prev, newCategory]);
-  };
+  const handleCategoryAdd = React.useCallback((name: string) => {
+    setCategories(prev => {
+        const newCategory: Category = {
+          id: `cat-${Date.now()}`,
+          name,
+          color: DEFAULT_CATEGORY_COLORS[prev.length % DEFAULT_CATEGORY_COLORS.length],
+        };
+        return [...prev, newCategory];
+    });
+  }, []);
 
   return (
     <div className="flex h-screen w-full bg-background">
