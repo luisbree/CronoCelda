@@ -13,14 +13,14 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 
-// Check if all Firebase config values are present.
+// Check if all Firebase config values are present and non-empty.
 const allConfigValuesPresent =
-  firebaseConfig.apiKey &&
-  firebaseConfig.authDomain &&
-  firebaseConfig.projectId &&
-  firebaseConfig.storageBucket &&
-  firebaseConfig.messagingSenderId &&
-  firebaseConfig.appId;
+  firebaseConfig.apiKey?.trim() &&
+  firebaseConfig.authDomain?.trim() &&
+  firebaseConfig.projectId?.trim() &&
+  firebaseConfig.storageBucket?.trim() &&
+  firebaseConfig.messagingSenderId?.trim() &&
+  firebaseConfig.appId?.trim();
 
 // Only initialize Firebase if all required config values are present
 if (allConfigValuesPresent) {
