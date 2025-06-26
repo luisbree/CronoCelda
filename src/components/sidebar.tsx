@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Logo } from './logo';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, UploadCloud } from 'lucide-react';
 import type { Category } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ColorPicker } from './color-picker';
@@ -22,9 +22,10 @@ interface SidebarProps {
   onCategoryAdd: (name: string) => void;
   onCardSelect: (cardId: string | null) => void;
   selectedCardId: string | null;
+  onNewMilestoneClick: () => void;
 }
 
-export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCardSelect, selectedCardId }: SidebarProps) {
+export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCardSelect, selectedCardId, onNewMilestoneClick }: SidebarProps) {
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
   const [newCategoryName, setNewCategoryName] = React.useState('');
@@ -148,6 +149,11 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
       </div>
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         
+        <Button onClick={onNewMilestoneClick} disabled={!selectedCardId}>
+          <UploadCloud className="mr-2 h-4 w-4" />
+          Hito nuevo
+        </Button>
+
         <div className="space-y-3">
             <h2 className="text-sm font-semibold tracking-tight font-headline px-2">Buscador de Proyectos</h2>
             <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>

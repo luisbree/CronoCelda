@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { getCardAttachments } from '@/services/trello';
+import { FileUpload } from '@/components/file-upload';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -33,6 +34,7 @@ export default function Home() {
   const [isTrelloOpen, setTrelloOpen] = React.useState(false);
   const [selectedCardId, setSelectedCardId] = React.useState<string | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
+  const [isUploadOpen, setIsUploadOpen] = React.useState(false);
 
   const { toast } = useToast();
 
@@ -123,6 +125,66 @@ export default function Home() {
     }
   }, [categories, toast]);
 
+  const handleUpload = async (data: { file: File, categoryId: string, name: string, description: string }) => {
+    const { file, categoryId, name, description } = data;
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) {
+        toast({
+            variant: "destructive",
+            title: "Error al crear hito",
+            description: "La categoría seleccionada no es válida.",
+        });
+        return;
+    };
+
+    const fileType: AssociatedFile['type'] = 
+        file.type.startsWith('image/') ? 'image' : 
+        file.type.startsWith('video/') ? 'video' :
+        file.type.startsWith('audio/') ? 'audio' :
+        ['application/pdf', 'application/msword', 'text/plain'].some(t => file.type.includes(t)) ? 'document' : 'other';
+    
+    const associatedFile: AssociatedFile = {
+        id: `file-local-${Date.now()}`,
+        name: file.name,
+        size: `${(file.size / 1024).toFixed(2)} KB`,
+        type: fileType
+    };
+
+    const newMilestone: Milestone = {
+        id: `hito-local-${Date.now()}`,
+        name: name,
+        description: description,
+        occurredAt: new Date().toISOString(), // Use current time for new milestones
+        category: category,
+        tags: null, // Start with null to show loading spinner
+        associatedFiles: [associatedFile],
+    };
+
+    setMilestones(prev => [...prev, newMilestone]);
+    setIsUploadOpen(false);
+    toast({
+        title: "Hito creado",
+        description: "El nuevo hito ha sido añadido a la línea de tiempo.",
+    });
+
+    // Run AI tagging in the background
+    try {
+        const result = await autoTagFiles({ textToAnalyze: `${name} ${description}` });
+        setMilestones(prev =>
+          prev.map(m =>
+            m.id === newMilestone.id ? { ...m, tags: result.tags } : m
+          )
+        );
+    } catch (error) {
+        console.error('AI tagging failed:', error);
+        setMilestones(prev =>
+          prev.map(m =>
+            m.id === newMilestone.id ? { ...m, tags: [] } : m // Set to empty array to stop spinner
+          )
+        );
+    }
+  };
+
 
   const handleSetRange = React.useCallback((rangeType: '1M' | '1Y' | 'All') => {
     const now = new Date();
@@ -199,6 +261,7 @@ export default function Home() {
         onCategoryAdd={handleCategoryAdd}
         onCardSelect={handleCardSelect}
         selectedCardId={selectedCardId}
+        onNewMilestoneClick={() => setIsUploadOpen(true)}
       />
       <div
         className="flex flex-1 flex-col transition-all duration-300"
@@ -238,6 +301,13 @@ export default function Home() {
         isOpen={isDetailOpen}
         onOpenChange={setIsDetailOpen}
         milestone={selectedMilestone}
+      />
+
+      <FileUpload
+        isOpen={isUploadOpen}
+        onOpenChange={setIsUploadOpen}
+        categories={categories}
+        onUpload={handleUpload}
       />
 
       <TrelloSummary
