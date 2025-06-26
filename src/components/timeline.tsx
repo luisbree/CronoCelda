@@ -1,44 +1,27 @@
+'use client';
+
+import * as React from 'react';
 import type { File as FileType } from '@/types';
-import { TimelineItem } from './timeline-item';
-import { format, isSameDay, parseISO } from 'date-fns';
-
-const groupFilesByDate = (files: FileType[]) => {
-  if (!files || files.length === 0) {
-    return {};
-  }
-  return files.reduce((acc: { [key: string]: FileType[] }, file) => {
-    const date = format(parseISO(file.uploadedAt), 'yyyy-MM-dd');
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(file);
-    return acc;
-  }, {});
-};
-
-const formatDateHeading = (dateString: string) => {
-  const date = parseISO(dateString);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (isSameDay(date, today)) {
-    return 'Today';
-  }
-  if (isSameDay(date, yesterday)) {
-    return 'Yesterday';
-  }
-  return format(date, 'MMMM d, yyyy');
-};
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { format, parseISO } from 'date-fns';
 
 interface TimelineProps {
   files: FileType[];
 }
 
 export function Timeline({ files }: TimelineProps) {
-  const groupedFiles = groupFilesByDate(files);
-  const sortedDates = Object.keys(groupedFiles).sort().reverse();
+  // Use a map to store the random heights for each file to ensure consistency on re-renders
+  const [heights, setHeights] = React.useState<Map<string, number>>(new Map());
+
+  React.useEffect(() => {
+    // This code runs only on the client, after the component has mounted.
+    const newHeights = new Map<string, number>();
+    files.forEach(file => {
+      // Generate a random height between 40px and 140px
+      newHeights.set(file.id, Math.floor(Math.random() * 101) + 40);
+    });
+    setHeights(newHeights);
+  }, [files]); // Recalculate heights when the list of files changes
 
   if (files.length === 0) {
     return (
@@ -51,24 +34,50 @@ export function Timeline({ files }: TimelineProps) {
     );
   }
 
+  // The parent component sorts files newest to oldest. Reverse for a chronological timeline.
+  const sortedFiles = [...files].reverse();
+
   return (
-    <div className="space-y-8">
-      {sortedDates.map(date => (
-        <div key={date} className="relative">
-          <div className="absolute left-5 top-2 h-full w-0.5 bg-border -z-10" />
-          <div className="flex items-center">
-            <div className="z-10 flex items-center justify-center w-10 h-10 bg-background rounded-full border-2 border-primary/20">
-              <div className="w-3 h-3 bg-primary rounded-full" />
-            </div>
-            <h2 className="ml-4 text-lg font-semibold text-primary">{formatDateHeading(date)}</h2>
-          </div>
-          <div className="ml-5 pl-10 space-y-4 pt-4">
-            {groupedFiles[date].map(file => (
-              <TimelineItem key={file.id} file={file} />
+    <div className="w-full h-full flex items-center justify-start overflow-x-auto p-4 sm:p-8 pt-12 pb-16">
+      <div className="relative flex items-end h-full w-full min-w-max">
+        {/* The horizontal time axis */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-400" />
+        
+        <TooltipProvider>
+          <div className="flex items-end gap-10 sm:gap-12 pl-4">
+            {sortedFiles.map((file) => (
+              <div key={file.id} className="relative flex flex-col items-center">
+                <Tooltip delayDuration={100}>
+                  <TooltipTrigger asChild>
+                    <div className="flex flex-col-reverse items-center cursor-pointer group">
+                      {/* The dot/circle */}
+                      <div
+                        className="w-4 h-4 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform"
+                        style={{ backgroundColor: file.category.color }}
+                      />
+                      {/* The vertical line */}
+                      <div
+                        className="w-px mb-[-1px] bg-gray-300"
+                        style={{ height: `${heights.get(file.id) || 60}px` }}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="font-semibold">{file.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {format(parseISO(file.uploadedAt), "PPP 'at' p")}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+                {/* The date label below the axis */}
+                <div className="absolute -bottom-7 text-xs text-muted-foreground whitespace-nowrap">
+                  {format(parseISO(file.uploadedAt), 'MMM d')}
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-      ))}
+        </TooltipProvider>
+      </div>
     </div>
   );
 }
