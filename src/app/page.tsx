@@ -23,6 +23,7 @@ import { getCardAttachments } from '@/services/trello';
 import { FileUpload } from '@/components/file-upload';
 import { auth } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup, type User } from 'firebase/auth';
+import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -38,6 +39,7 @@ export default function Home() {
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [driveUser, setDriveUser] = React.useState<User | null>(null);
+  const [isSummaryOpen, setIsSummaryOpen] = React.useState(false);
 
   const { toast } = useToast();
 
@@ -331,7 +333,12 @@ export default function Home() {
       <div
         className="flex flex-1 flex-col transition-all duration-300"
       >
-        <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} onSetRange={handleSetRange} />
+        <Header 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+          onSetRange={handleSetRange}
+          onOpenSummary={() => setIsSummaryOpen(true)}
+        />
         <main
           className="flex-1 overflow-y-auto p-4 md:p-6"
         >
@@ -380,6 +387,12 @@ export default function Home() {
       <TrelloSummary
         isOpen={isTrelloOpen}
         onOpenChange={setTrelloOpen}
+      />
+      
+      <MilestoneSummarySheet
+        isOpen={isSummaryOpen}
+        onOpenChange={setIsSummaryOpen}
+        milestones={filteredMilestones}
       />
 
       <div className="absolute bottom-6 right-6 z-20">
