@@ -17,7 +17,7 @@ export function Header({ searchTerm, setSearchTerm, onSetRange }: HeaderProps) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search files, categories, or tags..."
+            placeholder="Buscar archivos, categorías o etiquetas..."
             className="pl-9 w-full md:w-1/2 lg:w-1/3"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -26,11 +26,11 @@ export function Header({ searchTerm, setSearchTerm, onSetRange }: HeaderProps) {
       </div>
       <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => onSetRange('1M')}>1M</Button>
-          <Button size="sm" variant="outline" onClick={() => onSetRange('1Y')}>1Y</Button>
-          <Button size="sm" variant="outline" onClick={() => onSetRange('All')}>All</Button>
+          <Button size="sm" variant="outline" onClick={() => onSetRange('1Y')}>1A</Button>
+          <Button size="sm" variant="outline" onClick={() => onSetRange('All')}>Todo</Button>
       </div>
       <Avatar>
-        <AvatarImage src="https://placehold.co/100x100.png" alt="User" data-ai-hint="person portrait" />
+        <AvatarImage src="https://placehold.co/100x100.png" alt="Usuario" data-ai-hint="person portrait" />
         <AvatarFallback>U</AvatarFallback>
       </Avatar>
     </header>

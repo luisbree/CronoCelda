@@ -103,8 +103,8 @@ export default function Home() {
     if (!category) {
       toast({
         variant: 'destructive',
-        title: 'Error uploading file',
-        description: 'Selected category not found.',
+        title: 'Error al subir el archivo',
+        description: 'La categoría seleccionada no fue encontrada.',
       });
       return;
     }
@@ -125,8 +125,8 @@ export default function Home() {
     setFiles(prevFiles => [newFile, ...prevFiles]);
     setUploadOpen(false);
     toast({
-      title: 'File uploaded',
-      description: `${file.name} has been added to the vault.`,
+      title: 'Archivo subido',
+      description: `${file.name} ha sido añadido a la bóveda.`,
     });
 
     // AI Tagging
@@ -183,8 +183,8 @@ export default function Home() {
           {isDragging && (
             <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-primary/20">
               <div className="rounded-lg border-2 border-dashed border-primary bg-background p-12 text-center">
-                <h2 className="text-2xl font-bold text-primary">Drop files here</h2>
-                <p className="text-muted-foreground">Upload your files to ChronoVault</p>
+                <h2 className="text-2xl font-bold text-primary font-headline">Suelta los archivos aquí</h2>
+                <p className="text-muted-foreground">Sube tus archivos a ChronoVault</p>
               </div>
             </div>
           )}
@@ -196,9 +196,9 @@ export default function Home() {
               />
           ) : (
              <div className="flex flex-col items-center justify-center h-full text-center">
-                <h2 className="text-2xl font-semibold">Welcome to ChronoVault</h2>
+                <h2 className="text-2xl font-semibold font-headline">Bienvenido a ChronoVault</h2>
                 <p className="mt-2 text-muted-foreground">
-                  Drag and drop a file to get started or use the upload button.
+                  Arrastra y suelta un archivo para empezar o usa el botón de subir.
                 </p>
               </div>
           )}

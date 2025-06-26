@@ -20,8 +20,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { UploadCloud } from 'lucide-react';
 
 const uploadSchema = z.object({
-  file: z.custom<File>(file => file instanceof File, 'Please select a file to upload.'),
-  categoryId: z.string().min(1, 'Please select a category.'),
+  file: z.custom<File>(file => file instanceof File, 'Por favor, selecciona un archivo para subir.'),
+  categoryId: z.string().min(1, 'Por favor, selecciona una categoría.'),
 });
 
 type UploadFormValues = z.infer<typeof uploadSchema>;
@@ -70,9 +70,9 @@ export function FileUpload({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Upload a new file</DialogTitle>
+          <DialogTitle className="font-headline">Subir un nuevo archivo</DialogTitle>
           <DialogDescription>
-            Add a file to your ChronoVault. Select a category for organization.
+            Añade un archivo a tu ChronoVault. Selecciona una categoría para organizarlo.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -82,7 +82,7 @@ export function FileUpload({
               name="file"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>File</FormLabel>
+                  <FormLabel>Archivo</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -100,7 +100,7 @@ export function FileUpload({
                          <input id="file-input" type="file" className="hidden" {...fileRef} />
                         <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
                         <p className="mt-2 text-sm text-muted-foreground">
-                            {selectedFile ? selectedFile.name : 'Click or drag file to this area to upload'}
+                            {selectedFile ? selectedFile.name : 'Haz clic o arrastra un archivo a esta área para subirlo'}
                         </p>
                       </div>
                     </div>
@@ -114,11 +114,11 @@ export function FileUpload({
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>Categoría</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder="Selecciona una categoría" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -141,10 +141,10 @@ export function FileUpload({
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Uploading...' : 'Upload'}
+                {form.formState.isSubmitting ? 'Subiendo...' : 'Subir'}
               </Button>
             </DialogFooter>
           </form>

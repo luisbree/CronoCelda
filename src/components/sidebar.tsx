@@ -21,11 +21,11 @@ export function Sidebar({ categories, onUploadClick }: SidebarProps) {
           <div>
             <Button className="w-full" onClick={onUploadClick}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Upload File
+              Subir Archivo
             </Button>
           </div>
           <div>
-            <h2 className="px-2 mb-2 text-lg font-semibold tracking-tight">Categories</h2>
+            <h2 className="px-2 mb-2 text-lg font-semibold tracking-tight font-headline">Categorías</h2>
             <div className="space-y-1">
               {categories.map((category, index) => (
                 <Button

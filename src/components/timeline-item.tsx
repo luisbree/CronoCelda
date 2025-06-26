@@ -4,13 +4,14 @@ import { FileIcon } from './file-icon';
 import { Badge } from './ui/badge';
 import { Clock, Tag, Loader2 } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface TimelineItemProps {
   file: FileType;
 }
 
 export function TimelineItem({ file }: TimelineItemProps) {
-  const timeAgo = formatDistanceToNow(parseISO(file.uploadedAt), { addSuffix: true });
+  const timeAgo = formatDistanceToNow(parseISO(file.uploadedAt), { addSuffix: true, locale: es });
 
   return (
     <Card 
@@ -22,7 +23,7 @@ export function TimelineItem({ file }: TimelineItemProps) {
           <div className="flex items-center gap-4">
             <FileIcon type={file.type} />
             <div>
-              <CardTitle className="text-base font-medium">{file.name}</CardTitle>
+              <CardTitle className="text-base font-medium font-headline">{file.name}</CardTitle>
               <CardDescription className="text-xs">
                 {file.size}
               </CardDescription>
@@ -41,7 +42,7 @@ export function TimelineItem({ file }: TimelineItemProps) {
             {file.tags === null ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Generating tags...</span>
+                <span>Generando etiquetas...</span>
               </div>
             ) : file.tags.length > 0 ? (
               file.tags.map(tag => (
@@ -50,7 +51,7 @@ export function TimelineItem({ file }: TimelineItemProps) {
                 </Badge>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No tags available.</p>
+              <p className="text-sm text-muted-foreground">No hay etiquetas disponibles.</p>
             )}
           </div>
         </div>

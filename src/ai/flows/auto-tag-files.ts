@@ -1,11 +1,11 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for automatically tagging files based on their content using AI.
+ * @fileOverview Este archivo define un flujo de Genkit para etiquetar automáticamente archivos basados en su contenido usando IA.
  *
- * - autoTagFiles - A function that takes file content and returns suggested tags.
- * - AutoTagFilesInput - The input type for the autoTagFiles function.
- * - AutoTagFilesOutput - The return type for the autoTagFiles function.
+ * - autoTagFiles - Una función que toma el contenido de un archivo y devuelve etiquetas sugeridas.
+ * - AutoTagFilesInput - El tipo de entrada para la función autoTagFiles.
+ * - AutoTagFilesOutput - El tipo de retorno para la función autoTagFiles.
  */
 
 import {ai} from '@/ai/genkit';
@@ -14,14 +14,14 @@ import {z} from 'genkit';
 const AutoTagFilesInputSchema = z.object({
   fileContent: z
     .string()
-    .describe('The content of the file to be tagged.'),
+    .describe('El contenido del archivo a ser etiquetado.'),
 });
 export type AutoTagFilesInput = z.infer<typeof AutoTagFilesInputSchema>;
 
 const AutoTagFilesOutputSchema = z.object({
   tags: z
     .array(z.string())
-    .describe('An array of suggested tags for the file.'),
+    .describe('Un array de etiquetas sugeridas para el archivo.'),
 });
 export type AutoTagFilesOutput = z.infer<typeof AutoTagFilesOutputSchema>;
 
@@ -33,13 +33,13 @@ const prompt = ai.definePrompt({
   name: 'autoTagFilesPrompt',
   input: {schema: AutoTagFilesInputSchema},
   output: {schema: AutoTagFilesOutputSchema},
-  prompt: `You are an expert at tagging files based on their content.
+  prompt: `Eres un experto en etiquetar archivos basándote en su contenido.
 
-  Analyze the following file content and suggest relevant tags. The tags should be concise and descriptive.
+  Analiza el siguiente contenido de archivo y sugiere etiquetas relevantes. Las etiquetas deben ser concisas y descriptivas.
 
-  File Content: {{{fileContent}}}
+  Contenido del Archivo: {{{fileContent}}}
 
-  Return the tags as a JSON array of strings.`,
+  Devuelve las etiquetas como un array JSON de strings.`,
 });
 
 const autoTagFilesFlow = ai.defineFlow(

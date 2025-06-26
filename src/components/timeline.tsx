@@ -17,6 +17,7 @@ import {
   getMonth,
   getYear,
 } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -178,14 +179,14 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         if (durationInMonths < 12) {
           // If it's the first marker, or the year has changed, show the year.
           if (lastShownYear === null || year !== lastShownYear) {
-            label = format(monthDate, 'MMM yyyy');
+            label = format(monthDate, 'MMM yyyy', { locale: es });
           } else {
-            label = format(monthDate, 'MMM');
+            label = format(monthDate, 'MMM', { locale: es });
           }
           lastShownYear = year;
         } else {
           // For longer ranges, always show the year for clarity.
-          label = format(monthDate, 'MMM yyyy');
+          label = format(monthDate, 'MMM yyyy', { locale: es });
         }
         
         return {
@@ -225,9 +226,9 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   if (files.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
-        <h2 className="text-2xl font-semibold">Welcome to ChronoVault</h2>
+        <h2 className="text-2xl font-semibold font-headline">Bienvenido a ChronoVault</h2>
         <p className="mt-2 text-muted-foreground">
-          Drag and drop a file to get started or use the upload button.
+          Arrastra y suelta un archivo para empezar o usa el botón de subir.
         </p>
       </div>
     );
@@ -256,9 +257,9 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   if (filesInView.length === 0 && files.length > 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
-        <h2 className="text-2xl font-semibold">No files in this time range.</h2>
+        <h2 className="text-2xl font-semibold font-headline">No hay archivos en este rango de tiempo.</h2>
         <p className="mt-2 text-muted-foreground">
-          Try zooming out or selecting a different time range.
+          Intenta alejar el zoom o seleccionar un rango de tiempo diferente.
         </p>
       </div>
     );
@@ -328,7 +329,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
                   <TooltipContent>
                     <p className="font-semibold">{file.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {format(fileDate, "PPP 'at' p")}
+                      {format(fileDate, "PPP 'a las' p", { locale: es })}
                     </p>
                   </TooltipContent>
                 </Tooltip>
