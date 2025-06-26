@@ -49,7 +49,7 @@ export function Sidebar({ categories, onUploadClick, onCategoryColorChange, onCa
           <div>
             <Button className="w-full" onClick={onUploadClick}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Subir Archivo
+              Hito nuevo
             </Button>
           </div>
           <div>
