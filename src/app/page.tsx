@@ -9,6 +9,7 @@ import { type File as FileType, type Category } from '@/types';
 import { FILES, CATEGORIES } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
+import { addMonths, parseISO, subMonths, subYears } from 'date-fns';
 
 export default function Home() {
   const [files, setFiles] = React.useState<FileType[]>(FILES);
@@ -17,8 +18,42 @@ export default function Home() {
   const [isDragging, setIsDragging] = React.useState(false);
   const [isUploadOpen, setUploadOpen] = React.useState(false);
   const [fileToUpload, setFileToUpload] = React.useState<File | null>(null);
+  const [dateRange, setDateRange] = React.useState<{ start: Date; end: Date } | null>(null);
 
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    // Initialize with "All" view
+    if (files.length > 0) {
+      const allDates = files.map(f => parseISO(f.uploadedAt));
+      const oldest = new Date(Math.min(...allDates.map(d => d.getTime())));
+      const newest = new Date(Math.max(...allDates.map(d => d.getTime())));
+      setDateRange({
+        start: subMonths(oldest, 1),
+        end: addMonths(newest, 1),
+      });
+    }
+  }, [files]);
+
+  const handleSetRange = (rangeType: '1M' | '1Y' | 'All') => {
+    const now = new Date();
+    if (rangeType === '1M') {
+      setDateRange({ start: subMonths(now, 1), end: now });
+    } else if (rangeType === '1Y') {
+      setDateRange({ start: subYears(now, 1), end: now });
+    } else { // 'All'
+      if (files.length > 0) {
+        const allDates = files.map(f => parseISO(f.uploadedAt));
+        const oldest = new Date(Math.min(...allDates.map(d => d.getTime())));
+        const newest = new Date(Math.max(...allDates.map(d => d.getTime())));
+        setDateRange({
+          start: subMonths(oldest, 1),
+          end: addMonths(newest, 1),
+        });
+      }
+    }
+  };
+
 
   const filteredFiles = files
     .filter(file =>
@@ -138,7 +173,7 @@ export default function Home() {
         className="flex flex-1 flex-col transition-all duration-300"
         onDragEnter={handleDragEnter}
       >
-        <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} onSetRange={handleSetRange} />
         <main
           className="flex-1 overflow-y-auto p-4 md:p-6"
           onDragLeave={handleDragLeave}
@@ -153,7 +188,20 @@ export default function Home() {
               </div>
             </div>
           )}
-          <Timeline files={filteredFiles} />
+          {dateRange ? (
+             <Timeline 
+                files={filteredFiles} 
+                startDate={dateRange.start}
+                endDate={dateRange.end}
+              />
+          ) : (
+             <div className="flex flex-col items-center justify-center h-full text-center">
+                <h2 className="text-2xl font-semibold">Welcome to ChronoVault</h2>
+                <p className="mt-2 text-muted-foreground">
+                  Drag and drop a file to get started or use the upload button.
+                </p>
+              </div>
+          )}
         </main>
       </div>
 

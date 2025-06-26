@@ -6,52 +6,48 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   format,
   parseISO,
-  subMonths,
-  addMonths,
   differenceInMilliseconds,
   eachMonthOfInterval,
 } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
-import { cn } from '@/lib/utils';
 
 interface TimelineProps {
   files: FileType[];
+  startDate: Date;
+  endDate: Date;
 }
 
-// Storing calculated data in a separate interface for state
 interface TimelineData {
   monthMarkers: { date: Date; label: string; position: number }[];
   filePositions: Map<string, number>;
   heights: Map<string, number>;
+  visibleFiles: FileType[];
 }
 
-export function Timeline({ files }: TimelineProps) {
+export function Timeline({ files, startDate, endDate }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
-  const [zoomLevel, setZoomLevel] = React.useState(1);
-  const timelineViewportRef = React.useRef<HTMLDivElement>(null);
-  const zoomDataRef = React.useRef<{ point: number; mouseX: number } | null>(null);
-
-  // State for panning with right mouse button
-  const [isPanning, setIsPanning] = React.useState(false);
-  const panDataRef = React.useRef<{ startX: number; scrollLeft: number } | null>(null);
 
   React.useEffect(() => {
     // This code runs only on the client, after the component has mounted.
     // This prevents hydration mismatches between server and client.
-    if (files.length > 0) {
-      // All calculations that might differ between server/client are done here.
-      const heights = new Map<string, number>();
-      files.forEach(file => {
-        // Math.random() is a source of hydration errors if run during server render.
-        heights.set(file.id, Math.floor(Math.random() * 101) + 40);
-      });
+    
+    // All calculations that might differ between server/client are done here.
+    const heights = new Map<string, number>();
+    files.forEach(file => {
+      // Math.random() is a source of hydration errors if run during server render.
+      heights.set(file.id, Math.floor(Math.random() * 101) + 40);
+    });
 
+    const timelineStart = startDate;
+    const timelineEnd = endDate;
+
+    const visibleFiles = files.filter(file => {
+        const fileDate = parseISO(file.uploadedAt);
+        return fileDate >= timelineStart && fileDate <= timelineEnd;
+    });
+
+    if (visibleFiles.length > 0) {
       // Date calculations can have floating point discrepancies between environments.
-      const oldestFileDate = parseISO(files[files.length - 1].uploadedAt);
-      const newestFileDate = parseISO(files[0].uploadedAt);
-
-      const timelineStart = subMonths(oldestFileDate, 1);
-      const timelineEnd = addMonths(newestFileDate, 1);
       const totalTimelineDuration = differenceInMilliseconds(timelineEnd, timelineStart);
 
       const getPositionOnTimeline = (date: Date) => {
@@ -60,17 +56,26 @@ export function Timeline({ files }: TimelineProps) {
         return (dateOffset / totalTimelineDuration) * 100;
       };
 
-      const monthMarkers = eachMonthOfInterval({
+      const rawMonthMarkers = eachMonthOfInterval({
         start: timelineStart,
         end: timelineEnd,
-      }).map(monthDate => ({
-        date: monthDate,
-        label: format(monthDate, 'MMM'),
-        position: getPositionOnTimeline(monthDate),
-      }));
+      });
+
+      // Avoid duplicate month labels if range is small
+      const monthMarkers = rawMonthMarkers.reduce((acc, monthDate) => {
+        const label = format(monthDate, 'MMM yyyy');
+        if (!acc.find(m => m.label === label)) {
+          acc.push({
+            date: monthDate,
+            label: label,
+            position: getPositionOnTimeline(monthDate),
+          });
+        }
+        return acc;
+      }, [] as { date: Date; label: string; position: number }[]);
       
       const filePositions = new Map<string, number>();
-      files.forEach(file => {
+      visibleFiles.forEach(file => {
         const fileDate = parseISO(file.uploadedAt);
         const position = getPositionOnTimeline(fileDate);
         filePositions.set(file.id, position);
@@ -80,76 +85,19 @@ export function Timeline({ files }: TimelineProps) {
         monthMarkers,
         filePositions,
         heights,
+        visibleFiles,
       });
     } else {
-      // Clear data if no files
-      setTimelineData(null);
+      // Clear data if no files in range
+      setTimelineData({
+        monthMarkers: [],
+        filePositions: new Map(),
+        heights,
+        visibleFiles: [],
+      });
     }
-  }, [files]);
+  }, [files, startDate, endDate]);
 
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const viewport = timelineViewportRef.current;
-    if (!viewport) return;
-
-    const contentWidth = viewport.scrollWidth;
-    const mouseX = e.clientX - viewport.getBoundingClientRect().left;
-    const scrollX = viewport.scrollLeft;
-    
-    const newZoomLevel = Math.max(0.5, Math.min(zoomLevel - e.deltaY * 0.005, 5));
-
-    zoomDataRef.current = {
-      point: (scrollX + mouseX) / contentWidth,
-      mouseX: mouseX,
-    };
-
-    setZoomLevel(newZoomLevel);
-  };
-
-  React.useLayoutEffect(() => {
-    const viewport = timelineViewportRef.current;
-    const zoomData = zoomDataRef.current;
-
-    if (viewport && zoomData) {
-      const newContentWidth = viewport.scrollWidth;
-      const newScrollX = zoomData.point * newContentWidth - zoomData.mouseX;
-      viewport.scrollLeft = newScrollX;
-      zoomDataRef.current = null;
-    }
-  }, [zoomLevel]);
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Check for right mouse button (button code 2)
-    if (e.button !== 2 || !timelineViewportRef.current) return;
-    
-    setIsPanning(true);
-    panDataRef.current = {
-      startX: e.clientX,
-      scrollLeft: timelineViewportRef.current.scrollLeft,
-    };
-  };
-
-  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.button !== 2) return;
-    setIsPanning(false);
-  };
-
-  const handleMouseLeave = () => {
-    if (isPanning) {
-      setIsPanning(false);
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isPanning || !panDataRef.current || !timelineViewportRef.current) return;
-    e.preventDefault(); // Prevents text selection during drag
-    const dx = e.clientX - panDataRef.current.startX;
-    timelineViewportRef.current.scrollLeft = panDataRef.current.scrollLeft - dx;
-  };
-  
-  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault(); // Prevent the default right-click menu
-  };
 
   if (files.length === 0) {
     return (
@@ -166,8 +114,8 @@ export function Timeline({ files }: TimelineProps) {
   // We render a placeholder to ensure the DOM matches.
   if (!timelineData) {
     return (
-      <div className="w-full h-full flex items-end justify-start overflow-x-auto p-4 sm:p-8 pb-16">
-        <div className="relative h-full" style={{ width: '3000px' }}>
+      <div className="w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16">
+        <div className="relative h-full w-full">
           {/* The horizontal time axis */}
           <div className="absolute bottom-7 left-0 right-0 h-px bg-gray-400" />
           <div className="w-full h-32 flex items-end">
@@ -178,26 +126,24 @@ export function Timeline({ files }: TimelineProps) {
     );
   }
 
-  const { monthMarkers, filePositions, heights } = timelineData;
-
-  const baseWidth = 3000;
-  const timelineContainerWidth = `${baseWidth * zoomLevel}px`;
+  const { monthMarkers, filePositions, heights, visibleFiles } = timelineData;
+  
+  if (visibleFiles.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center">
+        <h2 className="text-2xl font-semibold">No files in this time range.</h2>
+        <p className="mt-2 text-muted-foreground">
+          Try selecting a different time range or upload new files.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div 
-      className={cn(
-        "w-full h-full flex items-end justify-start overflow-x-auto p-4 sm:p-8 pb-16 cursor-grab",
-        isPanning && "cursor-grabbing"
-      )}
-      ref={timelineViewportRef}
-      onWheel={handleWheel}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-      onContextMenu={handleContextMenu}
+      className="w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16"
     >
-      <div className="relative h-full" style={{ width: timelineContainerWidth }}>
+      <div className="relative h-full w-full">
         {/* The horizontal time axis */}
         <div className="absolute bottom-7 left-0 right-0 h-px bg-gray-400" />
 
@@ -217,10 +163,13 @@ export function Timeline({ files }: TimelineProps) {
 
         {/* File Markers */}
         <TooltipProvider>
-          {files.map(file => {
+          {visibleFiles.map(file => {
             const fileDate = parseISO(file.uploadedAt);
             const position = filePositions.get(file.id) ?? 0;
             const height = heights.get(file.id) ?? 60;
+
+            // Don't render if outside viewport, gives a little margin
+            if (position < -5 || position > 105) return null;
 
             return (
               <div
@@ -236,7 +185,7 @@ export function Timeline({ files }: TimelineProps) {
                         style={{ height: `${height}px` }}
                       />
                       <div
-                        className="w-4 h-4 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
+                        className="w-3 h-3 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
                         style={{ backgroundColor: file.category.color }}
                       />
                     </div>
