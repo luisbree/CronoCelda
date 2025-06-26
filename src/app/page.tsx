@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/tooltip';
 import { getCardAttachments, type TrelloCardBasic } from '@/services/trello';
 import { FileUpload } from '@/components/file-upload';
-import { auth } from '@/lib/firebase';
+import { getFirebaseServices } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup, type User } from 'firebase/auth';
 import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
 
@@ -263,11 +263,13 @@ export default function Home() {
   }, []);
 
   const handleDriveConnect = async () => {
+    const { auth } = await getFirebaseServices();
+    
     if (!auth) {
       toast({
         variant: 'destructive',
         title: 'Configuración Incompleta',
-        description: 'Las credenciales de Firebase no están configuradas. Por favor, completa tu archivo .env para usar esta función.',
+        description: 'Las credenciales de Firebase no están configuradas correctamente. Por favor, revisa tu archivo .env.',
       });
       return;
     }
