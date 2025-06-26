@@ -14,6 +14,7 @@ import type { TrelloBoard, TrelloListBasic, TrelloCardBasic } from '@/services/t
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -168,7 +169,6 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
         </Button>
 
         <div className="space-y-2">
-            <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground px-1">Proyectos (Trello)</h2>
             <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
             <SelectTrigger className="w-full h-9">
                 <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
@@ -243,7 +243,6 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
         
         <div className="mt-auto shrink-0 border-t pt-3 space-y-4">
             <div className="space-y-2">
-                <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground px-1">Fuente de Archivos</h2>
                  <Button onClick={onDriveConnect} variant="outline" className="w-full justify-start text-sm h-9">
                     <GoogleDriveIcon className="mr-2 h-5 w-5" />
                     {isDriveConnected ? 'Cambiar cuenta de Drive' : 'Conectar con Google Drive'}
@@ -255,53 +254,56 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
                  )}
             </div>
         
-            <div className="shrink-0">
-              <div className="flex items-center justify-between px-1 mb-1">
-                <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">Categorías</h2>
-                {!isAdding && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsAdding(true)}>
-                    <Plus className="h-4 w-4" />
-                    </Button>
-                )}
-              </div>
-
-              {isAdding && (
-                <div className="px-2 py-2 mb-2 space-y-2 border rounded-md bg-secondary/30">
-                  <Input
-                    placeholder="Nombre de la categoría"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategoryConfirm() }}
-                    autoFocus
-                    className="h-8 text-xs"
-                  />
-                  <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="sm" className="h-7" onClick={handleAddCategoryCancel}>Cancelar</Button>
-                    <Button size="sm" onClick={handleAddCategoryConfirm} disabled={!newCategoryName.trim()} className="h-7">Añadir</Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-0.5">
-                {categories.map((category) => (
-                  <div key={category.id} className="relative flex items-center w-full justify-start rounded-md text-xs font-medium h-7 px-3 hover:bg-accent hover:text-accent-foreground">
-                    <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
-                      <PopoverTrigger asChild>
-                        <button
-                          className="w-2 h-2 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                          style={{ backgroundColor: category.color }}
-                          aria-label={`Cambiar color de la categoría ${category.name}`}
-                        />
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
-                      </PopoverContent>
-                    </Popover>
-                    <span className="ml-3">{category.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+             <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+                <AccordionItem value="item-1" className="border-b-0">
+                    <AccordionTrigger className="py-1 px-1 hover:no-underline text-xs font-semibold tracking-wider uppercase text-muted-foreground justify-start gap-2">
+                        Categorías
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                        {isAdding && (
+                            <div className="px-1 py-2 mb-2 space-y-2 border rounded-md bg-secondary/30">
+                                <Input
+                                placeholder="Nombre de la categoría"
+                                value={newCategoryName}
+                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategoryConfirm() }}
+                                autoFocus
+                                className="h-8 text-xs"
+                                />
+                                <div className="flex justify-end gap-1">
+                                <Button variant="ghost" size="sm" className="h-7" onClick={handleAddCategoryCancel}>Cancelar</Button>
+                                <Button size="sm" onClick={handleAddCategoryConfirm} disabled={!newCategoryName.trim()} className="h-7">Añadir</Button>
+                                </div>
+                            </div>
+                        )}
+                        <div className="space-y-0.5">
+                            {categories.map((category) => (
+                            <div key={category.id} className="relative flex items-center w-full justify-start rounded-md text-xs font-medium h-7 px-3 hover:bg-accent hover:text-accent-foreground">
+                                <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
+                                <PopoverTrigger asChild>
+                                    <button
+                                    className="w-2 h-2 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    style={{ backgroundColor: category.color }}
+                                    aria-label={`Cambiar color de la categoría ${category.name}`}
+                                    />
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
+                                </PopoverContent>
+                                </Popover>
+                                <span className="ml-3">{category.name}</span>
+                            </div>
+                            ))}
+                        </div>
+                        {!isAdding && (
+                            <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground mt-1" onClick={() => setIsAdding(true)}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Añadir Categoría
+                            </Button>
+                        )}
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </div>
       </div>
       <div className="p-4 border-t shrink-0">
