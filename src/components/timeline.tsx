@@ -42,26 +42,27 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   const panStartRef = React.useRef({x: 0, rangeStart: new Date(), rangeEnd: new Date()});
 
   React.useEffect(() => {
-    // Initialize heights only once
-    const newHeights = heights.current;
-    if (newHeights.size === 0 && files.length > 0) {
-      files.forEach(file => {
-        let hash = 0;
-        for (let i = 0; i < file.id.length; i++) {
-          const char = file.id.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash |= 0;
-        }
-        newHeights.set(file.id, (Math.abs(hash) % 101) + 40);
-      });
-    }
-  }, [files]);
-  
-  React.useEffect(() => {
     setViewRange({ start: startDate, end: endDate });
   }, [startDate, endDate]);
 
+  React.useEffect(() => {
+    if (files.length > 0 && heights.current.size === 0) {
+      const newHeights = new Map<string, number>();
+      
+      const sortedFiles = [...files].sort(
+        (a, b) => parseISO(a.uploadedAt).getTime() - parseISO(b.uploadedAt).getTime()
+      );
 
+      const heightLevels = [60, 95, 130, 75, 110];
+      
+      sortedFiles.forEach((file, index) => {
+        newHeights.set(file.id, heightLevels[index % heightLevels.length]);
+      });
+      
+      heights.current = newHeights;
+    }
+  }, [files]);
+  
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     
@@ -159,35 +160,42 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
       let filteredMonths: Date[];
 
       if (durationInYears >= 2) {
-        // For ranges >= 2 years, show only January
-        const targetMonths = [0]; // 0-indexed: January
+        const targetMonths = [0]; // Enero
         filteredMonths = rawMonthMarkersSource.filter(date => targetMonths.includes(getMonth(date)));
       } else if (durationInYears >= 1) {
-        // For ranges >= 1 year, show Jan, Apr, Jul, Oct
-        const targetMonths = [0, 3, 6, 9]; // 0-indexed: Jan, Apr, Jul, Oct
+        const targetMonths = [0, 3, 6, 9]; // Ene, Abr, Jul, Oct
         filteredMonths = rawMonthMarkersSource.filter(date => targetMonths.includes(getMonth(date)));
       } else {
-        // For ranges < 1 year, show every other month
-        filteredMonths = rawMonthMarkersSource.filter(date => getMonth(date) % 2 === 0);
+        filteredMonths = rawMonthMarkersSource.filter((date, index) => index % 2 === 0);
       }
 
       let lastShownYear: number | null = null;
       const monthMarkers = filteredMonths.map((monthDate) => {
         const year = getYear(monthDate);
         let label: string;
+        const monthIndex = getMonth(monthDate);
 
-        if (durationInMonths < 12) {
-          // If it's the first marker, or the year has changed, show the year.
+        let showYear = false;
+        
+        if (durationInYears < 1) {
           if (lastShownYear === null || year !== lastShownYear) {
-            label = format(monthDate, 'MMM yyyy', { locale: es });
-          } else {
-            label = format(monthDate, 'MMM', { locale: es });
+            showYear = true;
           }
-          lastShownYear = year;
+          label = format(monthDate, 'MMM', { locale: es });
         } else {
-          // For longer ranges, always show the year for clarity.
-          label = format(monthDate, 'MMM yyyy', { locale: es });
+          showYear = true;
+          label = format(monthDate, 'MMM', { locale: es });
         }
+
+        if (monthIndex === 0) { // Siempre mostrar año en Enero
+            showYear = true;
+        }
+
+        if(showYear) {
+            label = format(monthDate, 'MMM yyyy', { locale: es });
+        }
+        
+        lastShownYear = year;
         
         return {
           date: monthDate,
