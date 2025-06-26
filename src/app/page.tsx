@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/tooltip';
 import { getCardAttachments } from '@/services/trello';
 import { FileUpload } from '@/components/file-upload';
+import { auth } from '@/lib/firebase';
+import { GoogleAuthProvider, signInWithPopup, type User } from 'firebase/auth';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -35,6 +37,7 @@ export default function Home() {
   const [selectedCardId, setSelectedCardId] = React.useState<string | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
+  const [driveUser, setDriveUser] = React.useState<User | null>(null);
 
   const { toast } = useToast();
 
@@ -253,6 +256,36 @@ export default function Home() {
     });
   }, []);
 
+  const handleDriveConnect = async () => {
+    if (driveUser) {
+        console.log("Already connected to Drive with user:", driveUser.displayName);
+        toast({ title: "Ya estás conectado a Google Drive." });
+        return;
+    }
+
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+    
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        
+        setDriveUser(user);
+        toast({
+            title: "Conexión Exitosa",
+            description: `Conectado como ${user.displayName}.`,
+        });
+
+    } catch (error: any) {
+        console.error("Google Sign-In Error:", error);
+        toast({
+            variant: "destructive",
+            title: "Error de conexión",
+            description: "No se pudo conectar con Google Drive. Por favor, revisa la consola y asegúrate de haber configurado tus credenciales de Firebase.",
+        });
+    }
+  };
+
   return (
     <div className="flex h-screen w-full bg-background">
       <Sidebar 
@@ -262,6 +295,8 @@ export default function Home() {
         onCardSelect={handleCardSelect}
         selectedCardId={selectedCardId}
         onNewMilestoneClick={() => setIsUploadOpen(true)}
+        onDriveConnect={handleDriveConnect}
+        isDriveConnected={!!driveUser}
       />
       <div
         className="flex flex-1 flex-col transition-all duration-300"

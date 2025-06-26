@@ -16,6 +16,17 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 
 
+const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <path d="m9.2 12.2 3.8 6.4 3.8-6.4Z"></path>
+        <path d="m6.4 18.6 3.8-6.4 3.8 6.4Z"></path>
+        <path d="m12 12.2 3.8-6.4-7.6 0Z"></path>
+    </svg>
+);
+
+
 interface SidebarProps {
   categories: Category[];
   onCategoryColorChange: (categoryId: string, color: string) => void;
@@ -23,9 +34,11 @@ interface SidebarProps {
   onCardSelect: (cardId: string | null) => void;
   selectedCardId: string | null;
   onNewMilestoneClick: () => void;
+  onDriveConnect: () => void;
+  isDriveConnected: boolean;
 }
 
-export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCardSelect, selectedCardId, onNewMilestoneClick }: SidebarProps) {
+export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCardSelect, selectedCardId, onNewMilestoneClick, onDriveConnect, isDriveConnected }: SidebarProps) {
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
   const [newCategoryName, setNewCategoryName] = React.useState('');
@@ -147,7 +160,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
       <div className="h-16 flex items-center border-b shrink-0">
         <Logo />
       </div>
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
         
         <Button onClick={onNewMilestoneClick} disabled={!selectedCardId}>
           <UploadCloud className="mr-2 h-4 w-4" />
@@ -155,7 +168,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
         </Button>
 
         <div className="space-y-3">
-            <h2 className="text-sm font-semibold tracking-tight font-headline px-2">Buscador de Proyectos</h2>
+            <h2 className="text-sm font-semibold tracking-tight font-headline px-2">Proyectos (Trello)</h2>
             <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
             <SelectTrigger className="w-full">
                 <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
@@ -194,7 +207,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
             <div className="flex-1 flex flex-col min-h-0 border rounded-md">
                 <div className="p-2 border-b shrink-0">
                     <p className="text-sm font-semibold text-muted-foreground">
-                        {`Resultados (${filteredCards.length})`}
+                        {`Tarjetas (${filteredCards.length})`}
                     </p>
                 </div>
                 <ScrollArea className="flex-1">
@@ -227,6 +240,19 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
                 </ScrollArea>
             </div>
         )}
+        
+        <div className="space-y-3 border-t pt-4">
+            <h2 className="text-sm font-semibold tracking-tight font-headline px-2">Fuente de Archivos (Drive)</h2>
+             <Button onClick={onDriveConnect} variant="outline" className="w-full">
+                <GoogleDriveIcon className="mr-2 h-5 w-5" />
+                {isDriveConnected ? 'Conectado a Drive' : 'Conectar con Google Drive'}
+             </Button>
+             {isDriveConnected && (
+              <div className="p-4 text-sm text-center text-muted-foreground border rounded-md bg-secondary/30">
+                  Navegador de archivos de Drive aparecerá aquí.
+              </div>
+             )}
+        </div>
         
         <div className="mt-auto shrink-0">
           <div className="flex items-center justify-between px-2 mb-2">
