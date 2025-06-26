@@ -26,12 +26,12 @@ interface TimelineProps {
 interface TimelineData {
   monthMarkers: { date: Date; label: string; position: number }[];
   filePositions: Map<string, number>;
-  heights: Map<string, number>;
   visibleFiles: FileType[];
 }
 
 export function Timeline({ files, startDate, endDate }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
+  const [heights, setHeights] = React.useState<Map<string, number>>(new Map());
   const timelineContainerRef = React.useRef<HTMLDivElement>(null);
   const [viewRange, setViewRange] = React.useState({ start: startDate, end: endDate });
   const [isPanning, setIsPanning] = React.useState(false);
@@ -40,6 +40,23 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   React.useEffect(() => {
     setViewRange({ start: startDate, end: endDate });
   }, [startDate, endDate]);
+
+  React.useEffect(() => {
+    // Generate heights only once when files change, using a consistent method.
+    const newHeights = new Map<string, number>();
+    files.forEach(file => {
+      // Use a simple hashing function based on file id to get a consistent random-like height
+      // This prevents heights from changing on every render.
+      let hash = 0;
+      for (let i = 0; i < file.id.length; i++) {
+          const char = file.id.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash |= 0; // Convert to 32bit integer
+      }
+      newHeights.set(file.id, (Math.abs(hash) % 101) + 40); // Heights between 40 and 140
+    });
+    setHeights(newHeights);
+  }, [files]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -70,7 +87,8 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 2) return; // Only for right-click
+    // Only for right-click or middle-click for panning
+    if (e.button !== 2 && e.button !== 1) return;
     e.preventDefault();
     setIsPanning(true);
     panStartRef.current = {
@@ -101,7 +119,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   };
 
   const handleMouseUp = (e: React.MouseEvent) => {
-    if (e.button !== 2) return;
+    if (e.button !== 2 && e.button !== 1) return;
     setIsPanning(false);
   };
 
@@ -110,11 +128,6 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   };
 
   React.useEffect(() => {
-    const heights = new Map<string, number>();
-    files.forEach(file => {
-      heights.set(file.id, Math.floor(Math.random() * 101) + 40);
-    });
-    
     const timelineStart = viewRange.start;
     const timelineEnd = viewRange.end;
 
@@ -155,22 +168,20 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         const position = getPositionOnTimeline(fileDate);
         filePositions.set(file.id, position);
       });
-
+      
       setTimelineData({
         monthMarkers,
         filePositions,
-        heights,
         visibleFiles,
       });
     } else {
       setTimelineData({
         monthMarkers: [],
         filePositions: new Map(),
-        heights,
         visibleFiles: [],
       });
     }
-  }, [files, viewRange]);
+  }, [files, viewRange, heights]);
 
 
   if (files.length === 0) {
@@ -197,7 +208,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     );
   }
 
-  const { monthMarkers, filePositions, heights, visibleFiles } = timelineData;
+  const { monthMarkers, filePositions, visibleFiles } = timelineData;
   
   const filesInView = visibleFiles.filter(file => {
     const pos = filePositions.get(file.id);
@@ -265,14 +276,14 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
               >
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
-                    <div className="flex flex-col items-center cursor-pointer group">
+                    <div className="flex flex-col-reverse items-center cursor-pointer group">
+                       <div
+                        className="w-px bg-gray-300"
+                        style={{ height: `${height}px` }}
+                      />
                        <div
                         className="w-2.5 h-2.5 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
                         style={{ backgroundColor: file.category.color }}
-                      />
-                      <div
-                        className="w-px bg-gray-300"
-                        style={{ height: `${height}px` }}
                       />
                     </div>
                   </TooltipTrigger>
