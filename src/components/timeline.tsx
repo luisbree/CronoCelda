@@ -48,7 +48,10 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
   }, [startDate, endDate]);
 
   React.useEffect(() => {
-    if (milestones.length > 0 && heights.current.size === 0) {
+    // When milestones change, we need to recalculate the heights to avoid visual overlap.
+    // The previous logic only calculated heights if the map was empty,
+    // which caused issues when switching between cards (projects).
+    if (milestones.length > 0) {
       const newHeights = new Map<string, number>();
       
       const sortedMilestones = [...milestones].sort(
@@ -58,10 +61,14 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
       const heightLevels = [60, 95, 130, 75, 110];
       
       sortedMilestones.forEach((milestone, index) => {
+        // Cycle through different height levels to stagger milestones vertically
         newHeights.set(milestone.id, heightLevels[index % heightLevels.length]);
       });
       
       heights.current = newHeights;
+    } else {
+        // If there are no milestones, clear the heights map.
+        heights.current.clear();
     }
   }, [milestones]);
   
