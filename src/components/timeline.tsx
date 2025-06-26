@@ -32,17 +32,8 @@ interface TimelineData {
 
 export function Timeline({ files, startDate, endDate }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
-  const [zoomLevel, setZoomLevel] = React.useState(1);
-  const [panOffset, setPanOffset] = React.useState(0);
-  const [isPanning, setIsPanning] = React.useState(false);
-  const [lastMouseX, setLastMouseX] = React.useState(0);
-  const timelineContainerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    // Reset pan and zoom when date range changes from the header buttons
-    setZoomLevel(1);
-    setPanOffset(0);
-
     const heights = new Map<string, number>();
     // Generate heights on the client side to avoid hydration mismatch
     files.forEach(file => {
@@ -106,75 +97,6 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     }
   }, [files, startDate, endDate]);
 
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const container = timelineContainerRef.current;
-    if (!container) return;
-
-    const delta = e.deltaY * -0.001;
-    const newZoomLevel = Math.max(1, zoomLevel + delta);
-    
-    const rect = container.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    
-    const mousePointOnTimeline = (mouseX - panOffset) / zoomLevel;
-    const newPanOffset = mouseX - mousePointOnTimeline * newZoomLevel;
-    
-    const maxPan = 0;
-    const minPan = container.clientWidth - container.clientWidth * newZoomLevel;
-    const clampedPanOffset = Math.min(maxPan, Math.max(minPan, newPanOffset));
-
-    setZoomLevel(newZoomLevel);
-    setPanOffset(clampedPanOffset);
-  };
-  
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.button === 2) { // Right mouse button
-      e.preventDefault();
-      setIsPanning(true);
-      setLastMouseX(e.clientX);
-    }
-  };
-  
-  const handleMouseMove = React.useCallback((e: MouseEvent) => {
-    if (isPanning && timelineContainerRef.current) {
-      const dx = e.clientX - lastMouseX;
-      setLastMouseX(e.clientX);
-      const newPanOffset = panOffset + dx;
-      const containerWidth = timelineContainerRef.current.clientWidth;
-      const maxPan = 0;
-      const minPan = containerWidth - (containerWidth * zoomLevel);
-      const clampedPanOffset = Math.min(maxPan, Math.max(minPan, newPanOffset));
-      setPanOffset(clampedPanOffset);
-    }
-  }, [isPanning, lastMouseX, panOffset, zoomLevel]);
-  
-  const handleMouseUp = React.useCallback(() => {
-    setIsPanning(false);
-  }, []);
-
-  const handleMouseLeave = () => {
-    setIsPanning(false);
-  }
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-  }
-
-  React.useEffect(() => {
-    if (isPanning) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    } else {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isPanning, handleMouseMove, handleMouseUp]);
-
 
   if (files.length === 0) {
     return (
@@ -215,23 +137,10 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
 
   return (
     <div 
-      ref={timelineContainerRef}
-      className={cn(
-        "w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16 overflow-hidden cursor-grab",
-        isPanning && "cursor-grabbing"
-      )}
-      onWheel={handleWheel}
-      onMouseDown={handleMouseDown}
-      onMouseLeave={handleMouseLeave}
-      onContextMenu={handleContextMenu}
+      className="w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16"
     >
       <div 
-        className="relative h-full"
-        style={{
-          width: `${100 * zoomLevel}%`,
-          transform: `translateX(${panOffset}px)`,
-          transition: isPanning ? 'none' : 'transform 0.1s ease-out, width 0.1s ease-out'
-        }}
+        className="relative h-full w-full"
       >
         <div className="absolute bottom-7 left-0 right-0 h-px bg-gray-400" />
 
