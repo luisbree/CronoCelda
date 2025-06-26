@@ -257,6 +257,15 @@ export default function Home() {
   }, []);
 
   const handleDriveConnect = async () => {
+    if (!auth) {
+      toast({
+        variant: 'destructive',
+        title: 'Configuración Incompleta',
+        description: 'Las credenciales de Firebase no están configuradas. Por favor, completa tu archivo .env para usar esta función.',
+      });
+      return;
+    }
+    
     if (driveUser) {
         console.log("Already connected to Drive with user:", driveUser.displayName);
         toast({ title: "Ya estás conectado a Google Drive." });
