@@ -129,7 +129,7 @@ export default function Home() {
     }
   }, [categories]);
 
-  const handleUpload = async (data: { file: File, categoryId: string, name: string, description: string }) => {
+  const handleUpload = async (data: { file?: File, categoryId: string, name: string, description: string }) => {
     const { file, categoryId, name, description } = data;
     const category = categories.find(c => c.id === categoryId);
     if (!category) {
@@ -141,18 +141,22 @@ export default function Home() {
         return;
     };
 
-    const fileType: AssociatedFile['type'] = 
-        file.type.startsWith('image/') ? 'image' : 
-        file.type.startsWith('video/') ? 'video' :
-        file.type.startsWith('audio/') ? 'audio' :
-        ['application/pdf', 'application/msword', 'text/plain'].some(t => file.type.includes(t)) ? 'document' : 'other';
-    
-    const associatedFile: AssociatedFile = {
-        id: `file-local-${Date.now()}`,
-        name: file.name,
-        size: `${(file.size / 1024).toFixed(2)} KB`,
-        type: fileType
-    };
+    const associatedFiles: AssociatedFile[] = [];
+    if (file) {
+      const fileType: AssociatedFile['type'] = 
+          file.type.startsWith('image/') ? 'image' : 
+          file.type.startsWith('video/') ? 'video' :
+          file.type.startsWith('audio/') ? 'audio' :
+          ['application/pdf', 'application/msword', 'text/plain'].some(t => file.type.includes(t)) ? 'document' : 'other';
+      
+      const associatedFile: AssociatedFile = {
+          id: `file-local-${Date.now()}`,
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(2)} KB`,
+          type: fileType
+      };
+      associatedFiles.push(associatedFile);
+    }
 
     const newMilestone: Milestone = {
         id: `hito-local-${Date.now()}`,
@@ -161,7 +165,7 @@ export default function Home() {
         occurredAt: new Date().toISOString(), // Use current time for new milestones
         category: category,
         tags: null, // Start with null to show loading spinner
-        associatedFiles: [associatedFile],
+        associatedFiles: associatedFiles,
         isImportant: false,
     };
 

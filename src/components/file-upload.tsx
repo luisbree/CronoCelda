@@ -23,7 +23,7 @@ import { UploadCloud } from 'lucide-react';
 const uploadSchema = z.object({
   name: z.string().min(5, { message: 'El título del hito debe tener al menos 5 caracteres.' }),
   description: z.string().min(10, { message: 'La descripción debe tener al menos 10 caracteres.' }),
-  file: z.custom<File>(file => file instanceof File, 'Por favor, selecciona un archivo para subir.'),
+  file: z.instanceof(File).optional(),
   categoryId: z.string().min(1, 'Por favor, selecciona una categoría.'),
 });
 
@@ -33,7 +33,7 @@ interface FileUploadProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   categories: Category[];
-  onUpload: (data: { file: File, categoryId: string, name: string, description: string }) => void;
+  onUpload: (data: { file?: File, categoryId: string, name: string, description: string }) => void;
   initialFile?: File | null;
 }
 
@@ -77,7 +77,7 @@ export function FileUpload({
         <DialogHeader>
           <DialogTitle className="font-headline">Crear un nuevo hito</DialogTitle>
           <DialogDescription>
-            Añade un hito a tu CronoCelda. Describe el evento y adjunta el archivo principal.
+            Añade un hito a tu CronoCelda. Describe el evento y, si lo deseas, adjunta un archivo.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -117,7 +117,7 @@ export function FileUpload({
               name="file"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Archivo Adjunto</FormLabel>
+                  <FormLabel>Archivo Adjunto (Opcional)</FormLabel>
                   <FormControl>
                     <div className="relative">
                        <input id="file-input" type="file" className="hidden" {...fileRef} onChange={(e) => {
@@ -134,7 +134,6 @@ export function FileUpload({
                       </div>
                     </div>
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
