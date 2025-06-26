@@ -7,7 +7,7 @@ import { Timeline } from '@/components/timeline';
 import { MilestoneDetail } from '@/components/milestone-detail';
 import { type Milestone, type Category, type AssociatedFile } from '@/types';
 import { CATEGORIES } from '@/lib/data';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
 import { addMonths, endOfDay, parseISO, startOfDay, subMonths, subYears } from 'date-fns';
 import { TrelloSummary } from '@/components/trello-summary';
@@ -40,8 +40,6 @@ export default function Home() {
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [driveUser, setDriveUser] = React.useState<User | null>(null);
   const [isSummaryOpen, setIsSummaryOpen] = React.useState(false);
-
-  const { toast } = useToast();
 
   React.useEffect(() => {
     if (milestones.length > 0) {
@@ -129,7 +127,7 @@ export default function Home() {
     } finally {
         setIsLoadingTimeline(false);
     }
-  }, [categories, toast]);
+  }, [categories]);
 
   const handleUpload = async (data: { file: File, categoryId: string, name: string, description: string }) => {
     const { file, categoryId, name, description } = data;
