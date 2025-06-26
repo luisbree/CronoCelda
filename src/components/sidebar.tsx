@@ -160,15 +160,15 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
       <div className="h-16 flex items-center border-b shrink-0">
         <Logo />
       </div>
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
+      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
         
-        <Button onClick={onNewMilestoneClick} disabled={!selectedCardId}>
+        <Button onClick={onNewMilestoneClick} disabled={!selectedCardId} size="sm">
           <UploadCloud className="mr-2 h-4 w-4" />
           Hito nuevo
         </Button>
 
-        <div className="space-y-3">
-            <h2 className="text-sm font-semibold tracking-tight font-headline px-2">Proyectos (Trello)</h2>
+        <div className="space-y-2">
+            <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground px-1">Proyectos (Trello)</h2>
             <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
             <SelectTrigger className="w-full">
                 <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
@@ -241,64 +241,67 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
             </div>
         )}
         
-        <div className="space-y-3 border-t pt-4">
-            <h2 className="text-sm font-semibold tracking-tight font-headline px-2">Fuente de Archivos (Drive)</h2>
-             <Button onClick={onDriveConnect} variant="outline" className="w-full">
-                <GoogleDriveIcon className="mr-2 h-5 w-5" />
-                {isDriveConnected ? 'Conectado a Drive' : 'Conectar con Google Drive'}
-             </Button>
-             {isDriveConnected && (
-              <div className="p-4 text-sm text-center text-muted-foreground border rounded-md bg-secondary/30">
-                  Navegador de archivos de Drive aparecerá aquí.
-              </div>
-             )}
-        </div>
+        <div className="mt-auto shrink-0 border-t pt-3 space-y-4">
+            <div className="space-y-2">
+                <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground px-1">Fuente de Archivos</h2>
+                 <Button onClick={onDriveConnect} variant="outline" className="w-full justify-start text-sm h-9">
+                    <GoogleDriveIcon className="mr-2 h-5 w-5" />
+                    {isDriveConnected ? 'Conectado a Drive' : 'Conectar con Google Drive'}
+                 </Button>
+                 {isDriveConnected && (
+                  <div className="p-2 text-xs text-center text-muted-foreground border rounded-md bg-secondary/30">
+                      Navegador de archivos de Drive aparecerá aquí.
+                  </div>
+                 )}
+            </div>
         
-        <div className="mt-auto shrink-0">
-          <div className="flex items-center justify-between px-2 mb-2">
-            <h2 className="text-sm font-semibold tracking-tight font-headline">Categorías</h2>
-            {!isAdding && (
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsAdding(true)}>
-                <Plus className="h-4 w-4" />
-                </Button>
-            )}
-          </div>
+            <div className="shrink-0">
+              <div className="flex items-center justify-between px-1 mb-1">
+                <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">Categorías</h2>
+                {!isAdding && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsAdding(true)}>
+                    <Plus className="h-4 w-4" />
+                    </Button>
+                )}
+              </div>
 
-          {isAdding && (
-            <div className="px-3 py-2 mb-2 space-y-3 border rounded-md bg-secondary/30">
-              <Input
-                placeholder="Nombre de la categoría"
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategoryConfirm() }}
-                autoFocus
-              />
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={handleAddCategoryCancel}>Cancelar</Button>
-                <Button size="sm" onClick={handleAddCategoryConfirm} disabled={!newCategoryName.trim()}>Añadir</Button>
+              {isAdding && (
+                <div className="px-2 py-2 mb-2 space-y-2 border rounded-md bg-secondary/30">
+                  <Input
+                    placeholder="Nombre de la categoría"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategoryConfirm() }}
+                    autoFocus
+                    className="h-8 text-xs"
+                  />
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="sm" className="h-7" onClick={handleAddCategoryCancel}>Cancelar</Button>
+                    <Button size="sm" onClick={handleAddCategoryConfirm} disabled={!newCategoryName.trim()} className="h-7">Añadir</Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-0.5">
+                {categories.map((category) => (
+                  <div key={category.id} className="relative flex items-center w-full justify-start rounded-md text-xs font-medium h-7 px-3 hover:bg-accent hover:text-accent-foreground">
+                    <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
+                      <PopoverTrigger asChild>
+                        <button
+                          className="w-2 h-2 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                          style={{ backgroundColor: category.color }}
+                          aria-label={`Cambiar color de la categoría ${category.name}`}
+                        />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
+                      </PopoverContent>
+                    </Popover>
+                    <span className="ml-3">{category.name}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-
-          <div className="space-y-0.5">
-            {categories.map((category) => (
-              <div key={category.id} className="relative flex items-center w-full justify-start rounded-md text-xs font-medium h-8 px-3 hover:bg-accent hover:text-accent-foreground">
-                <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
-                  <PopoverTrigger asChild>
-                    <button
-                      className="w-2 h-2 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                      style={{ backgroundColor: category.color }}
-                      aria-label={`Cambiar color de la categoría ${category.name}`}
-                    />
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
-                  </PopoverContent>
-                </Popover>
-                <span className="ml-3">{category.name}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
       <div className="p-4 border-t shrink-0">
