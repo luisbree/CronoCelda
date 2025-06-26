@@ -49,15 +49,15 @@ export function Timeline({ files }: TimelineProps) {
               <div key={file.id} className="relative flex flex-col items-center">
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
-                    <div className="flex flex-col-reverse items-center cursor-pointer group">
-                      {/* The dot/circle */}
+                    <div className="flex flex-col items-center cursor-pointer group">
+                      {/* The dot/circle at the top */}
                       <div
-                        className="w-4 h-4 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform"
+                        className="w-4 h-4 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
                         style={{ backgroundColor: file.category.color }}
                       />
                       {/* The vertical line */}
                       <div
-                        className="w-px mb-[-1px] bg-gray-300"
+                        className="w-px -mt-2 bg-gray-300"
                         style={{ height: `${heights.get(file.id) || 60}px` }}
                       />
                     </div>
