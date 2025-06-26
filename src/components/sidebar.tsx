@@ -1,13 +1,17 @@
 'use client';
 
+import * as React from 'react';
 import { Logo } from './logo';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { PlusCircle, Plus } from 'lucide-react';
+import { PlusCircle, Plus, Search } from 'lucide-react';
 import type { Category } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ColorPicker } from './color-picker';
-import * as React from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { getMemberBoards, getBoardLists } from '@/services/trello';
+import type { TrelloBoard, TrelloListBasic } from '@/services/trello';
+
 
 interface SidebarProps {
   categories: Category[];
@@ -20,6 +24,53 @@ export function Sidebar({ categories, onUploadClick, onCategoryColorChange, onCa
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
   const [newCategoryName, setNewCategoryName] = React.useState('');
+
+  const [boards, setBoards] = React.useState<TrelloBoard[]>([]);
+  const [lists, setLists] = React.useState<TrelloListBasic[]>([]);
+  const [selectedBoard, setSelectedBoard] = React.useState('');
+  const [selectedList, setSelectedList] = React.useState('');
+  const [cardSearchTerm, setCardSearchTerm] = React.useState('');
+  const [isLoadingBoards, setIsLoadingBoards] = React.useState(false);
+  const [isLoadingLists, setIsLoadingLists] = React.useState(false);
+
+  React.useEffect(() => {
+    const fetchBoards = async () => {
+      setIsLoadingBoards(true);
+      try {
+        const memberBoards = await getMemberBoards();
+        setBoards(memberBoards);
+      } catch (error) {
+        console.error("Failed to fetch boards", error);
+        // Opcionalmente, mostrar un toast al usuario
+      } finally {
+        setIsLoadingBoards(false);
+      }
+    };
+    fetchBoards();
+  }, []);
+
+  React.useEffect(() => {
+    if (!selectedBoard) {
+      setLists([]);
+      setSelectedList('');
+      return;
+    }
+
+    const fetchLists = async () => {
+      setIsLoadingLists(true);
+      setLists([]);
+      try {
+        const boardLists = await getBoardLists(selectedBoard);
+        setLists(boardLists);
+      } catch (error) {
+        console.error(`Failed to fetch lists for board ${selectedBoard}`, error);
+      } finally {
+        setIsLoadingLists(false);
+      }
+    };
+    fetchLists();
+  }, [selectedBoard]);
+
 
   const handleColorSelect = (categoryId: string, color: string) => {
     onCategoryColorChange(categoryId, color);
@@ -47,6 +98,39 @@ export function Sidebar({ categories, onUploadClick, onCategoryColorChange, onCa
       <div className="flex-1 overflow-y-auto">
         <nav className="p-4 space-y-4 h-full flex flex-col">
           <div>
+            <div className="space-y-3 mb-4">
+              <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {boards.map(board => (
+                    <SelectItem key={board.id} value={board.id}>{board.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {lists.map(list => (
+                    <SelectItem key={list.id} value={list.id}>{list.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar una tarjeta..."
+                  className="pl-9"
+                  value={cardSearchTerm}
+                  onChange={(e) => setCardSearchTerm(e.target.value)}
+                  disabled={!selectedList}
+                />
+              </div>
+            </div>
             <Button className="w-full" onClick={onUploadClick}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Hito nuevo

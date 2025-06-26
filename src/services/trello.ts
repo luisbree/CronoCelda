@@ -17,15 +17,29 @@ export interface TrelloBoardSummary {
   lists: TrelloList[];
 }
 
+export interface TrelloBoard {
+  id: string;
+  name: string;
+}
+
+export interface TrelloListBasic {
+  id: string;
+  name: string;
+}
+
+function getTrelloAuthParams() {
+    const apiKey = process.env.TRELLO_API_KEY;
+    const apiToken = process.env.TRELLO_API_TOKEN;
+
+    if (!apiKey || !apiToken) {
+        throw new Error('Trello API key or token not configured in .env file.');
+    }
+    return `key=${apiKey}&token=${apiToken}`;
+}
+
 export async function getBoardSummary(boardId: string): Promise<TrelloBoardSummary> {
-  const apiKey = process.env.TRELLO_API_KEY;
-  const apiToken = process.env.TRELLO_API_TOKEN;
-
-  if (!apiKey || !apiToken) {
-    throw new Error('Trello API key or token not configured in .env file.');
-  }
-
-  const url = `https://api.trello.com/1/boards/${boardId}?lists=open&cards=open&card_fields=name,due&list_fields=name&fields=name&key=${apiKey}&token=${apiToken}`;
+  const authParams = getTrelloAuthParams();
+  const url = `https://api.trello.com/1/boards/${boardId}?lists=open&cards=open&card_fields=name,due&list_fields=name&fields=name&${authParams}`;
 
   try {
     const response = await fetch(url);
@@ -38,6 +52,44 @@ export async function getBoardSummary(boardId: string): Promise<TrelloBoardSumma
     return data as TrelloBoardSummary;
   } catch (error) {
     console.error('Error fetching from Trello:', error);
+    throw new Error('An error occurred while communicating with the Trello API.');
+  }
+}
+
+export async function getMemberBoards(): Promise<TrelloBoard[]> {
+  const authParams = getTrelloAuthParams();
+  const url = `https://api.trello.com/1/members/me/boards?fields=name&${authParams}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Trello API Error (getMemberBoards):', errorText);
+      throw new Error(`Failed to fetch Trello boards: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data as TrelloBoard[];
+  } catch (error) {
+    console.error('Error fetching boards from Trello:', error);
+    throw new Error('An error occurred while communicating with the Trello API.');
+  }
+}
+
+export async function getBoardLists(boardId: string): Promise<TrelloListBasic[]> {
+  const authParams = getTrelloAuthParams();
+  const url = `https://api.trello.com/1/boards/${boardId}/lists?fields=name&${authParams}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Trello API Error (getBoardLists):', errorText);
+      throw new Error(`Failed to fetch Trello lists: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data as TrelloListBasic[];
+  } catch (error) {
+    console.error('Error fetching lists from Trello:', error);
     throw new Error('An error occurred while communicating with the Trello API.');
   }
 }
