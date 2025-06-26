@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
 import { addMonths, parseISO, subMonths, subYears } from 'date-fns';
 
+const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
+
 export default function Home() {
   const [milestones, setMilestones] = React.useState<Milestone[]>(MILESTONES);
   const [categories, setCategories] = React.useState<Category[]>(CATEGORIES);
@@ -178,10 +180,24 @@ export default function Home() {
     });
     setMilestones(newMilestones);
   };
+  
+  const handleCategoryAdd = (name: string) => {
+    const newCategory: Category = {
+      id: `cat-${Date.now()}`,
+      name,
+      color: DEFAULT_CATEGORY_COLORS[categories.length % DEFAULT_CATEGORY_COLORS.length],
+    };
+    setCategories(prev => [...prev, newCategory]);
+  };
 
   return (
     <div className="flex h-screen w-full bg-background">
-      <Sidebar categories={categories} onUploadClick={handleUploadClick} onCategoryColorChange={handleCategoryColorChange} />
+      <Sidebar 
+        categories={categories} 
+        onUploadClick={handleUploadClick} 
+        onCategoryColorChange={handleCategoryColorChange}
+        onCategoryAdd={handleCategoryAdd}
+      />
       <div
         className="flex flex-1 flex-col transition-all duration-300"
         onDragEnter={handleDragEnter}
