@@ -34,6 +34,8 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
   const timelineContainerRef = React.useRef<HTMLDivElement>(null);
   const [viewRange, setViewRange] = React.useState({ start: startDate, end: endDate });
+  const [isPanning, setIsPanning] = React.useState(false);
+  const panStartRef = React.useRef({x: 0, rangeStart: new Date(), rangeEnd: new Date()});
 
   React.useEffect(() => {
     setViewRange({ start: startDate, end: endDate });
@@ -65,6 +67,46 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         start: new Date(newStartMs),
         end: new Date(newEndMs),
     });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 2) return; // Only for right-click
+    e.preventDefault();
+    setIsPanning(true);
+    panStartRef.current = {
+        x: e.clientX,
+        rangeStart: viewRange.start,
+        rangeEnd: viewRange.end,
+    };
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isPanning) return;
+    e.preventDefault();
+
+    const container = timelineContainerRef.current;
+    if (!container) return;
+    
+    const deltaX = e.clientX - panStartRef.current.x;
+    if (deltaX === 0) return;
+
+    const fullDuration = panStartRef.current.rangeEnd.getTime() - panStartRef.current.rangeStart.getTime();
+    const pixelToMs = fullDuration / container.offsetWidth;
+    const timeDelta = deltaX * pixelToMs;
+
+    setViewRange({
+        start: new Date(panStartRef.current.rangeStart.getTime() - timeDelta),
+        end: new Date(panStartRef.current.rangeEnd.getTime() - timeDelta),
+    });
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (e.button !== 2) return;
+    setIsPanning(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsPanning(false);
   };
 
   React.useEffect(() => {
@@ -177,7 +219,15 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     <div 
       ref={timelineContainerRef}
       onWheel={handleWheel}
-      className="w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16 touch-none"
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onContextMenu={(e) => e.preventDefault()}
+      className={cn(
+        "w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16 touch-none cursor-grab",
+        isPanning && "cursor-grabbing"
+      )}
     >
       <div 
         className="relative h-full w-full"
@@ -210,19 +260,19 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
             return (
               <div
                 key={file.id}
-                className="absolute bottom-7 flex flex-col-reverse items-center"
+                className="absolute bottom-7 flex flex-col items-center"
                 style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
               >
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
-                    <div className="flex flex-col-reverse items-center cursor-pointer group">
+                    <div className="flex flex-col items-center cursor-pointer group">
                        <div
-                        className="w-px bg-gray-300"
-                        style={{ height: `${height}px` }}
-                      />
-                      <div
                         className="w-2.5 h-2.5 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
                         style={{ backgroundColor: file.category.color }}
+                      />
+                      <div
+                        className="w-px bg-gray-300"
+                        style={{ height: `${height}px` }}
                       />
                     </div>
                   </TooltipTrigger>
