@@ -34,24 +34,28 @@ interface TimelineData {
 
 export function Timeline({ files, startDate, endDate }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
-  const [heights] = React.useState<Map<string, number>>(() => {
-    const newHeights = new Map<string, number>();
-    files.forEach(file => {
-      let hash = 0;
-      for (let i = 0; i < file.id.length; i++) {
-        const char = file.id.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0;
-      }
-      newHeights.set(file.id, (Math.abs(hash) % 101) + 40);
-    });
-    return newHeights;
-  });
+  const heights = React.useRef(new Map<string, number>());
   const timelineContainerRef = React.useRef<HTMLDivElement>(null);
   const [viewRange, setViewRange] = React.useState({ start: startDate, end: endDate });
   const [isPanning, setIsPanning] = React.useState(false);
   const panStartRef = React.useRef({x: 0, rangeStart: new Date(), rangeEnd: new Date()});
 
+  React.useEffect(() => {
+    // Initialize heights only once
+    const newHeights = heights.current;
+    if (newHeights.size === 0 && files.length > 0) {
+      files.forEach(file => {
+        let hash = 0;
+        for (let i = 0; i < file.id.length; i++) {
+          const char = file.id.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash |= 0;
+        }
+        newHeights.set(file.id, (Math.abs(hash) % 101) + 40);
+      });
+    }
+  }, [files]);
+  
   React.useEffect(() => {
     setViewRange({ start: startDate, end: endDate });
   }, [startDate, endDate]);
@@ -72,8 +76,8 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     const zoomIntensity = 0.1;
     const delta = currentDuration * zoomIntensity * (e.deltaY > 0 ? 1 : -1);
     
-    const newStartMs = viewRange.start.getTime() + delta * mouseXPercent;
-    const newEndMs = viewRange.end.getTime() - delta * (1 - mouseXPercent);
+    const newStartMs = viewRange.start.getTime() - delta * mouseXPercent;
+    const newEndMs = viewRange.end.getTime() + delta * (1 - mouseXPercent);
 
     if (newEndMs <= newStartMs) {
         return; 
@@ -86,7 +90,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 2 && e.button !== 1) return;
+    if (e.button !== 2 && e.button !== 1) return; // Only right or middle click
     e.preventDefault();
     setIsPanning(true);
     panStartRef.current = {
@@ -144,6 +148,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
       };
       
       const durationInMonths = differenceInMonths(timelineEnd, timelineStart);
+      const durationInYears = durationInMonths / 12;
 
       const rawMonthMarkersSource = eachMonthOfInterval({
         start: timelineStart,
@@ -152,13 +157,17 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
 
       let filteredMonths: Date[];
 
-      if (durationInMonths < 12) {
-        // Show every other month
-        filteredMonths = rawMonthMarkersSource.filter(date => getMonth(date) % 2 === 0);
-      } else {
-        // Show Mar, Jun, Oct, Dec
-        const targetMonths = [2, 5, 9, 11]; // 0-indexed: March, June, October, December
+      if (durationInYears >= 2) {
+        // For ranges >= 2 years, show only January
+        const targetMonths = [0]; // 0-indexed: January
         filteredMonths = rawMonthMarkersSource.filter(date => targetMonths.includes(getMonth(date)));
+      } else if (durationInYears >= 1) {
+        // For ranges >= 1 year, show Jan, Apr, Jul, Oct
+        const targetMonths = [0, 3, 6, 9]; // 0-indexed: Jan, Apr, Jul, Oct
+        filteredMonths = rawMonthMarkersSource.filter(date => targetMonths.includes(getMonth(date)));
+      } else {
+        // For ranges < 1 year, show every other month
+        filteredMonths = rawMonthMarkersSource.filter(date => getMonth(date) % 2 === 0);
       }
 
       let lastShownYear: number | null = null;
@@ -210,7 +219,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         visibleFiles: [],
       });
     }
-  }, [files, viewRange, heights]);
+  }, [files, viewRange]);
 
 
   if (files.length === 0) {
@@ -293,7 +302,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
           {visibleFiles.map(file => {
             const fileDate = parseISO(file.uploadedAt);
             const position = filePositions.get(file.id) ?? 0;
-            const height = heights.get(file.id) ?? 60;
+            const height = heights.current.get(file.id) ?? 60;
 
             if (position < 0 || position > 100) return null;
 
