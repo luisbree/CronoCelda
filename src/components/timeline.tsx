@@ -32,23 +32,56 @@ interface TimelineData {
 
 export function Timeline({ files, startDate, endDate }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
+  const timelineContainerRef = React.useRef<HTMLDivElement>(null);
+  const [viewRange, setViewRange] = React.useState({ start: startDate, end: endDate });
+
+  React.useEffect(() => {
+    setViewRange({ start: startDate, end: endDate });
+  }, [startDate, endDate]);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    
+    const container = timelineContainerRef.current;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const mouseXPercent = (e.clientX - rect.left) / rect.width;
+    
+    const currentDuration = viewRange.end.getTime() - viewRange.start.getTime();
+    if(currentDuration <= 0) return;
+
+    const zoomIntensity = 0.1;
+    const delta = currentDuration * zoomIntensity * (e.deltaY > 0 ? 1 : -1);
+    
+    const newStartMs = viewRange.start.getTime() + delta * mouseXPercent;
+    const newEndMs = viewRange.end.getTime() - delta * (1 - mouseXPercent);
+
+    if (newEndMs <= newStartMs) {
+        return; 
+    }
+    
+    setViewRange({
+        start: new Date(newStartMs),
+        end: new Date(newEndMs),
+    });
+  };
 
   React.useEffect(() => {
     const heights = new Map<string, number>();
-    // Generate heights on the client side to avoid hydration mismatch
     files.forEach(file => {
       heights.set(file.id, Math.floor(Math.random() * 101) + 40);
     });
     
-    const timelineStart = startDate;
-    const timelineEnd = endDate;
+    const timelineStart = viewRange.start;
+    const timelineEnd = viewRange.end;
 
     const visibleFiles = files.filter(file => {
         const fileDate = parseISO(file.uploadedAt);
         return fileDate >= timelineStart && fileDate <= timelineEnd;
     });
 
-    if (visibleFiles.length > 0) {
+    if (timelineStart && timelineEnd) {
       const totalTimelineDuration = differenceInMilliseconds(timelineEnd, timelineStart);
 
       const getPositionOnTimeline = (date: Date) => {
@@ -95,7 +128,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         visibleFiles: [],
       });
     }
-  }, [files, startDate, endDate]);
+  }, [files, viewRange]);
 
 
   if (files.length === 0) {
@@ -124,12 +157,17 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
 
   const { monthMarkers, filePositions, heights, visibleFiles } = timelineData;
   
-  if (visibleFiles.length === 0) {
+  const filesInView = visibleFiles.filter(file => {
+    const pos = filePositions.get(file.id);
+    return pos !== undefined && pos >= 0 && pos <= 100;
+  });
+
+  if (filesInView.length === 0 && files.length > 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <h2 className="text-2xl font-semibold">No files in this time range.</h2>
         <p className="mt-2 text-muted-foreground">
-          Try selecting a different time range or upload new files.
+          Try zooming out or selecting a different time range.
         </p>
       </div>
     );
@@ -137,7 +175,9 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
 
   return (
     <div 
-      className="w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16"
+      ref={timelineContainerRef}
+      onWheel={handleWheel}
+      className="w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16 touch-none"
     >
       <div 
         className="relative h-full w-full"
@@ -145,16 +185,18 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         <div className="absolute bottom-7 left-0 right-0 h-px bg-gray-400" />
 
         {monthMarkers.map(({ label, position }) => (
-          <div
-            key={label + position}
-            className="absolute -bottom-0.5 flex flex-col items-center"
-            style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
-          >
-            <div className="h-2 w-px bg-gray-400" />
-            <span className="absolute top-4 text-xs text-muted-foreground whitespace-nowrap">
-              {label}
-            </span>
-          </div>
+          position >= 0 && position <= 100 && (
+            <div
+              key={label + position}
+              className="absolute -bottom-0.5 flex flex-col items-center"
+              style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+            >
+              <div className="h-2 w-px bg-gray-400" />
+              <span className="absolute top-4 text-xs text-muted-foreground whitespace-nowrap">
+                {label}
+              </span>
+            </div>
+          )
         ))}
 
         <TooltipProvider>
@@ -168,13 +210,13 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
             return (
               <div
                 key={file.id}
-                className="absolute bottom-7 flex flex-col items-center"
+                className="absolute bottom-7 flex flex-col-reverse items-center"
                 style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
               >
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
                     <div className="flex flex-col-reverse items-center cursor-pointer group">
-                      <div
+                       <div
                         className="w-px bg-gray-300"
                         style={{ height: `${height}px` }}
                       />
