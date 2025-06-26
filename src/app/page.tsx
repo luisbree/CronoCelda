@@ -13,7 +13,7 @@ import { addMonths, parseISO, subMonths, subYears } from 'date-fns';
 
 export default function Home() {
   const [files, setFiles] = React.useState<FileType[]>(FILES);
-  const [categories] = React.useState<Category[]>(CATEGORIES);
+  const [categories, setCategories] = React.useState<Category[]>(CATEGORIES);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [isDragging, setIsDragging] = React.useState(false);
   const [isUploadOpen, setUploadOpen] = React.useState(false);
@@ -33,7 +33,7 @@ export default function Home() {
         end: addMonths(newest, 1),
       });
     }
-  }, [files]);
+  }, []); // Run only once on initial load
 
   const handleSetRange = (rangeType: '1M' | '1Y' | 'All') => {
     const now = new Date();
@@ -166,9 +166,24 @@ export default function Home() {
     }
   };
 
+  const handleCategoryColorChange = (categoryId: string, color: string) => {
+    const newCategories = categories.map(c => 
+      c.id === categoryId ? { ...c, color } : c
+    );
+    setCategories(newCategories);
+
+    const newFiles = files.map(f => {
+      if (f.category.id === categoryId) {
+        return { ...f, category: { ...f.category, color } };
+      }
+      return f;
+    });
+    setFiles(newFiles);
+  };
+
   return (
     <div className="flex h-screen w-full bg-background">
-      <Sidebar categories={categories} onUploadClick={handleUploadClick} />
+      <Sidebar categories={categories} onUploadClick={handleUploadClick} onCategoryColorChange={handleCategoryColorChange} />
       <div
         className="flex flex-1 flex-col transition-all duration-300"
         onDragEnter={handleDragEnter}
