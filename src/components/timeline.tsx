@@ -12,6 +12,7 @@ import {
   eachMonthOfInterval,
 } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface TimelineProps {
   files: FileType[];
@@ -30,6 +31,9 @@ export function Timeline({ files }: TimelineProps) {
   const timelineViewportRef = React.useRef<HTMLDivElement>(null);
   const zoomDataRef = React.useRef<{ point: number; mouseX: number } | null>(null);
 
+  // State for panning with right mouse button
+  const [isPanning, setIsPanning] = React.useState(false);
+  const panDataRef = React.useRef<{ startX: number; scrollLeft: number } | null>(null);
 
   React.useEffect(() => {
     // This code runs only on the client, after the component has mounted.
@@ -114,6 +118,39 @@ export function Timeline({ files }: TimelineProps) {
     }
   }, [zoomLevel]);
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Check for right mouse button (button code 2)
+    if (e.button !== 2 || !timelineViewportRef.current) return;
+    
+    setIsPanning(true);
+    panDataRef.current = {
+      startX: e.clientX,
+      scrollLeft: timelineViewportRef.current.scrollLeft,
+    };
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 2) return;
+    setIsPanning(false);
+  };
+
+  const handleMouseLeave = () => {
+    if (isPanning) {
+      setIsPanning(false);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isPanning || !panDataRef.current || !timelineViewportRef.current) return;
+    e.preventDefault(); // Prevents text selection during drag
+    const dx = e.clientX - panDataRef.current.startX;
+    timelineViewportRef.current.scrollLeft = panDataRef.current.scrollLeft - dx;
+  };
+  
+  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Prevent the default right-click menu
+  };
+
   if (files.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
@@ -148,9 +185,17 @@ export function Timeline({ files }: TimelineProps) {
 
   return (
     <div 
-      className="w-full h-full flex items-end justify-start overflow-x-auto p-4 sm:p-8 pb-16 cursor-grab active:cursor-grabbing"
+      className={cn(
+        "w-full h-full flex items-end justify-start overflow-x-auto p-4 sm:p-8 pb-16 cursor-grab",
+        isPanning && "cursor-grabbing"
+      )}
       ref={timelineViewportRef}
       onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onContextMenu={handleContextMenu}
     >
       <div className="relative h-full" style={{ width: timelineContainerWidth }}>
         {/* The horizontal time axis */}
