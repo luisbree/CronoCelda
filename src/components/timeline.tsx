@@ -2,7 +2,12 @@
 
 import * as React from 'react';
 import type { File as FileType } from '@/types';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   format,
   parseISO,
@@ -10,6 +15,7 @@ import {
   eachMonthOfInterval,
 } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface TimelineProps {
   files: FileType[];
@@ -26,18 +32,22 @@ interface TimelineData {
 
 export function Timeline({ files, startDate, endDate }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
+  const [zoomLevel, setZoomLevel] = React.useState(1);
+  const [panOffset, setPanOffset] = React.useState(0);
+  const [isPanning, setIsPanning] = React.useState(false);
+  const [lastMouseX, setLastMouseX] = React.useState(0);
+  const timelineContainerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    // This code runs only on the client, after the component has mounted.
-    // This prevents hydration mismatches between server and client.
-    
-    // All calculations that might differ between server/client are done here.
+    // Reset pan and zoom when date range changes from the header buttons
+    setZoomLevel(1);
+    setPanOffset(0);
+
     const heights = new Map<string, number>();
     files.forEach(file => {
-      // Math.random() is a source of hydration errors if run during server render.
       heights.set(file.id, Math.floor(Math.random() * 101) + 40);
     });
-
+    
     const timelineStart = startDate;
     const timelineEnd = endDate;
 
@@ -47,7 +57,6 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     });
 
     if (visibleFiles.length > 0) {
-      // Date calculations can have floating point discrepancies between environments.
       const totalTimelineDuration = differenceInMilliseconds(timelineEnd, timelineStart);
 
       const getPositionOnTimeline = (date: Date) => {
@@ -61,7 +70,6 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         end: timelineEnd,
       });
 
-      // Avoid duplicate month labels if range is small
       const monthMarkers = rawMonthMarkers.reduce((acc, monthDate) => {
         const label = format(monthDate, 'MMM yyyy');
         if (!acc.find(m => m.label === label)) {
@@ -88,7 +96,6 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         visibleFiles,
       });
     } else {
-      // Clear data if no files in range
       setTimelineData({
         monthMarkers: [],
         filePositions: new Map(),
@@ -97,6 +104,75 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
       });
     }
   }, [files, startDate, endDate]);
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const container = timelineContainerRef.current;
+    if (!container) return;
+
+    const delta = e.deltaY * -0.001;
+    const newZoomLevel = Math.max(1, zoomLevel + delta);
+    
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    
+    const mousePointOnTimeline = (mouseX - panOffset) / zoomLevel;
+    const newPanOffset = mouseX - mousePointOnTimeline * newZoomLevel;
+    
+    const maxPan = 0;
+    const minPan = container.clientWidth - container.clientWidth * newZoomLevel;
+    const clampedPanOffset = Math.min(maxPan, Math.max(minPan, newPanOffset));
+
+    setZoomLevel(newZoomLevel);
+    setPanOffset(clampedPanOffset);
+  };
+  
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button === 2) { // Right mouse button
+      e.preventDefault();
+      setIsPanning(true);
+      setLastMouseX(e.clientX);
+    }
+  };
+  
+  const handleMouseMove = React.useCallback((e: MouseEvent) => {
+    if (isPanning && timelineContainerRef.current) {
+      const dx = e.clientX - lastMouseX;
+      setLastMouseX(e.clientX);
+      const newPanOffset = panOffset + dx;
+      const containerWidth = timelineContainerRef.current.clientWidth;
+      const maxPan = 0;
+      const minPan = containerWidth - (containerWidth * zoomLevel);
+      const clampedPanOffset = Math.min(maxPan, Math.max(minPan, newPanOffset));
+      setPanOffset(clampedPanOffset);
+    }
+  }, [isPanning, lastMouseX, panOffset, zoomLevel]);
+  
+  const handleMouseUp = React.useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  const handleMouseLeave = () => {
+    setIsPanning(false);
+  }
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+  }
+
+  React.useEffect(() => {
+    if (isPanning) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isPanning, handleMouseMove, handleMouseUp]);
 
 
   if (files.length === 0) {
@@ -110,13 +186,10 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     );
   }
 
-  // On initial render (server and client), timelineData is null.
-  // We render a placeholder to ensure the DOM matches.
   if (!timelineData) {
     return (
       <div className="w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16">
         <div className="relative h-full w-full">
-          {/* The horizontal time axis */}
           <div className="absolute bottom-7 left-0 right-0 h-px bg-gray-400" />
           <div className="w-full h-32 flex items-end">
             <Skeleton className="h-full w-full" />
@@ -141,13 +214,26 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
 
   return (
     <div 
-      className="w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16"
+      ref={timelineContainerRef}
+      className={cn(
+        "w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16 overflow-hidden cursor-grab",
+        isPanning && "cursor-grabbing"
+      )}
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseLeave={handleMouseLeave}
+      onContextMenu={handleContextMenu}
     >
-      <div className="relative h-full w-full">
-        {/* The horizontal time axis */}
+      <div 
+        className="relative h-full"
+        style={{
+          width: `${100 * zoomLevel}%`,
+          transform: `translateX(${panOffset}px)`,
+          transition: isPanning ? 'none' : 'transform 0.1s ease-out, width 0.1s ease-out'
+        }}
+      >
         <div className="absolute bottom-7 left-0 right-0 h-px bg-gray-400" />
 
-        {/* Month Markers */}
         {monthMarkers.map(({ label, position }) => (
           <div
             key={label + position}
@@ -161,15 +247,13 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
           </div>
         ))}
 
-        {/* File Markers */}
         <TooltipProvider>
           {visibleFiles.map(file => {
             const fileDate = parseISO(file.uploadedAt);
             const position = filePositions.get(file.id) ?? 0;
             const height = heights.get(file.id) ?? 60;
 
-            // Don't render if outside viewport, gives a little margin
-            if (position < -5 || position > 105) return null;
+            if (position < 0 || position > 100) return null;
 
             return (
               <div
@@ -185,7 +269,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
                         style={{ height: `${height}px` }}
                       />
                       <div
-                        className="w-3 h-3 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
+                        className="w-2.5 h-2.5 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
                         style={{ backgroundColor: file.category.color }}
                       />
                     </div>
