@@ -287,10 +287,16 @@ export default function Home() {
 
     } catch (error: any) {
         console.error("Google Sign-In Error:", error);
+        
+        let description = "No se pudo conectar con Google Drive. Por favor, revisa la consola para más detalles.";
+        if (error.code === 'auth/configuration-not-found') {
+          description = "La configuración de Firebase no es correcta. Asegúrate de que los valores en tu archivo .env coinciden con los de tu proyecto de Firebase.";
+        }
+
         toast({
             variant: "destructive",
             title: "Error de conexión",
-            description: "No se pudo conectar con Google Drive. Por favor, revisa la consola y asegúrate de haber configurado tus credenciales de Firebase.",
+            description: description,
         });
     }
   };
