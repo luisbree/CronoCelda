@@ -11,6 +11,15 @@ import { MILESTONES, CATEGORIES } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
 import { addMonths, parseISO, subMonths, subYears } from 'date-fns';
+import { TrelloSummary } from '@/components/trello-summary';
+import { Button } from '@/components/ui/button';
+import { MessageSquare } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -24,6 +33,7 @@ export default function Home() {
   const [dateRange, setDateRange] = React.useState<{ start: Date; end: Date } | null>(null);
   const [selectedMilestone, setSelectedMilestone] = React.useState<Milestone | null>(null);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
+  const [isTrelloOpen, setTrelloOpen] = React.useState(false);
 
   const { toast } = useToast();
 
@@ -248,6 +258,31 @@ export default function Home() {
         onOpenChange={setIsDetailOpen}
         milestone={selectedMilestone}
       />
+
+      <TrelloSummary
+        isOpen={isTrelloOpen}
+        onOpenChange={setTrelloOpen}
+      />
+
+      <div className="absolute bottom-6 right-6 z-20">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                className="rounded-full h-14 w-14 shadow-lg bg-accent text-accent-foreground hover:bg-accent/90"
+                onClick={() => setTrelloOpen(true)}
+                aria-label="Abrir Resumen de Trello"
+              >
+                <MessageSquare className="h-6 w-6" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Resumen de Trello con IA</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     </div>
   );
 }
