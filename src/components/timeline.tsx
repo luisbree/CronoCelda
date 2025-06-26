@@ -13,6 +13,9 @@ import {
   parseISO,
   differenceInMilliseconds,
   eachMonthOfInterval,
+  differenceInMonths,
+  getMonth,
+  getYear,
 } from 'date-fns';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -31,7 +34,19 @@ interface TimelineData {
 
 export function Timeline({ files, startDate, endDate }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
-  const [heights, setHeights] = React.useState<Map<string, number>>(new Map());
+  const [heights] = React.useState<Map<string, number>>(() => {
+    const newHeights = new Map<string, number>();
+    files.forEach(file => {
+      let hash = 0;
+      for (let i = 0; i < file.id.length; i++) {
+        const char = file.id.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0;
+      }
+      newHeights.set(file.id, (Math.abs(hash) % 101) + 40);
+    });
+    return newHeights;
+  });
   const timelineContainerRef = React.useRef<HTMLDivElement>(null);
   const [viewRange, setViewRange] = React.useState({ start: startDate, end: endDate });
   const [isPanning, setIsPanning] = React.useState(false);
@@ -41,22 +56,6 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     setViewRange({ start: startDate, end: endDate });
   }, [startDate, endDate]);
 
-  React.useEffect(() => {
-    // Generate heights only once when files change, using a consistent method.
-    const newHeights = new Map<string, number>();
-    files.forEach(file => {
-      // Use a simple hashing function based on file id to get a consistent random-like height
-      // This prevents heights from changing on every render.
-      let hash = 0;
-      for (let i = 0; i < file.id.length; i++) {
-          const char = file.id.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash |= 0; // Convert to 32bit integer
-      }
-      newHeights.set(file.id, (Math.abs(hash) % 101) + 40); // Heights between 40 and 140
-    });
-    setHeights(newHeights);
-  }, [files]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -87,7 +86,6 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Only for right-click or middle-click for panning
     if (e.button !== 2 && e.button !== 1) return;
     e.preventDefault();
     setIsPanning(true);
@@ -136,7 +134,7 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         return fileDate >= timelineStart && fileDate <= timelineEnd;
     });
 
-    if (timelineStart && timelineEnd) {
+    if (timelineStart && timelineEnd && timelineEnd > timelineStart) {
       const totalTimelineDuration = differenceInMilliseconds(timelineEnd, timelineStart);
 
       const getPositionOnTimeline = (date: Date) => {
@@ -144,20 +142,51 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         const dateOffset = differenceInMilliseconds(date, timelineStart);
         return (dateOffset / totalTimelineDuration) * 100;
       };
+      
+      const durationInMonths = differenceInMonths(timelineEnd, timelineStart);
 
-      const rawMonthMarkers = eachMonthOfInterval({
+      const rawMonthMarkersSource = eachMonthOfInterval({
         start: timelineStart,
         end: timelineEnd,
       });
 
-      const monthMarkers = rawMonthMarkers.reduce((acc, monthDate) => {
-        const label = format(monthDate, 'MMM yyyy');
-        if (!acc.find(m => m.label === label)) {
-          acc.push({
-            date: monthDate,
-            label: label,
-            position: getPositionOnTimeline(monthDate),
-          });
+      let filteredMonths: Date[];
+
+      if (durationInMonths < 12) {
+        // Show every other month
+        filteredMonths = rawMonthMarkersSource.filter(date => getMonth(date) % 2 === 0);
+      } else {
+        // Show Mar, Jun, Oct, Dec
+        const targetMonths = [2, 5, 9, 11]; // 0-indexed: March, June, October, December
+        filteredMonths = rawMonthMarkersSource.filter(date => targetMonths.includes(getMonth(date)));
+      }
+
+      let lastShownYear: number | null = null;
+      const monthMarkers = filteredMonths.map((monthDate) => {
+        const year = getYear(monthDate);
+        let label: string;
+
+        if (durationInMonths < 12) {
+          // If it's the first marker, or the year has changed, show the year.
+          if (lastShownYear === null || year !== lastShownYear) {
+            label = format(monthDate, 'MMM yyyy');
+          } else {
+            label = format(monthDate, 'MMM');
+          }
+          lastShownYear = year;
+        } else {
+          // For longer ranges, always show the year for clarity.
+          label = format(monthDate, 'MMM yyyy');
+        }
+        
+        return {
+          date: monthDate,
+          label,
+          position: getPositionOnTimeline(monthDate),
+        };
+      }).reduce((acc, marker) => {
+        if (!acc.find(m => m.label === marker.label)) {
+          acc.push(marker);
         }
         return acc;
       }, [] as { date: Date; label: string; position: number }[]);
