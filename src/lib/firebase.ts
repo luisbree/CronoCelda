@@ -13,17 +13,25 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 
-// Only initialize Firebase if all required config values are present
-if (
+// Check if all Firebase config values are present.
+const allConfigValuesPresent =
   firebaseConfig.apiKey &&
   firebaseConfig.authDomain &&
-  firebaseConfig.projectId
-) {
+  firebaseConfig.projectId &&
+  firebaseConfig.storageBucket &&
+  firebaseConfig.messagingSenderId &&
+  firebaseConfig.appId;
+
+// Only initialize Firebase if all required config values are present
+if (allConfigValuesPresent) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
   } catch (error) {
     console.error("Failed to initialize Firebase:", error);
+    // If initialization fails, ensure auth remains null.
+    app = null;
+    auth = null;
   }
 }
 
