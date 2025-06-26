@@ -13,7 +13,8 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Paperclip, Tag, X } from 'lucide-react';
+import { Paperclip, Tag, X, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MilestoneDetailProps {
   milestone: Milestone | null;
@@ -54,6 +55,12 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
     }
   };
 
+  const handleToggleImportant = () => {
+    if (milestone) {
+      onMilestoneUpdate({ ...milestone, isImportant: !milestone.isImportant });
+    }
+  };
+
   // Reset local state when dialog closes or milestone changes
   React.useEffect(() => {
     if (!isOpen) {
@@ -69,7 +76,16 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px] max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="font-headline text-2xl pr-8">{milestone.name}</DialogTitle>
+          <div className="flex items-start justify-between gap-4">
+            <DialogTitle className="font-headline text-2xl">{milestone.name}</DialogTitle>
+            <button 
+                onClick={handleToggleImportant} 
+                className="p-1 rounded-full text-muted-foreground hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors shrink-0"
+                aria-label={milestone.isImportant ? 'Quitar de importantes' : 'Marcar como importante'}
+            >
+                <Star className={cn("h-5 w-5", milestone.isImportant && "fill-yellow-400 text-yellow-400")} />
+            </button>
+          </div>
           <div className="flex items-center pt-2">
             <Select value={milestone.category.id} onValueChange={handleCategoryChange}>
                 <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-sm font-medium text-muted-foreground hover:text-foreground focus:text-foreground">

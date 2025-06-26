@@ -13,6 +13,7 @@ export interface Milestone {
   category: Category;
   tags: string[] | null;
   associatedFiles: AssociatedFile[];
+  isImportant: boolean;
 }
 
 export interface Category {

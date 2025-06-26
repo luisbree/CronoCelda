@@ -20,6 +20,7 @@ import {
 import { es } from 'date-fns/locale';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
+import { Star } from 'lucide-react';
 
 interface TimelineProps {
   milestones: Milestone[];
@@ -325,7 +326,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
                     <div 
-                      className="flex flex-col-reverse items-center cursor-pointer group"
+                      className="relative flex flex-col-reverse items-center cursor-pointer group"
                       onClick={() => onMilestoneClick(milestone)}
                     >
                        <div
@@ -336,6 +337,11 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
                         className="w-2.5 h-2.5 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
                         style={{ backgroundColor: milestone.category.color }}
                       />
+                      {milestone.isImportant && (
+                        <div style={{ bottom: `${height + 10}px`}} className="absolute">
+                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                        </div>
+                      )}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>

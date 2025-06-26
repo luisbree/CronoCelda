@@ -91,6 +91,7 @@ export default function Home() {
                 category: defaultCategory,
                 tags: null,
                 associatedFiles: [associatedFile],
+                isImportant: false,
             };
         });
 
@@ -161,6 +162,7 @@ export default function Home() {
         category: category,
         tags: null, // Start with null to show loading spinner
         associatedFiles: [associatedFile],
+        isImportant: false,
     };
 
     setMilestones(prev => [...prev, newMilestone]);
