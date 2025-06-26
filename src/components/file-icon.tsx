@@ -1,7 +1,7 @@
 import { FileText, ImageIcon, Video, Music, FileQuestion } from 'lucide-react';
-import type { File as FileType } from '@/types';
+import type { AssociatedFile } from '@/types';
 
-export function FileIcon({ type }: { type: FileType['type'] }) {
+export function FileIcon({ type }: { type: AssociatedFile['type'] }) {
   const className = "h-8 w-8 text-muted-foreground";
   switch (type) {
     case 'document':

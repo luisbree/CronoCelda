@@ -1,9 +1,9 @@
 'use server';
 
 /**
- * @fileOverview Este archivo define un flujo de Genkit para etiquetar automáticamente archivos basados en su contenido usando IA.
+ * @fileOverview Este archivo define un flujo de Genkit para etiquetar automáticamente contenido de texto usando IA.
  *
- * - autoTagFiles - Una función que toma el contenido de un archivo y devuelve etiquetas sugeridas.
+ * - autoTagFiles - Una función que toma un texto y devuelve etiquetas sugeridas.
  * - AutoTagFilesInput - El tipo de entrada para la función autoTagFiles.
  * - AutoTagFilesOutput - El tipo de retorno para la función autoTagFiles.
  */
@@ -12,16 +12,16 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AutoTagFilesInputSchema = z.object({
-  fileContent: z
+  textToAnalyze: z
     .string()
-    .describe('El contenido del archivo a ser etiquetado.'),
+    .describe('El texto a analizar para generar etiquetas.'),
 });
 export type AutoTagFilesInput = z.infer<typeof AutoTagFilesInputSchema>;
 
 const AutoTagFilesOutputSchema = z.object({
   tags: z
     .array(z.string())
-    .describe('Un array de etiquetas sugeridas para el archivo.'),
+    .describe('Un array de etiquetas sugeridas para el texto.'),
 });
 export type AutoTagFilesOutput = z.infer<typeof AutoTagFilesOutputSchema>;
 
@@ -33,11 +33,11 @@ const prompt = ai.definePrompt({
   name: 'autoTagFilesPrompt',
   input: {schema: AutoTagFilesInputSchema},
   output: {schema: AutoTagFilesOutputSchema},
-  prompt: `Eres un experto en etiquetar archivos basándote en su contenido.
+  prompt: `Eres un experto en etiquetar documentos técnicos y administrativos relacionados a obras de ingeniería y medio ambiente.
 
-  Analiza el siguiente contenido de archivo y sugiere etiquetas relevantes. Las etiquetas deben ser concisas y descriptivas.
+  Analiza la siguiente descripción de un hito o evento y sugiere entre 3 y 5 etiquetas relevantes. Las etiquetas deben ser concisas, en minúsculas y descriptivas.
 
-  Contenido del Archivo: {{{fileContent}}}
+  Texto a analizar: {{{textToAnalyze}}}
 
   Devuelve las etiquetas como un array JSON de strings.`,
 });

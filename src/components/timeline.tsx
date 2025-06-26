@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import type { File as FileType } from '@/types';
+import type { Milestone } from '@/types';
 import {
   Tooltip,
   TooltipContent,
@@ -22,18 +22,19 @@ import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 
 interface TimelineProps {
-  files: FileType[];
+  milestones: Milestone[];
   startDate: Date;
   endDate: Date;
+  onMilestoneClick: (milestone: Milestone) => void;
 }
 
 interface TimelineData {
   monthMarkers: { date: Date; label: string; position: number }[];
   filePositions: Map<string, number>;
-  visibleFiles: FileType[];
+  visibleMilestones: Milestone[];
 }
 
-export function Timeline({ files, startDate, endDate }: TimelineProps) {
+export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: TimelineProps) {
   const [timelineData, setTimelineData] = React.useState<TimelineData | null>(null);
   const heights = React.useRef(new Map<string, number>());
   const timelineContainerRef = React.useRef<HTMLDivElement>(null);
@@ -46,22 +47,22 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
   }, [startDate, endDate]);
 
   React.useEffect(() => {
-    if (files.length > 0 && heights.current.size === 0) {
+    if (milestones.length > 0 && heights.current.size === 0) {
       const newHeights = new Map<string, number>();
       
-      const sortedFiles = [...files].sort(
-        (a, b) => parseISO(a.uploadedAt).getTime() - parseISO(b.uploadedAt).getTime()
+      const sortedMilestones = [...milestones].sort(
+        (a, b) => parseISO(a.occurredAt).getTime() - parseISO(b.occurredAt).getTime()
       );
 
       const heightLevels = [60, 95, 130, 75, 110];
       
-      sortedFiles.forEach((file, index) => {
-        newHeights.set(file.id, heightLevels[index % heightLevels.length]);
+      sortedMilestones.forEach((milestone, index) => {
+        newHeights.set(milestone.id, heightLevels[index % heightLevels.length]);
       });
       
       heights.current = newHeights;
     }
-  }, [files]);
+  }, [milestones]);
   
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -135,8 +136,8 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     const timelineStart = viewRange.start;
     const timelineEnd = viewRange.end;
 
-    const visibleFiles = files.filter(file => {
-        const fileDate = parseISO(file.uploadedAt);
+    const visibleMilestones = milestones.filter(milestone => {
+        const fileDate = parseISO(milestone.occurredAt);
         return fileDate >= timelineStart && fileDate <= timelineEnd;
     });
 
@@ -210,28 +211,28 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
       }, [] as { date: Date; label: string; position: number }[]);
       
       const filePositions = new Map<string, number>();
-      visibleFiles.forEach(file => {
-        const fileDate = parseISO(file.uploadedAt);
+      visibleMilestones.forEach(milestone => {
+        const fileDate = parseISO(milestone.occurredAt);
         const position = getPositionOnTimeline(fileDate);
-        filePositions.set(file.id, position);
+        filePositions.set(milestone.id, position);
       });
       
       setTimelineData({
         monthMarkers,
         filePositions,
-        visibleFiles,
+        visibleMilestones,
       });
     } else {
       setTimelineData({
         monthMarkers: [],
         filePositions: new Map(),
-        visibleFiles: [],
+        visibleMilestones: [],
       });
     }
-  }, [files, viewRange]);
+  }, [milestones, viewRange]);
 
 
-  if (files.length === 0) {
+  if (milestones.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <h2 className="text-2xl font-semibold font-headline">Bienvenido a ChronoVault</h2>
@@ -255,17 +256,17 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
     );
   }
 
-  const { monthMarkers, filePositions, visibleFiles } = timelineData;
+  const { monthMarkers, filePositions, visibleMilestones } = timelineData;
   
-  const filesInView = visibleFiles.filter(file => {
-    const pos = filePositions.get(file.id);
+  const milestonesInView = visibleMilestones.filter(milestone => {
+    const pos = filePositions.get(milestone.id);
     return pos !== undefined && pos >= 0 && pos <= 100;
   });
 
-  if (filesInView.length === 0 && files.length > 0) {
+  if (milestonesInView.length === 0 && milestones.length > 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
-        <h2 className="text-2xl font-semibold font-headline">No hay archivos en este rango de tiempo.</h2>
+        <h2 className="text-2xl font-semibold font-headline">No hay hitos en este rango de tiempo.</h2>
         <p className="mt-2 text-muted-foreground">
           Intenta alejar el zoom o seleccionar un rango de tiempo diferente.
         </p>
@@ -308,36 +309,39 @@ export function Timeline({ files, startDate, endDate }: TimelineProps) {
         ))}
 
         <TooltipProvider>
-          {visibleFiles.map(file => {
-            const fileDate = parseISO(file.uploadedAt);
-            const position = filePositions.get(file.id) ?? 0;
-            const height = heights.current.get(file.id) ?? 60;
+          {visibleMilestones.map(milestone => {
+            const milestoneDate = parseISO(milestone.occurredAt);
+            const position = filePositions.get(milestone.id) ?? 0;
+            const height = heights.current.get(milestone.id) ?? 60;
 
             if (position < 0 || position > 100) return null;
 
             return (
               <div
-                key={file.id}
+                key={milestone.id}
                 className="absolute bottom-7 flex flex-col items-center"
                 style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
               >
                 <Tooltip delayDuration={100}>
                   <TooltipTrigger asChild>
-                    <div className="flex flex-col-reverse items-center cursor-pointer group">
+                    <div 
+                      className="flex flex-col-reverse items-center cursor-pointer group"
+                      onClick={() => onMilestoneClick(milestone)}
+                    >
                        <div
                         className="w-px bg-gray-300"
                         style={{ height: `${height}px` }}
                       />
                        <div
                         className="w-2.5 h-2.5 rounded-full border-2 border-background shadow-md group-hover:scale-125 transition-transform z-10"
-                        style={{ backgroundColor: file.category.color }}
+                        style={{ backgroundColor: milestone.category.color }}
                       />
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="font-semibold">{file.name}</p>
+                    <p className="font-semibold">{milestone.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {format(fileDate, "PPP 'a las' p", { locale: es })}
+                      {format(milestoneDate, "PPP 'a las' p", { locale: es })}
                     </p>
                   </TooltipContent>
                 </Tooltip>

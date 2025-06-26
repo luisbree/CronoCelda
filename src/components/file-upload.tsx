@@ -13,13 +13,16 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import type { Category } from '@/types';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
+import { Textarea } from './ui/textarea';
 import { UploadCloud } from 'lucide-react';
 
 const uploadSchema = z.object({
+  name: z.string().min(5, { message: 'El título del hito debe tener al menos 5 caracteres.' }),
+  description: z.string().min(10, { message: 'La descripción debe tener al menos 10 caracteres.' }),
   file: z.custom<File>(file => file instanceof File, 'Por favor, selecciona un archivo para subir.'),
   categoryId: z.string().min(1, 'Por favor, selecciona una categoría.'),
 });
@@ -30,7 +33,7 @@ interface FileUploadProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   categories: Category[];
-  onUpload: (data: { file: File, categoryId: string }) => void;
+  onUpload: (data: { file: File, categoryId: string, name: string, description: string }) => void;
   initialFile?: File | null;
 }
 
@@ -44,6 +47,8 @@ export function FileUpload({
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
+      name: '',
+      description: '',
       file: undefined,
       categoryId: '',
     },
@@ -68,39 +73,63 @@ export function FileUpload({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle className="font-headline">Subir un nuevo archivo</DialogTitle>
+          <DialogTitle className="font-headline">Crear un nuevo hito</DialogTitle>
           <DialogDescription>
-            Añade un archivo a tu ChronoVault. Selecciona una categoría para organizarlo.
+            Añade un hito a tu ChronoVault. Describe el evento y adjunta el archivo principal.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título del Hito</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej: Inicio de Estudio de Impacto Ambiental" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe el hito, su importancia y contexto."
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="file"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Archivo</FormLabel>
+                  <FormLabel>Archivo Adjunto</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Input
-                        type="file"
-                        className="hidden"
-                        {...fileRef}
-                        onChange={(e) => {
+                       <input id="file-input" type="file" className="hidden" {...fileRef} onChange={(e) => {
                           field.onChange(e.target.files ? e.target.files[0] : null);
-                        }}
-                      />
+                        }} />
                       <div 
-                        className="border-2 border-dashed border-muted-foreground/50 rounded-lg p-8 text-center cursor-pointer hover:bg-accent hover:border-primary"
+                        className="border-2 border-dashed border-muted-foreground/50 rounded-lg p-6 text-center cursor-pointer hover:bg-accent hover:border-primary"
                         onClick={() => document.getElementById('file-input')?.click()}
                       >
-                         <input id="file-input" type="file" className="hidden" {...fileRef} />
-                        <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
                         <p className="mt-2 text-sm text-muted-foreground">
-                            {selectedFile ? selectedFile.name : 'Haz clic o arrastra un archivo a esta área para subirlo'}
+                            {selectedFile ? selectedFile.name : 'Haz clic o arrastra un archivo'}
                         </p>
                       </div>
                     </div>
@@ -144,7 +173,7 @@ export function FileUpload({
                 Cancelar
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Subiendo...' : 'Subir'}
+                {form.formState.isSubmitting ? 'Creando...' : 'Crear Hito'}
               </Button>
             </DialogFooter>
           </form>
