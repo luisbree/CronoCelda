@@ -45,16 +45,16 @@ export function Sidebar({ categories, onUploadClick, onCategoryColorChange, onCa
         <Logo />
       </div>
       <div className="flex-1 overflow-y-auto">
-        <nav className="p-4 space-y-4">
+        <nav className="p-4 space-y-4 h-full flex flex-col">
           <div>
             <Button className="w-full" onClick={onUploadClick}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Hito nuevo
             </Button>
           </div>
-          <div>
+          <div className="mt-auto">
             <div className="flex items-center justify-between px-2 mb-2">
-              <h2 className="text-lg font-semibold tracking-tight font-headline">Categorías</h2>
+              <h2 className="text-sm font-semibold tracking-tight font-headline">Categorías</h2>
               {!isAdding && (
                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsAdding(true)}>
                     <Plus className="h-4 w-4" />
@@ -78,9 +78,9 @@ export function Sidebar({ categories, onUploadClick, onCategoryColorChange, onCa
               </div>
             )}
 
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {categories.map((category) => (
-                <div key={category.id} className="relative flex items-center w-full justify-start rounded-md text-sm font-medium h-9 px-3 hover:bg-accent hover:text-accent-foreground">
+                <div key={category.id} className="relative flex items-center w-full justify-start rounded-md text-xs font-medium h-8 px-3 hover:bg-accent hover:text-accent-foreground">
                   <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
                     <PopoverTrigger asChild>
                       <button
