@@ -4,36 +4,35 @@ import * as React from 'react';
 import { Sidebar } from '@/components/sidebar';
 import { Header } from '@/components/header';
 import { Timeline } from '@/components/timeline';
-import { FileUpload } from '@/components/file-upload';
 import { MilestoneDetail } from '@/components/milestone-detail';
 import { type Milestone, type Category, type AssociatedFile } from '@/types';
-import { MILESTONES, CATEGORIES } from '@/lib/data';
+import { CATEGORIES } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
 import { addMonths, parseISO, subMonths, subYears } from 'date-fns';
 import { TrelloSummary } from '@/components/trello-summary';
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Loader2, GanttChartSquare } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { getCardAttachments } from '@/services/trello';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
 export default function Home() {
-  const [milestones, setMilestones] = React.useState<Milestone[]>(MILESTONES);
+  const [milestones, setMilestones] = React.useState<Milestone[]>([]);
   const [categories, setCategories] = React.useState<Category[]>(CATEGORIES);
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [isDragging, setIsDragging] = React.useState(false);
-  const [isUploadOpen, setUploadOpen] = React.useState(false);
-  const [fileToUpload, setFileToUpload] = React.useState<File | null>(null);
   const [dateRange, setDateRange] = React.useState<{ start: Date; end: Date } | null>(null);
   const [selectedMilestone, setSelectedMilestone] = React.useState<Milestone | null>(null);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [isTrelloOpen, setTrelloOpen] = React.useState(false);
+  const [selectedCardId, setSelectedCardId] = React.useState<string | null>(null);
+  const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
 
   const { toast } = useToast();
 
@@ -46,8 +45,84 @@ export default function Home() {
         start: subMonths(oldest, 1),
         end: addMonths(newest, 1),
       });
+    } else {
+        setDateRange(null);
     }
-  }, []);
+  }, [milestones]);
+
+  const handleCardSelect = async (cardId: string | null) => {
+    setSelectedCardId(cardId);
+    if (!cardId) {
+      setMilestones([]);
+      return;
+    }
+
+    setIsLoadingTimeline(true);
+    setMilestones([]);
+
+    try {
+        const attachments = await getCardAttachments(cardId);
+        const defaultCategory = categories[1] || CATEGORIES[1];
+
+        const newMilestones: Milestone[] = attachments.map(att => {
+            const fileType: AssociatedFile['type'] = 
+                att.mimeType.startsWith('image/') ? 'image' : 
+                att.mimeType.startsWith('video/') ? 'video' :
+                att.mimeType.startsWith('audio/') ? 'audio' :
+                ['application/pdf', 'application/msword', 'text/plain'].some(t => att.mimeType.includes(t)) ? 'document' : 'other';
+            
+            const associatedFile: AssociatedFile = {
+                id: `file-${att.id}`,
+                name: att.fileName,
+                size: `${(att.bytes / 1024).toFixed(2)} KB`,
+                type: fileType
+            };
+
+            return {
+                id: `hito-${att.id}`,
+                name: att.fileName,
+                description: `Archivo adjuntado a la tarjeta de Trello el ${new Date(att.date).toLocaleDateString()}.`,
+                occurredAt: att.date,
+                category: defaultCategory,
+                tags: null,
+                associatedFiles: [associatedFile],
+            };
+        });
+
+        setMilestones(newMilestones);
+        
+        newMilestones.forEach(async (milestone) => {
+             try {
+                if (milestone.name) {
+                    const result = await autoTagFiles({ textToAnalyze: milestone.name });
+                    setMilestones(prev =>
+                      prev.map(m =>
+                        m.id === milestone.id ? { ...m, tags: result.tags } : m
+                      )
+                    );
+                }
+             } catch (error) {
+                console.error('AI tagging failed:', error);
+                setMilestones(prev =>
+                  prev.map(m =>
+                    m.id === milestone.id ? { ...m, tags: [] } : m
+                  )
+                );
+             }
+        });
+
+    } catch(error) {
+        console.error("Failed to process card attachments:", error);
+        toast({
+            variant: "destructive",
+            title: "Error al cargar hitos",
+            description: "No se pudieron obtener los datos de la tarjeta de Trello."
+        });
+    } finally {
+        setIsLoadingTimeline(false);
+    }
+  }
+
 
   const handleSetRange = (rangeType: '1M' | '1Y' | 'All') => {
     const now = new Date();
@@ -85,97 +160,6 @@ export default function Home() {
     })
     .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime());
 
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      setFileToUpload(file);
-      setUploadOpen(true);
-      e.dataTransfer.clearData();
-    }
-  };
-  
-  const handleUploadClick = () => {
-    setFileToUpload(null);
-    setUploadOpen(true);
-  };
-
-  const handleUpload = async ({ file, categoryId, name, description }: { file: File; categoryId: string; name: string, description: string }) => {
-    const category = categories.find(c => c.id === categoryId);
-    if (!category) {
-      toast({
-        variant: 'destructive',
-        title: 'Error al crear hito',
-        description: 'La categoría seleccionada no fue encontrada.',
-      });
-      return;
-    }
-
-    const associatedFile: AssociatedFile = {
-      id: `file-${Date.now()}`,
-      name: file.name,
-      size: `${(file.size / 1024).toFixed(2)} KB`,
-      type: file.type.startsWith('image/') ? 'image' : 
-            file.type.startsWith('video/') ? 'video' :
-            file.type.startsWith('audio/') ? 'audio' :
-            ['application/pdf', 'application/msword', 'text/plain'].includes(file.type) ? 'document' : 'other',
-    };
-
-    const newMilestone: Milestone = {
-      id: `hito-${Date.now()}`,
-      name,
-      description,
-      occurredAt: new Date().toISOString(),
-      category,
-      tags: null,
-      associatedFiles: [associatedFile],
-    };
-
-    setMilestones(prev => [newMilestone, ...prev]);
-    setUploadOpen(false);
-    toast({
-      title: 'Hito creado',
-      description: `${name} ha sido añadido a la bóveda.`,
-    });
-
-    try {
-      if (description) {
-        const result = await autoTagFiles({ textToAnalyze: description });
-        setMilestones(prev =>
-          prev.map(m =>
-            m.id === newMilestone.id ? { ...m, tags: result.tags } : m
-          )
-        );
-      }
-    } catch (error) {
-      console.error('AI tagging failed:', error);
-      setMilestones(prev =>
-        prev.map(m =>
-          m.id === newMilestone.id ? { ...m, tags: [] } : m
-        )
-      );
-    }
-  };
-
   const handleCategoryColorChange = (categoryId: string, color: string) => {
     const newCategories = categories.map(c => 
       c.id === categoryId ? { ...c, color } : c
@@ -204,30 +188,27 @@ export default function Home() {
     <div className="flex h-screen w-full bg-background">
       <Sidebar 
         categories={categories} 
-        onUploadClick={handleUploadClick} 
         onCategoryColorChange={handleCategoryColorChange}
         onCategoryAdd={handleCategoryAdd}
+        onCardSelect={handleCardSelect}
+        selectedCardId={selectedCardId}
       />
       <div
         className="flex flex-1 flex-col transition-all duration-300"
-        onDragEnter={handleDragEnter}
       >
         <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} onSetRange={handleSetRange} />
         <main
           className="flex-1 overflow-y-auto p-4 md:p-6"
-          onDragLeave={handleDragLeave}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
         >
-          {isDragging && (
-            <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-primary/20">
-              <div className="rounded-lg border-2 border-dashed border-primary bg-background p-12 text-center">
-                <h2 className="text-2xl font-bold text-primary font-headline">Suelta el archivo aquí</h2>
-                <p className="text-muted-foreground">Sube tu archivo para crear un nuevo hito</p>
-              </div>
+          {isLoadingTimeline ? (
+             <div className="flex flex-col items-center justify-center h-full text-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <h2 className="text-2xl font-semibold font-headline mt-4">Cargando línea de tiempo...</h2>
+                <p className="mt-2 text-muted-foreground">
+                    Obteniendo los hitos desde Trello.
+                </p>
             </div>
-          )}
-          {dateRange ? (
+          ) : dateRange && milestones.length > 0 ? (
              <Timeline 
                 milestones={filteredMilestones} 
                 startDate={dateRange.start}
@@ -236,22 +217,15 @@ export default function Home() {
               />
           ) : (
              <div className="flex flex-col items-center justify-center h-full text-center">
-                <h2 className="text-2xl font-semibold font-headline">Bienvenido a CronoCelda</h2>
-                <p className="mt-2 text-muted-foreground">
-                  Crea un hito para empezar o arrastra un archivo.
+                <GanttChartSquare className="h-16 w-16 text-muted-foreground/50" />
+                <h2 className="text-2xl font-semibold font-headline mt-4">Bienvenido a CronoCelda</h2>
+                <p className="mt-2 text-muted-foreground max-w-md">
+                  Para comenzar, utiliza los controles de la barra lateral para seleccionar un tablero, una lista y finalmente una tarjeta de Trello que represente tu proyecto.
                 </p>
               </div>
           )}
         </main>
       </div>
-
-      <FileUpload
-        isOpen={isUploadOpen}
-        onOpenChange={setUploadOpen}
-        categories={categories}
-        onUpload={handleUpload}
-        initialFile={fileToUpload}
-      />
 
       <MilestoneDetail
         isOpen={isDetailOpen}

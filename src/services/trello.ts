@@ -27,6 +27,21 @@ export interface TrelloListBasic {
   name: string;
 }
 
+export interface TrelloCardBasic {
+  id: string;
+  name: string;
+}
+
+export interface TrelloAttachment {
+    id: string;
+    bytes: number;
+    date: string; 
+    fileName: string;
+    mimeType: string;
+    url: string;
+}
+
+
 function getTrelloAuthParams() {
     const apiKey = process.env.TRELLO_API_KEY;
     const apiToken = process.env.TRELLO_API_TOKEN;
@@ -90,6 +105,44 @@ export async function getBoardLists(boardId: string): Promise<TrelloListBasic[]>
     return data as TrelloListBasic[];
   } catch (error) {
     console.error('Error fetching lists from Trello:', error);
+    throw new Error('An error occurred while communicating with the Trello API.');
+  }
+}
+
+export async function getCardsInList(listId: string): Promise<TrelloCardBasic[]> {
+  const authParams = getTrelloAuthParams();
+  const url = `https://api.trello.com/1/lists/${listId}/cards?fields=name,id&${authParams}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Trello API Error (getCardsInList):', errorText);
+      throw new Error(`Failed to fetch Trello cards: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data as TrelloCardBasic[];
+  } catch (error) {
+    console.error('Error fetching cards from Trello:', error);
+    throw new Error('An error occurred while communicating with the Trello API.');
+  }
+}
+
+export async function getCardAttachments(cardId: string): Promise<TrelloAttachment[]> {
+  const authParams = getTrelloAuthParams();
+  const url = `https://api.trello.com/1/cards/${cardId}/attachments?fields=id,name,url,bytes,mimeType,date&${authParams}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Trello API Error (getCardAttachments):', errorText);
+      throw new Error(`Failed to fetch Trello card attachments: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.map((att: any) => ({...att, fileName: att.name})) as TrelloAttachment[];
+  } catch (error) {
+    console.error('Error fetching attachments from Trello:', error);
     throw new Error('An error occurred while communicating with the Trello API.');
   }
 }
