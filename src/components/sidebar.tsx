@@ -246,7 +246,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
                 <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground px-1">Fuente de Archivos</h2>
                  <Button onClick={onDriveConnect} variant="outline" className="w-full justify-start text-sm h-9">
                     <GoogleDriveIcon className="mr-2 h-5 w-5" />
-                    {isDriveConnected ? 'Conectado a Drive' : 'Conectar con Google Drive'}
+                    {isDriveConnected ? 'Cambiar cuenta de Drive' : 'Conectar con Google Drive'}
                  </Button>
                  {isDriveConnected && (
                   <div className="p-2 text-xs text-center text-muted-foreground border rounded-md bg-secondary/30">

@@ -271,15 +271,13 @@ export default function Home() {
       });
       return;
     }
-    
-    if (driveUser) {
-        console.log("Already connected to Drive with user:", driveUser.displayName);
-        toast({ title: "Ya estás conectado a Google Drive." });
-        return;
-    }
 
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+    // Forzar siempre el selector de cuentas de Google.
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
     
     try {
         const result = await signInWithPopup(auth, provider);
@@ -292,6 +290,11 @@ export default function Home() {
         });
 
     } catch (error: any) {
+        // No mostrar error si el usuario cierra el pop-up de selección de cuenta.
+        if (error.code === 'auth/popup-closed-by-user') {
+            return;
+        }
+        
         console.error("Google Sign-In Error:", error);
         
         let description = "No se pudo conectar con Google Drive. Por favor, revisa la consola para más detalles.";
