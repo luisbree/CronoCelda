@@ -301,6 +301,19 @@ export default function Home() {
     }
   };
 
+  const handleMilestoneUpdate = React.useCallback((updatedMilestone: Milestone) => {
+    setMilestones(prevMilestones =>
+      prevMilestones.map(m =>
+        m.id === updatedMilestone.id ? { ...m, ...updatedMilestone } : m
+      )
+    );
+    // Also update the selected milestone if it's the one being edited
+    if (selectedMilestone && selectedMilestone.id === updatedMilestone.id) {
+        setSelectedMilestone(updatedMilestone);
+    }
+  }, [selectedMilestone]);
+
+
   return (
     <div className="flex h-screen w-full bg-background">
       <Sidebar 
@@ -351,6 +364,8 @@ export default function Home() {
         isOpen={isDetailOpen}
         onOpenChange={setIsDetailOpen}
         milestone={selectedMilestone}
+        categories={categories}
+        onMilestoneUpdate={handleMilestoneUpdate}
       />
 
       <FileUpload
