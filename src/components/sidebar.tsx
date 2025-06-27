@@ -276,7 +276,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
         )}
         
         <div className="mt-auto shrink-0 border-t pt-3 space-y-4">
-             <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+             <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="item-1" className="border-b-0">
                     <AccordionTrigger className="py-1 px-1 hover:no-underline text-xs font-semibold tracking-wider uppercase text-muted-foreground justify-start gap-2">
                         Categorías
