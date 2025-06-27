@@ -7,14 +7,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
-import type { Milestone, Category } from '@/types';
+import type { Milestone, Category, AssociatedFile } from '@/types';
 import { FileIcon } from './file-icon';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Paperclip, Tag, X, Star } from 'lucide-react';
+import { Paperclip, Tag, X, Star, Pencil, History, UploadCloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Button } from './ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { ScrollArea } from './ui/scroll-area';
 
 interface MilestoneDetailProps {
   milestone: Milestone | null;
@@ -26,11 +31,52 @@ interface MilestoneDetailProps {
 
 export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, onMilestoneUpdate }: MilestoneDetailProps) {
   const [newTag, setNewTag] = React.useState('');
+  const [isEditingTitle, setIsEditingTitle] = React.useState(false);
+  const [editableTitle, setEditableTitle] = React.useState('');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (milestone) {
+      setEditableTitle(milestone.name);
+    }
+  }, [milestone]);
+
+  // Reset local state when dialog closes or milestone changes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setNewTag('');
+      setIsEditingTitle(false);
+    }
+  }, [isOpen]);
+
+  if (!milestone) {
+    return null;
+  }
+
+  const createLogEntry = (action: string): string => {
+    return `${format(new Date(), "PPpp", { locale: es })} - ${action}`;
+  };
+
+  const handleTitleSave = () => {
+    if (milestone && editableTitle.trim() && editableTitle.trim() !== milestone.name) {
+      const updatedMilestone = {
+        ...milestone,
+        name: editableTitle.trim(),
+        history: [...milestone.history, createLogEntry(`Título cambiado a "${editableTitle.trim()}"`)],
+      };
+      onMilestoneUpdate(updatedMilestone);
+    }
+    setIsEditingTitle(false);
+  };
 
   const handleCategoryChange = (categoryId: string) => {
     const newCategory = categories.find(c => c.id === categoryId);
-    if (newCategory && milestone) {
-      onMilestoneUpdate({ ...milestone, category: newCategory });
+    if (newCategory && milestone && newCategory.id !== milestone.category.id) {
+      onMilestoneUpdate({
+        ...milestone,
+        category: newCategory,
+        history: [...milestone.history, createLogEntry(`Categoría cambiada a "${newCategory.name}"`)],
+      });
     }
   };
 
@@ -42,8 +88,13 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
         setNewTag('');
         return;
       }
-      const updatedTags = [...(milestone.tags || []), newTag.trim()];
-      onMilestoneUpdate({ ...milestone, tags: updatedTags });
+      const newTagName = newTag.trim();
+      const updatedTags = [...(milestone.tags || []), newTagName];
+      onMilestoneUpdate({
+        ...milestone,
+        tags: updatedTags,
+        history: [...milestone.history, createLogEntry(`Etiqueta añadida: "${newTagName}"`)],
+      });
       setNewTag('');
     }
   };
@@ -51,33 +102,81 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
   const handleTagRemove = (tagToRemove: string) => {
     if (milestone) {
         const updatedTags = (milestone.tags || []).filter(tag => tag !== tagToRemove);
-        onMilestoneUpdate({ ...milestone, tags: updatedTags });
+        onMilestoneUpdate({
+          ...milestone,
+          tags: updatedTags,
+          history: [...milestone.history, createLogEntry(`Etiqueta eliminada: "${tagToRemove}"`)],
+        });
     }
   };
 
   const handleToggleImportant = () => {
     if (milestone) {
-      onMilestoneUpdate({ ...milestone, isImportant: !milestone.isImportant });
+      const action = !milestone.isImportant ? 'marcado como importante' : 'desmarcado como importante';
+      onMilestoneUpdate({
+        ...milestone,
+        isImportant: !milestone.isImportant,
+        history: [...milestone.history, createLogEntry(`Hito ${action}`)],
+      });
     }
   };
 
-  // Reset local state when dialog closes or milestone changes
-  React.useEffect(() => {
-    if (!isOpen) {
-      setNewTag('');
-    }
-  }, [isOpen]);
+  const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !milestone) return;
 
-  if (!milestone) {
-    return null;
-  }
+    const newFiles = Array.from(e.target.files);
+    
+    const newAssociatedFiles: AssociatedFile[] = newFiles.map(file => {
+      const fileType: AssociatedFile['type'] = 
+          file.type.startsWith('image/') ? 'image' : 
+          file.type.startsWith('video/') ? 'video' :
+          file.type.startsWith('audio/') ? 'audio' :
+          ['application/pdf', 'application/msword', 'text/plain'].some(t => file.type.includes(t)) ? 'document' : 'other';
+      
+      return {
+          id: `file-local-${Date.now()}-${file.name}`,
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(2)} KB`,
+          type: fileType
+      };
+    });
+
+    if (newAssociatedFiles.length > 0) {
+      onMilestoneUpdate({
+        ...milestone,
+        associatedFiles: [...milestone.associatedFiles, ...newAssociatedFiles],
+        history: [...milestone.history, createLogEntry(`Se añadieron ${newAssociatedFiles.length} archivo(s)`)],
+      });
+    }
+    // Reset file input
+    if(e.target) e.target.value = '';
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
-            <DialogTitle className="font-headline text-2xl">{milestone.name}</DialogTitle>
+            {isEditingTitle ? (
+              <Input
+                value={editableTitle}
+                onChange={(e) => setEditableTitle(e.target.value)}
+                onBlur={handleTitleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleTitleSave();
+                  if (e.key === 'Escape') setIsEditingTitle(false);
+                }}
+                className="text-2xl font-headline font-semibold h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0"
+                autoFocus
+              />
+            ) : (
+              <DialogTitle className="font-headline text-2xl flex items-center gap-2">
+                {milestone.name}
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsEditingTitle(true)}>
+                    <Pencil className="h-4 w-4" />
+                </Button>
+              </DialogTitle>
+            )}
             <button 
                 onClick={handleToggleImportant} 
                 className="p-1 rounded-full text-muted-foreground hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors shrink-0"
@@ -115,7 +214,7 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
             </Select>
           </div>
         </DialogHeader>
-        <div className="py-2 overflow-y-auto space-y-4 pr-2">
+        <div className="py-2 overflow-y-auto space-y-4 pr-4">
             <p className="text-sm text-foreground leading-relaxed">{milestone.description}</p>
             
             <div className="space-y-3">
@@ -145,8 +244,24 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
             </div>
         
             <Separator />
+
             <div className="space-y-3">
-                <h3 className="font-semibold flex items-center gap-2 text-base"><Paperclip className="h-4 w-4" /> Archivos Adjuntos</h3>
+                <h3 className="font-semibold flex items-center justify-between gap-2 text-base">
+                    <div className="flex items-center gap-2">
+                        <Paperclip className="h-4 w-4" /> Archivos Adjuntos
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                        <UploadCloud className="mr-2 h-4 w-4"/>
+                        Añadir
+                    </Button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        multiple
+                        onChange={handleFileAdd}
+                    />
+                </h3>
                 {milestone.associatedFiles.length > 0 ? (
                     <ul className="space-y-2">
                         {milestone.associatedFiles.map(file => (
@@ -163,6 +278,27 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
                     <p className="text-sm text-muted-foreground italic">No hay archivos adjuntos para este hito.</p>
                 )}
             </div>
+            
+            <Separator />
+
+            <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="history" className="border-b-0">
+                    <AccordionTrigger className="text-base font-semibold hover:no-underline py-2">
+                        <div className="flex items-center gap-2">
+                            <History className="h-4 w-4" /> Historial de Cambios
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                    <ScrollArea className="h-32">
+                        <ul className="space-y-2 text-xs text-muted-foreground pr-4">
+                        {milestone.history.slice().reverse().map((entry, index) => (
+                            <li key={index}>{entry}</li>
+                        ))}
+                        </ul>
+                    </ScrollArea>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </div>
       </DialogContent>
     </Dialog>

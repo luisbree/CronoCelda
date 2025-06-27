@@ -9,7 +9,8 @@ import { type Milestone, type Category, type AssociatedFile } from '@/types';
 import { CATEGORIES } from '@/lib/data';
 import { toast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
-import { addMonths, endOfDay, parseISO, startOfDay, subMonths, subYears } from 'date-fns';
+import { addMonths, endOfDay, parseISO, startOfDay, subMonths, subYears, format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { TrelloSummary } from '@/components/trello-summary';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Loader2, GanttChartSquare } from 'lucide-react';
@@ -79,6 +80,8 @@ export default function Home() {
                 size: `${(att.bytes / 1024).toFixed(2)} KB`,
                 type: fileType
             };
+            
+            const creationLog = `${format(new Date(), "PPpp", { locale: es })} - Creación desde Trello.`;
 
             return {
                 id: `hito-${att.id}`,
@@ -89,6 +92,7 @@ export default function Home() {
                 tags: null,
                 associatedFiles: [associatedFile],
                 isImportant: false,
+                history: [creationLog],
             };
         });
 
@@ -157,6 +161,7 @@ export default function Home() {
       });
     }
 
+    const creationLog = `${format(new Date(), "PPpp", { locale: es })} - Creación de hito.`;
     const newMilestone: Milestone = {
         id: `hito-local-${Date.now()}`,
         name: name,
@@ -166,6 +171,7 @@ export default function Home() {
         tags: null, // Start with null to show loading spinner
         associatedFiles: associatedFiles,
         isImportant: false,
+        history: [creationLog],
     };
 
     setMilestones(prev => [...prev, newMilestone]);
@@ -266,7 +272,7 @@ export default function Home() {
   const handleMilestoneUpdate = React.useCallback((updatedMilestone: Milestone) => {
     setMilestones(prevMilestones =>
       prevMilestones.map(m =>
-        m.id === updatedMilestone.id ? { ...m, ...updatedMilestone } : m
+        m.id === updatedMilestone.id ? updatedMilestone : m
       )
     );
     // Also update the selected milestone if it's the one being edited

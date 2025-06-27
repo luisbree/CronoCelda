@@ -14,6 +14,7 @@ export interface Milestone {
   tags: string[] | null;
   associatedFiles: AssociatedFile[];
   isImportant: boolean;
+  history: string[];
 }
 
 export interface Category {
