@@ -20,6 +20,7 @@ import { es } from 'date-fns/locale';
 import { Button } from './ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { ScrollArea } from './ui/scroll-area';
+import { Textarea } from './ui/textarea';
 
 interface MilestoneDetailProps {
   milestone: Milestone | null;
@@ -33,11 +34,14 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
   const [newTag, setNewTag] = React.useState('');
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [editableTitle, setEditableTitle] = React.useState('');
+  const [isEditingDescription, setIsEditingDescription] = React.useState(false);
+  const [editableDescription, setEditableDescription] = React.useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (milestone) {
       setEditableTitle(milestone.name);
+      setEditableDescription(milestone.description);
     }
   }, [milestone]);
 
@@ -46,6 +50,7 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
     if (!isOpen) {
       setNewTag('');
       setIsEditingTitle(false);
+      setIsEditingDescription(false);
     }
   }, [isOpen]);
 
@@ -67,6 +72,17 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
       onMilestoneUpdate(updatedMilestone);
     }
     setIsEditingTitle(false);
+  };
+  
+  const handleDescriptionSave = () => {
+    if (milestone && editableDescription.trim() !== milestone.description) {
+        onMilestoneUpdate({
+            ...milestone,
+            description: editableDescription.trim(),
+            history: [...milestone.history, createLogEntry('Descripción actualizada.')],
+        });
+    }
+    setIsEditingDescription(false);
   };
 
   const handleCategoryChange = (categoryId: string) => {
@@ -215,7 +231,30 @@ export function MilestoneDetail({ milestone, isOpen, onOpenChange, categories, o
           </div>
         </DialogHeader>
         <div className="py-2 overflow-y-auto space-y-4 pr-4">
-            <p className="text-sm text-foreground leading-relaxed">{milestone.description}</p>
+            {isEditingDescription ? (
+              <Textarea
+                value={editableDescription}
+                onChange={(e) => setEditableDescription(e.target.value)}
+                onBlur={handleDescriptionSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setIsEditingDescription(false);
+                    setEditableDescription(milestone.description); // Reset on cancel
+                  }
+                }}
+                className="text-sm leading-relaxed w-full"
+                autoFocus
+                rows={5}
+              />
+            ) : (
+              <div
+                className="text-sm text-foreground leading-relaxed cursor-pointer hover:bg-secondary/50 p-2 -m-2 rounded-md transition-colors relative group"
+                onClick={() => setIsEditingDescription(true)}
+              >
+                <p className="whitespace-pre-wrap">{milestone.description || 'Añade una descripción...'}</p>
+                <Pencil className="h-4 w-4 absolute top-2 right-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
             
             <div className="space-y-3">
                  <div className="flex flex-wrap gap-2 items-center">
