@@ -7,6 +7,7 @@ import { Timeline } from '@/components/timeline';
 import { MilestoneDetail } from '@/components/milestone-detail';
 import { type Milestone, type Category, type AssociatedFile } from '@/types';
 import { CATEGORIES } from '@/lib/data';
+import { SAMPLE_MILESTONES } from '@/lib/sample-data';
 import { toast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
 import { addMonths, endOfDay, parseISO, startOfDay, subMonths, subYears, format } from 'date-fns';
@@ -47,6 +48,9 @@ export default function Home() {
         const storedMilestones = localStorage.getItem('crono-celda-milestones');
         if (storedMilestones) {
           setMilestones(JSON.parse(storedMilestones));
+        } else {
+          // If no milestones in storage, initialize with sample data
+          setMilestones(SAMPLE_MILESTONES);
         }
 
         const storedCategories = localStorage.getItem('crono-celda-categories');
@@ -60,6 +64,7 @@ export default function Home() {
           console.error("Failed to load data from localStorage", error);
           // Fallback to default categories if loading fails
           setCategories(CATEGORIES);
+          setMilestones(SAMPLE_MILESTONES);
       } finally {
         setIsLoaded(true);
       }
@@ -98,16 +103,19 @@ export default function Home() {
   const handleCardSelect = React.useCallback(async (card: TrelloCardBasic | null) => {
     setSelectedCard(card);
     if (!card) {
-      setMilestones([]);
+      // Keep existing milestones if a card is deselected, don't clear them.
+      // setMilestones([]); 
       return;
     }
 
     setIsLoadingTimeline(true);
+    
+    // Clear existing milestones when a NEW card is selected
     setMilestones([]);
 
     try {
         const attachments = await getCardAttachments(card.id);
-        const defaultCategory = categories[1] || CATEGORIES[1];
+        const defaultCategory = categories.find(c => c.name.toLowerCase().includes('trello')) || CATEGORIES[1];
 
         const newMilestones: Milestone[] = attachments.map(att => {
             const fileType: AssociatedFile['type'] = 
@@ -138,7 +146,7 @@ export default function Home() {
             };
         });
 
-        setMilestones(newMilestones);
+        setMilestones(prevMilestones => [...prevMilestones, ...newMilestones]);
         
         newMilestones.forEach(async (milestone) => {
              try {
@@ -367,7 +375,7 @@ export default function Home() {
                 <GanttChartSquare className="h-16 w-16 text-muted-foreground/50" />
                 <h2 className="text-2xl font-semibold font-headline mt-4">Bienvenido a CronoCelda</h2>
                 <p className="mt-2 text-muted-foreground max-w-md">
-                  Para comenzar, utiliza los controles de la barra lateral para seleccionar un tablero, una lista y finalmente una tarjeta de Trello que represente tu proyecto.
+                  Para comenzar, utiliza los controles de la barra lateral para seleccionar un tablero, una lista y finalmente una tarjeta de Trello que represente tu proyecto. O, si tienes datos locales, crea un nuevo hito.
                 </p>
               </div>
           )}
