@@ -129,7 +129,7 @@ export default function Home() {
     }
   }, [categories]);
 
-  const handleUpload = async (data: { files?: File[], categoryId: string, name: string, description: string }) => {
+  const handleUpload = React.useCallback(async (data: { files?: File[], categoryId: string, name: string, description: string }) => {
     const { files, categoryId, name, description } = data;
     const category = categories.find(c => c.id === categoryId);
     if (!category) {
@@ -194,7 +194,7 @@ export default function Home() {
           )
         );
     }
-  };
+  }, [categories]);
 
 
   const handleSetRange = React.useCallback((rangeType: '1D' | '1M' | '1Y' | 'All') => {
@@ -266,7 +266,7 @@ export default function Home() {
     });
   }, []);
 
-  const handleDriveConnect = async () => {
+  const handleDriveConnect = React.useCallback(async () => {
     const { auth } = await getFirebaseServices();
     
     if (!auth) {
@@ -314,7 +314,7 @@ export default function Home() {
             description: description,
         });
     }
-  };
+  }, []);
 
   const handleMilestoneUpdate = React.useCallback((updatedMilestone: Milestone) => {
     setMilestones(prevMilestones =>
