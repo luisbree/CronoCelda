@@ -105,16 +105,19 @@ export default function Home() {
   const handleCardSelect = React.useCallback(async (card: TrelloCardBasic | null) => {
     setSelectedCard(card);
     if (!card) {
-      // Keep existing milestones if a card is deselected, don't clear them.
-      // setMilestones([]); 
       return;
     }
 
     setIsLoadingTimeline(true);
-    
-    // Clear existing milestones when a NEW card is selected
-    setMilestones([]);
 
+    // Special case: If the selected card is the RSA060 project, load the sample data.
+    if (card.name.includes('RSA060')) {
+        setMilestones(SAMPLE_MILESTONES);
+        setIsLoadingTimeline(false);
+        return;
+    }
+
+    // Default behavior for other cards: fetch attachments from Trello
     try {
         const attachments = await getCardAttachments(card.id);
         const defaultCategory = categories.find(c => c.name.toLowerCase().includes('trello')) || CATEGORIES[1];
@@ -148,7 +151,7 @@ export default function Home() {
             };
         });
 
-        setMilestones(prevMilestones => [...prevMilestones, ...newMilestones]);
+        setMilestones(newMilestones);
         
         newMilestones.forEach(async (milestone) => {
              try {
@@ -172,6 +175,7 @@ export default function Home() {
 
     } catch(error) {
         console.error("Failed to process card attachments:", error);
+        setMilestones([]); // Clear milestones on error
         toast({
             variant: "destructive",
             title: "Error al cargar hitos",
