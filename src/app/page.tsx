@@ -21,8 +21,6 @@ import {
 } from '@/components/ui/tooltip';
 import { getCardAttachments, type TrelloCardBasic } from '@/services/trello';
 import { FileUpload } from '@/components/file-upload';
-import { getFirebaseServices } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup, type User } from 'firebase/auth';
 import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
@@ -38,7 +36,6 @@ export default function Home() {
   const [selectedCard, setSelectedCard] = React.useState<TrelloCardBasic | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
-  const [driveUser, setDriveUser] = React.useState<User | null>(null);
   const [isSummaryOpen, setIsSummaryOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -266,56 +263,6 @@ export default function Home() {
     });
   }, []);
 
-  const handleDriveConnect = React.useCallback(async () => {
-    const { auth } = await getFirebaseServices();
-    
-    if (!auth) {
-      toast({
-        variant: 'destructive',
-        title: 'Configuración Incompleta',
-        description: 'Las credenciales de Firebase no están configuradas correctamente. Por favor, revisa tu archivo .env.',
-      });
-      return;
-    }
-
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/drive.readonly');
-    // Forzar siempre el selector de cuentas de Google.
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
-    
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-        
-        setDriveUser(user);
-        toast({
-            title: "Conexión Exitosa",
-            description: `Conectado como ${user.displayName}.`,
-        });
-
-    } catch (error: any) {
-        // No mostrar error si el usuario cierra el pop-up de selección de cuenta.
-        if (error.code === 'auth/popup-closed-by-user') {
-            return;
-        }
-        
-        console.error("Google Sign-In Error:", error);
-        
-        let description = "No se pudo conectar con Google Drive. Por favor, revisa la consola para más detalles.";
-        if (error.code === 'auth/configuration-not-found') {
-          description = "La configuración de Firebase no es correcta. Asegúrate de que los valores en tu archivo .env coinciden con los de tu proyecto de Firebase.";
-        }
-
-        toast({
-            variant: "destructive",
-            title: "Error de conexión",
-            description: description,
-        });
-    }
-  }, []);
-
   const handleMilestoneUpdate = React.useCallback((updatedMilestone: Milestone) => {
     setMilestones(prevMilestones =>
       prevMilestones.map(m =>
@@ -338,8 +285,6 @@ export default function Home() {
         onCardSelect={handleCardSelect}
         selectedCard={selectedCard}
         onNewMilestoneClick={() => setIsUploadOpen(true)}
-        onDriveConnect={handleDriveConnect}
-        isDriveConnected={!!driveUser}
       />
       <div
         className="flex flex-1 flex-col transition-all duration-300"

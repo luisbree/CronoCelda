@@ -16,18 +16,6 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-
-const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <path d="m9.2 12.2 3.8 6.4 3.8-6.4Z"></path>
-        <path d="m6.4 18.6 3.8-6.4 3.8 6.4Z"></path>
-        <path d="m12 12.2 3.8-6.4-7.6 0Z"></path>
-    </svg>
-);
-
-
 interface SidebarProps {
   categories: Category[];
   onCategoryColorChange: (categoryId: string, color: string) => void;
@@ -35,11 +23,9 @@ interface SidebarProps {
   onCardSelect: (card: TrelloCardBasic | null) => void;
   selectedCard: TrelloCardBasic | null;
   onNewMilestoneClick: () => void;
-  onDriveConnect: () => void;
-  isDriveConnected: boolean;
 }
 
-export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCardSelect, selectedCard, onNewMilestoneClick, onDriveConnect, isDriveConnected }: SidebarProps) {
+export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCardSelect, selectedCard, onNewMilestoneClick }: SidebarProps) {
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
   const [newCategoryName, setNewCategoryName] = React.useState('');
@@ -241,18 +227,6 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
         )}
         
         <div className="mt-auto shrink-0 border-t pt-3 space-y-4">
-            <div className="space-y-2">
-                 <Button onClick={onDriveConnect} variant="outline" className="w-full justify-start text-sm h-9">
-                    <GoogleDriveIcon className="mr-2 h-5 w-5" />
-                    {isDriveConnected ? 'Cambiar cuenta de Drive' : 'Conectar con Google Drive'}
-                 </Button>
-                 {isDriveConnected && (
-                  <div className="p-2 text-xs text-center text-muted-foreground border rounded-md bg-secondary/30">
-                      Navegador de archivos de Drive aparecerá aquí.
-                  </div>
-                 )}
-            </div>
-        
              <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
                 <AccordionItem value="item-1" className="border-b-0">
                     <AccordionTrigger className="py-1 px-1 hover:no-underline text-xs font-semibold tracking-wider uppercase text-muted-foreground justify-start gap-2">
