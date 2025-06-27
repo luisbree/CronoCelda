@@ -97,17 +97,15 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
   React.useEffect(() => {
     onCardSelect(null);
     setCardSearchTerm('');
+    setCards([]);
+    setFilteredCards([]);
 
     if (!selectedList) {
-        setCards([]);
-        setFilteredCards([]);
         return;
     }
     
     const fetchCards = async () => {
         setIsLoadingCards(true);
-        setCards([]);
-        setFilteredCards([]);
         try {
             const listCards = await getCardsInList(selectedList);
             setCards(listCards);
@@ -119,7 +117,8 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
         }
     };
     fetchCards();
-  }, [selectedList, onCardSelect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedList]);
   
   React.useEffect(() => {
     if (!cardSearchTerm) {
