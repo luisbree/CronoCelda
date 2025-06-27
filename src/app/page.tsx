@@ -28,7 +28,7 @@ const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4
 
 export default function Home() {
   const [milestones, setMilestones] = React.useState<Milestone[]>([]);
-  const [categories, setCategories] = React.useState<Category[]>(CATEGORIES);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [dateRange, setDateRange] = React.useState<{ start: Date; end: Date } | null>(null);
   const [selectedMilestone, setSelectedMilestone] = React.useState<Milestone | null>(null);
@@ -38,6 +38,48 @@ export default function Home() {
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = React.useState(false);
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  // Load state from localStorage on initial mount
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedMilestones = localStorage.getItem('crono-celda-milestones');
+        if (storedMilestones) {
+          setMilestones(JSON.parse(storedMilestones));
+        }
+
+        const storedCategories = localStorage.getItem('crono-celda-categories');
+        if (storedCategories) {
+          setCategories(JSON.parse(storedCategories));
+        } else {
+          // If no categories in storage, initialize with defaults
+          setCategories(CATEGORIES);
+        }
+      } catch (error) {
+          console.error("Failed to load data from localStorage", error);
+          // Fallback to default categories if loading fails
+          setCategories(CATEGORIES);
+      } finally {
+        setIsLoaded(true);
+      }
+    }
+  }, []); // Empty dependency array ensures this runs once on mount.
+
+  // Save milestones to localStorage whenever they change
+  React.useEffect(() => {
+    if (isLoaded && typeof window !== 'undefined') {
+      localStorage.setItem('crono-celda-milestones', JSON.stringify(milestones));
+    }
+  }, [milestones, isLoaded]);
+
+  // Save categories to localStorage whenever they change
+  React.useEffect(() => {
+    if (isLoaded && typeof window !== 'undefined') {
+      localStorage.setItem('crono-celda-categories', JSON.stringify(categories));
+    }
+  }, [categories, isLoaded]);
+
 
   React.useEffect(() => {
     if (milestones.length > 0) {
