@@ -48,27 +48,63 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
   }, [startDate, endDate]);
 
   React.useEffect(() => {
-    // When milestones change, we need to recalculate the heights to avoid visual overlap.
-    // The previous logic only calculated heights if the map was empty,
-    // which caused issues when switching between cards (projects).
     if (milestones.length > 0) {
       const newHeights = new Map<string, number>();
-      
       const sortedMilestones = [...milestones].sort(
         (a, b) => parseISO(a.occurredAt).getTime() - parseISO(b.occurredAt).getTime()
       );
 
-      const heightLevels = [60, 95, 130, 75, 110];
+      // Define parameters for height generation and collision
+      const MIN_HEIGHT = 60;
+      const MAX_HEIGHT = 150;
+      const VERTICAL_SEPARATION = 35; // Min vertical distance between dots
+
+      // Calculate the total time span of all milestones to determine a relative "closeness"
+      const allDates = sortedMilestones.map(m => parseISO(m.occurredAt));
+      const oldestTime = allDates[0]?.getTime() ?? 0;
+      const newestTime = allDates[allDates.length - 1]?.getTime() ?? 0;
+      const totalDuration = newestTime - oldestTime;
       
-      sortedMilestones.forEach((milestone, index) => {
-        // Cycle through different height levels to stagger milestones vertically
-        newHeights.set(milestone.id, heightLevels[index % heightLevels.length]);
+      // Consider milestones close if they are within 1.5% of the total duration.
+      // This value is tuned to avoid crowding on the default view.
+      const TIME_SEPARATION_THRESHOLD = totalDuration > 0 ? totalDuration * 0.015 : 1;
+
+      const placedMilestones: { time: number; height: number }[] = [];
+
+      sortedMilestones.forEach(milestone => {
+        const milestoneTime = parseISO(milestone.occurredAt).getTime();
+        
+        let finalHeight: number = MIN_HEIGHT;
+        let collision = true;
+        let attempts = 0;
+        const MAX_ATTEMPTS = 20;
+
+        // Try to find a random height that doesn't collide with recent milestones
+        while (collision && attempts < MAX_ATTEMPTS) {
+          attempts++;
+          collision = false;
+          finalHeight = Math.floor(Math.random() * (MAX_HEIGHT - MIN_HEIGHT + 1)) + MIN_HEIGHT;
+
+          for (const placed of placedMilestones) {
+            const timeDiff = Math.abs(milestoneTime - placed.time);
+            const heightDiff = Math.abs(finalHeight - placed.height);
+            
+            // If milestones are close in time and also close in height, it's a collision
+            if (timeDiff < TIME_SEPARATION_THRESHOLD && heightDiff < VERTICAL_SEPARATION) {
+              collision = true;
+              break; // Found a collision, try a new random height
+            }
+          }
+        }
+        
+        // After attempts, we use the last generated height, accepting a potential overlap in very crowded cases.
+        newHeights.set(milestone.id, finalHeight);
+        placedMilestones.push({ time: milestoneTime, height: finalHeight });
       });
-      
+
       heights.current = newHeights;
     } else {
-        // If there are no milestones, clear the heights map.
-        heights.current.clear();
+      heights.current.clear();
     }
   }, [milestones]);
   
