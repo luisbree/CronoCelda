@@ -4,12 +4,12 @@ import * as React from 'react';
 import { Logo } from './logo';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Plus, Search, UploadCloud } from 'lucide-react';
+import { Plus, Search, UploadCloud, Loader2 } from 'lucide-react';
 import type { Category } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ColorPicker } from './color-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { getMemberBoards, getBoardLists, getCardsInList } from '@/services/trello';
+import { getMemberBoards, getBoardLists, getCardsInList, searchTrelloCards } from '@/services/trello';
 import type { TrelloBoard, TrelloListBasic, TrelloCardBasic } from '@/services/trello';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -42,6 +42,7 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
   const [isLoadingBoards, setIsLoadingBoards] = React.useState(false);
   const [isLoadingLists, setIsLoadingLists] = React.useState(false);
   const [isLoadingCards, setIsLoadingCards] = React.useState(false);
+  const [isSearching, setIsSearching] = React.useState(false);
 
   React.useEffect(() => {
     const fetchBoards = async () => {
@@ -82,11 +83,9 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
 
   React.useEffect(() => {
     onCardSelect(null);
-    setCardSearchTerm('');
-    setCards([]);
-    setFilteredCards([]);
-
     if (!selectedList) {
+        setCards([]);
+        setFilteredCards([]);
         return;
     }
     
@@ -98,6 +97,8 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
             setFilteredCards(listCards);
         } catch (error) {
             console.error(`Failed to fetch cards for list ${selectedList}`, error);
+            setCards([]);
+            setFilteredCards([]);
         } finally {
             setIsLoadingCards(false);
         }
@@ -141,6 +142,53 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
     onCardSelect(card);
   }
 
+  const handleGlobalSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || !cardSearchTerm.trim() || isSearching) {
+        return;
+    }
+
+    e.preventDefault();
+    setIsSearching(true);
+    onCardSelect(null);
+
+    try {
+        const results = await searchTrelloCards(cardSearchTerm.trim());
+
+        if (results.length === 1) {
+            const card = results[0] as TrelloCardBasic & { idBoard: string, idList: string };
+            
+            setSelectedBoard(card.idBoard);
+
+            setIsLoadingLists(true);
+            const boardLists = await getBoardLists(card.idBoard);
+            setLists(boardLists);
+            setIsLoadingLists(false);
+            
+            setSelectedList(card.idList);
+
+            setIsLoadingCards(true);
+            const listCards = await getCardsInList(card.idList);
+            setCards(listCards);
+            setFilteredCards(listCards);
+            setIsLoadingCards(false);
+
+            onCardSelect(card);
+        } else {
+            setSelectedBoard('');
+            setSelectedList('');
+            setCards(results);
+            setFilteredCards(results);
+        }
+    } catch (error) {
+        console.error("Global card search failed", error);
+    } finally {
+        setIsSearching(false);
+    }
+};
+
+const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Resultados (${filteredCards.length})` : `Tarjetas (${filteredCards.length})`;
+
+
   return (
     <aside className="hidden md:flex flex-col w-72 border-r bg-card h-full">
       <div className="h-16 flex items-center border-b shrink-0">
@@ -177,27 +225,28 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
             </Select>
 
             <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-                placeholder="Buscar una tarjeta..."
-                className="pl-9 h-9"
-                value={cardSearchTerm}
-                onChange={(e) => setCardSearchTerm(e.target.value)}
-                disabled={!selectedList || isLoadingCards}
-            />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Buscar tarjeta y presionar Enter..."
+                    className="pl-9 h-9"
+                    value={cardSearchTerm}
+                    onChange={(e) => setCardSearchTerm(e.target.value)}
+                    onKeyDown={handleGlobalSearch}
+                />
+                {isSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
         </div>
         
-        {selectedList && (
+        {(selectedList || isSearching || (!selectedBoard && cardSearchTerm)) && (
             <div className="flex-1 flex flex-col min-h-0 border rounded-md">
                 <div className="p-2 border-b shrink-0">
                     <p className="text-xs font-semibold text-muted-foreground">
-                        {`Tarjetas (${filteredCards.length})`}
+                        {cardListTitle}
                     </p>
                 </div>
                 <ScrollArea className="flex-1">
                     <div className="p-1 space-y-1">
-                    {isLoadingCards ? (
+                    {isLoadingCards || isSearching ? (
                         <div className="p-2 space-y-2">
                            <Skeleton className="h-6 w-full" />
                            <Skeleton className="h-6 w-full" />

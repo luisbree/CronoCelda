@@ -147,3 +147,22 @@ export async function getCardAttachments(cardId: string): Promise<TrelloAttachme
     throw new Error('An error occurred while communicating with the Trello API.');
   }
 }
+
+export async function searchTrelloCards(query: string): Promise<TrelloCardBasic[]> {
+    const authParams = getTrelloAuthParams();
+    const url = `https://api.trello.com/1/search?query=${encodeURIComponent(query)}&idBoards=mine&modelTypes=cards&card_fields=name,id,url,idBoard,idList&cards_limit=50&${authParams}`;
+  
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Trello API Error (searchTrelloCards):', errorText);
+        throw new Error(`Failed to fetch Trello search results: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data.cards as TrelloCardBasic[];
+    } catch (error) {
+      console.error('Error searching cards on Trello:', error);
+      throw new Error('An error occurred while communicating with the Trello API.');
+    }
+}
