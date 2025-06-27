@@ -46,18 +46,20 @@ export default function Home() {
     if (typeof window !== 'undefined') {
       try {
         const storedMilestones = localStorage.getItem('crono-celda-milestones');
-        if (storedMilestones) {
-          setMilestones(JSON.parse(storedMilestones));
+        const parsedMilestones = storedMilestones ? JSON.parse(storedMilestones) : null;
+        if (parsedMilestones && parsedMilestones.length > 0) {
+          setMilestones(parsedMilestones);
         } else {
-          // If no milestones in storage, initialize with sample data
+          // If no milestones in storage, or if storage is empty, initialize with sample data
           setMilestones(SAMPLE_MILESTONES);
         }
 
         const storedCategories = localStorage.getItem('crono-celda-categories');
-        if (storedCategories) {
-          setCategories(JSON.parse(storedCategories));
+        const parsedCategories = storedCategories ? JSON.parse(storedCategories) : null;
+        if (parsedCategories && parsedCategories.length > 0) {
+          setCategories(parsedCategories);
         } else {
-          // If no categories in storage, initialize with defaults
+          // If no categories in storage, or if storage is empty, initialize with defaults
           setCategories(CATEGORIES);
         }
       } catch (error) {
