@@ -40,6 +40,12 @@ export default function Home() {
   const [isSummaryOpen, setIsSummaryOpen] = React.useState(false);
   const [isLoaded, setIsLoaded] = React.useState(false);
 
+  // Resizing state
+  const [isResizing, setIsResizing] = React.useState(false);
+  const [timelinePanelHeight, setTimelinePanelHeight] = React.useState(55); // Initial percentage
+  const resizeContainerRef = React.useRef<HTMLDivElement>(null);
+
+
   // Load state from localStorage on initial mount
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -348,6 +354,41 @@ export default function Home() {
     }
   }, [selectedMilestone]);
 
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+  
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizeContainerRef.current) return;
+      
+      const container = resizeContainerRef.current;
+      const rect = container.getBoundingClientRect();
+      const newHeight = e.clientY - rect.top;
+      let newHeightPercent = (newHeight / rect.height) * 100;
+
+      if (newHeightPercent < 20) newHeightPercent = 20;
+      if (newHeightPercent > 80) newHeightPercent = 80;
+      
+      setTimelinePanelHeight(newHeightPercent);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
 
   return (
     <div className="flex h-screen w-full bg-background">
@@ -367,8 +408,14 @@ export default function Home() {
           onOpenSummary={() => setIsSummaryOpen(true)}
           trelloCardUrl={selectedCard?.url ?? null}
         />
-        <div className="flex-1 flex flex-col overflow-hidden">
-            <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div 
+          ref={resizeContainerRef}
+          className="flex-1 flex flex-col overflow-hidden"
+        >
+            <main 
+              className="overflow-y-auto p-4 md:p-6"
+              style={{ height: selectedMilestone ? `${timelinePanelHeight}%` : '100%' }}
+            >
             {isLoadingTimeline ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                     <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -397,14 +444,21 @@ export default function Home() {
             )}
             </main>
             {selectedMilestone && (
-                 <div className="h-[45%] border-t bg-background shrink-0">
-                    <MilestoneDetail
-                        milestone={selectedMilestone}
-                        categories={categories}
-                        onMilestoneUpdate={handleMilestoneUpdate}
-                        onClose={handleDetailClose}
+                 <>
+                    <div
+                      onMouseDown={handleResizeMouseDown}
+                      className="h-2 bg-border cursor-row-resize hover:bg-ring transition-colors flex-shrink-0"
+                      title="Arrastrar para redimensionar"
                     />
-                 </div>
+                    <div className="flex-1 bg-slate-100 shrink-0 overflow-y-auto">
+                        <MilestoneDetail
+                            milestone={selectedMilestone}
+                            categories={categories}
+                            onMilestoneUpdate={handleMilestoneUpdate}
+                            onClose={handleDetailClose}
+                        />
+                    </div>
+                 </>
             )}
         </div>
       </div>
