@@ -47,7 +47,7 @@ export default function Home() {
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const storedMilestones = localStorage.getItem('crono-celda-milestones');
+        const storedMilestones = localStorage.getItem('deas-tl-milestones');
         const parsedMilestones = storedMilestones ? JSON.parse(storedMilestones) : null;
         if (parsedMilestones && parsedMilestones.length > 0) {
           setMilestones(parsedMilestones.map((m: Milestone) => ({...m, occurredAt: m.occurredAt})));
@@ -56,7 +56,7 @@ export default function Home() {
           setMilestones([]);
         }
 
-        const storedCategories = localStorage.getItem('crono-celda-categories');
+        const storedCategories = localStorage.getItem('deas-tl-categories');
         const parsedCategories = storedCategories ? JSON.parse(storedCategories) : null;
         if (parsedCategories && parsedCategories.length > 0) {
           setCategories(parsedCategories);
@@ -78,14 +78,14 @@ export default function Home() {
   // Save milestones to localStorage whenever they change
   React.useEffect(() => {
     if (isLoaded && typeof window !== 'undefined') {
-      localStorage.setItem('crono-celda-milestones', JSON.stringify(milestones));
+      localStorage.setItem('deas-tl-milestones', JSON.stringify(milestones));
     }
   }, [milestones, isLoaded]);
 
   // Save categories to localStorage whenever they change
   React.useEffect(() => {
     if (isLoaded && typeof window !== 'undefined') {
-      localStorage.setItem('crono-celda-categories', JSON.stringify(categories));
+      localStorage.setItem('deas-tl-categories', JSON.stringify(categories));
     }
   }, [categories, isLoaded]);
 
