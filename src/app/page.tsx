@@ -7,7 +7,7 @@ import { Timeline } from '@/components/timeline';
 import { MilestoneDetail } from '@/components/milestone-detail';
 import { type Milestone, type Category, type AssociatedFile } from '@/types';
 import { CATEGORIES } from '@/lib/data';
-import { SAMPLE_MILESTONES, SAMPLE_MILESTONES_RSB002 } from '@/lib/sample-data';
+import { SAMPLE_MILESTONES_RSB002 } from '@/lib/sample-data';
 import { toast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
 import { addMonths, endOfDay, parseISO, startOfDay, subMonths, subYears, format } from 'date-fns';
@@ -54,7 +54,7 @@ export default function Home() {
           setMilestones(parsedMilestones.map((m: Milestone) => ({...m, occurredAt: m.occurredAt})));
         } else {
           // If no milestones in storage, or if storage is empty, initialize with sample data
-          setMilestones(SAMPLE_MILESTONES);
+          setMilestones([]);
         }
 
         const storedCategories = localStorage.getItem('crono-celda-categories');
@@ -69,7 +69,7 @@ export default function Home() {
           console.error("Failed to load data from localStorage", error);
           // Fallback to default categories if loading fails
           setCategories(CATEGORIES);
-          setMilestones(SAMPLE_MILESTONES);
+          setMilestones([]);
       } finally {
         setIsLoaded(true);
       }
@@ -113,13 +113,6 @@ export default function Home() {
 
     setIsLoadingTimeline(true);
     setSelectedMilestone(null); // Close detail panel when changing card
-
-    // Special case: If the selected card is the RSA060 project, load the sample data.
-    if (card.name.includes('RSA060')) {
-        setMilestones(SAMPLE_MILESTONES);
-        setIsLoadingTimeline(false);
-        return;
-    }
     
     // Special case: If the selected card is the RSB002 project, load the sample data.
     if (card.name.toLowerCase().includes('san roque') || card.name.includes('RSB002')) {
@@ -398,7 +391,7 @@ export default function Home() {
   
   React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!resizeContainerRef.current) return;
+      if (!isResizing || !resizeContainerRef.current) return;
       
       const container = resizeContainerRef.current;
       const rect = container.getBoundingClientRect();
