@@ -48,29 +48,20 @@ export default function Home() {
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const storedMilestones = localStorage.getItem('deas-tl-milestones');
-        const parsedMilestones = storedMilestones ? JSON.parse(storedMilestones) : null;
-        if (parsedMilestones && parsedMilestones.length > 0) {
-          setMilestones(parsedMilestones.map((m: Milestone) => ({...m, occurredAt: m.occurredAt})));
-        } else {
-          // If no milestones in storage, or if storage is empty, initialize with sample data
-          setMilestones([]);
-        }
-
+        // Categories are loaded from storage to preserve user customizations.
         const storedCategories = localStorage.getItem('deas-tl-categories');
         const parsedCategories = storedCategories ? JSON.parse(storedCategories) : null;
         if (parsedCategories && parsedCategories.length > 0) {
           setCategories(parsedCategories);
         } else {
-          // If no categories in storage, or if storage is empty, initialize with defaults
           setCategories(CATEGORIES);
         }
       } catch (error) {
-          console.error("Failed to load data from localStorage", error);
-          // Fallback to default categories if loading fails
+          console.error("Failed to load categories from localStorage", error);
           setCategories(CATEGORIES);
-          setMilestones([]);
       } finally {
+        // Milestones always start empty to ensure a clean slate.
+        setMilestones([]);
         setIsLoaded(true);
       }
     }
