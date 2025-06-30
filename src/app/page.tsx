@@ -12,7 +12,7 @@ import { autoTagFiles } from '@/ai/flows/auto-tag-files';
 import { addMonths, endOfDay, parseISO, startOfDay, subMonths, subYears, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { Loader2, GanttChartSquare } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -22,6 +22,7 @@ import {
 import { getCardAttachments, type TrelloCardBasic } from '@/services/trello';
 import { FileUpload } from '@/components/file-upload';
 import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
+import { WelcomeScreen } from '@/components/welcome-screen';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -457,13 +458,7 @@ export default function Home() {
                     />
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                    <GanttChartSquare className="h-16 w-16 text-muted-foreground/50" />
-                    <h2 className="text-2xl font-medium font-headline mt-4">Bienvenido a DEAS TL</h2>
-                    <p className="mt-2 text-muted-foreground max-w-md">
-                    Para comenzar, utiliza los controles de la barra lateral para seleccionar un tablero, una lista y finalmente una tarjeta de Trello que represente tu proyecto. O, si tienes datos locales, crea un nuevo hito.
-                    </p>
-                </div>
+                <WelcomeScreen />
             )}
             </main>
             {selectedMilestone && (
