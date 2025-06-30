@@ -372,7 +372,7 @@ export default function Home() {
             {isLoadingTimeline ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                     <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <h2 className="text-2xl font-semibold font-headline mt-4">Cargando línea de tiempo...</h2>
+                    <h2 className="text-2xl font-medium font-headline mt-4">Cargando línea de tiempo...</h2>
                     <p className="mt-2 text-muted-foreground">
                         Obteniendo los hitos desde Trello.
                     </p>
@@ -389,7 +389,7 @@ export default function Home() {
             ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                     <GanttChartSquare className="h-16 w-16 text-muted-foreground/50" />
-                    <h2 className="text-2xl font-semibold font-headline mt-4">Bienvenido a CronoCelda</h2>
+                    <h2 className="text-2xl font-medium font-headline mt-4">Bienvenido a CronoCelda</h2>
                     <p className="mt-2 text-muted-foreground max-w-md">
                     Para comenzar, utiliza los controles de la barra lateral para seleccionar un tablero, una lista y finalmente una tarjeta de Trello que represente tu proyecto. O, si tienes datos locales, crea un nuevo hito.
                     </p>

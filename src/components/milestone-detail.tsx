@@ -164,11 +164,11 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                     if (e.key === 'Enter') handleTitleSave();
                     if (e.key === 'Escape') setIsEditingTitle(false);
                     }}
-                    className="text-xl font-headline font-semibold h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 bg-transparent"
+                    className="text-xl font-headline font-medium h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 bg-transparent"
                     autoFocus
                 />
                 ) : (
-                <h2 className="font-headline text-xl flex items-center gap-2 truncate">
+                <h2 className="font-headline text-xl font-medium flex items-center gap-2 truncate">
                     <span className="truncate" title={milestone.name}>{milestone.name}</span>
                     <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setIsEditingTitle(true)}>
                         <Pencil className="h-4 w-4" />
