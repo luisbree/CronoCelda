@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 import { Logo } from './logo';
-import { Button } from './ui/button';
+import { Button, buttonVariants } from './ui/button';
 import { Input } from './ui/input';
-import { Plus, Search, UploadCloud, Loader2, X } from 'lucide-react';
+import { Plus, Search, UploadCloud, Loader2, X, Pencil, Trash2 } from 'lucide-react';
 import type { Category } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ColorPicker } from './color-picker';
@@ -15,20 +15,46 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SidebarProps {
   categories: Category[];
   onCategoryColorChange: (categoryId: string, color: string) => void;
   onCategoryAdd: (name: string) => void;
+  onCategoryUpdate: (categoryId: string, name: string) => void;
+  onCategoryDelete: (categoryId: string) => void;
   onCardSelect: (card: TrelloCardBasic | null) => void;
   selectedCard: TrelloCardBasic | null;
   onNewMilestoneClick: () => void;
 }
 
-export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCardSelect, selectedCard, onNewMilestoneClick }: SidebarProps) {
+export function Sidebar({ 
+    categories, 
+    onCategoryColorChange, 
+    onCategoryAdd, 
+    onCategoryUpdate,
+    onCategoryDelete,
+    onCardSelect, 
+    selectedCard, 
+    onNewMilestoneClick 
+}: SidebarProps) {
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
   const [newCategoryName, setNewCategoryName] = React.useState('');
+  
+  const [editingCategoryId, setEditingCategoryId] = React.useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = React.useState('');
+  const [categoryToDelete, setCategoryToDelete] = React.useState<Category | null>(null);
+  const editInputRef = React.useRef<HTMLInputElement>(null);
 
   const [boards, setBoards] = React.useState<TrelloBoard[]>([]);
   const [lists, setLists] = React.useState<TrelloListBasic[]>([]);
@@ -137,6 +163,37 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
     setIsAdding(false);
     setNewCategoryName('');
   };
+  
+  const handleEditStart = (category: Category) => {
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(category.name);
+  };
+
+  const handleEditCancel = () => {
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
+  };
+
+  const handleEditConfirm = () => {
+    if (editingCategoryId && editingCategoryName.trim()) {
+      onCategoryUpdate(editingCategoryId, editingCategoryName.trim());
+    }
+    handleEditCancel();
+  };
+
+  const handleDeleteConfirm = () => {
+    if (categoryToDelete) {
+      onCategoryDelete(categoryToDelete.id);
+      setCategoryToDelete(null);
+    }
+  };
+  
+  React.useEffect(() => {
+    if (editingCategoryId && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editingCategoryId]);
 
   const handleCardClick = (card: TrelloCardBasic) => {
     onCardSelect(card);
@@ -200,7 +257,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
       </div>
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
         
-        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm">
+        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm" style={{ backgroundColor: '#326681' }}>
           <UploadCloud className="mr-2 h-4 w-4" />
           Hito nuevo
         </Button>
@@ -314,21 +371,46 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                         )}
                         <div className="space-y-0.5">
                             {categories.map((category) => (
-                            <div key={category.id} className="relative flex items-center w-full justify-start rounded-md text-xs font-medium h-7 px-3 hover:bg-accent hover:text-accent-foreground">
-                                <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
-                                <PopoverTrigger asChild>
-                                    <button
-                                    className="w-2 h-2 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    style={{ backgroundColor: category.color }}
-                                    aria-label={`Cambiar color de la categoría ${category.name}`}
+                                <div key={category.id} className="group relative flex items-center w-full justify-start rounded-md text-xs font-medium h-8 px-3 hover:bg-accent">
+                                    <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
+                                        <PopoverTrigger asChild>
+                                            <button
+                                            className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                            style={{ backgroundColor: category.color }}
+                                            aria-label={`Cambiar color de la categoría ${category.name}`}
+                                            disabled={!!editingCategoryId}
+                                            />
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
+                                        </PopoverContent>
+                                    </Popover>
+                                    {editingCategoryId === category.id ? (
+                                    <Input
+                                        ref={editInputRef}
+                                        value={editingCategoryName}
+                                        onChange={(e) => setEditingCategoryName(e.target.value)}
+                                        onBlur={handleEditConfirm}
+                                        onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleEditConfirm();
+                                        if (e.key === 'Escape') handleEditCancel();
+                                        }}
+                                        className="h-6 ml-3 text-xs"
                                     />
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
-                                </PopoverContent>
-                                </Popover>
-                                <span className="ml-3">{category.name}</span>
-                            </div>
+                                    ) : (
+                                    <>
+                                        <span className="ml-3 text-muted-foreground truncate" title={category.name}>{category.name}</span>
+                                        <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditStart(category)}>
+                                            <Pencil className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-destructive/10 text-destructive" onClick={() => setCategoryToDelete(category)}>
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                        </div>
+                                    </>
+                                    )}
+                                </div>
                             ))}
                         </div>
                         {!isAdding && (
@@ -345,6 +427,27 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
       <div className="p-4 border-t shrink-0">
         <p className="text-xs text-muted-foreground">&copy; 2024 DEAS TL</p>
       </div>
+
+       <AlertDialog open={!!categoryToDelete} onOpenChange={(open) => !open && setCategoryToDelete(null)}>
+        <AlertDialogContent>
+        <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+            Esta acción no se puede deshacer. Se eliminará la categoría <span className="font-semibold text-foreground">{categoryToDelete?.name}</span>. 
+            No podrás eliminarla si está en uso por algún hito.
+            </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCategoryToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+            onClick={handleDeleteConfirm}
+            className={cn(buttonVariants({ variant: "destructive" }))}
+            >
+            Eliminar
+            </AlertDialogAction>
+        </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </aside>
   );
 }

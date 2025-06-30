@@ -340,6 +340,45 @@ export default function Home() {
     });
   }, []);
 
+  const handleCategoryUpdate = React.useCallback((categoryId: string, name: string) => {
+    const newName = name.trim();
+    if (!newName) return;
+
+    setCategories(prev => {
+      const newCategories = prev.map(c => 
+        c.id === categoryId ? { ...c, name: newName } : c
+      );
+      
+      // Also update milestones using this category
+      setMilestones(prevMilestones => prevMilestones.map(m => {
+        if (m.category.id === categoryId) {
+          const newCategory = newCategories.find(c => c.id === categoryId);
+          if (newCategory) {
+            return { ...m, category: newCategory };
+          }
+        }
+        return m;
+      }));
+
+      return newCategories;
+    });
+  }, []);
+  
+  const handleCategoryDelete = React.useCallback((categoryId: string) => {
+    const isCategoryInUse = milestones.some(m => m.category.id === categoryId);
+
+    if (isCategoryInUse) {
+      toast({
+        variant: "destructive",
+        title: "Categoría en uso",
+        description: "No se puede eliminar una categoría que está asignada a uno o más hitos.",
+      });
+      return;
+    }
+
+    setCategories(prev => prev.filter(c => c.id !== categoryId));
+  }, [milestones]);
+
   const handleMilestoneUpdate = React.useCallback((updatedMilestone: Milestone) => {
     setMilestones(prevMilestones =>
       prevMilestones.map(m =>
@@ -394,6 +433,8 @@ export default function Home() {
         categories={categories} 
         onCategoryColorChange={handleCategoryColorChange}
         onCategoryAdd={handleCategoryAdd}
+        onCategoryUpdate={handleCategoryUpdate}
+        onCategoryDelete={handleCategoryDelete}
         onCardSelect={handleCardSelect}
         selectedCard={selectedCard}
         onNewMilestoneClick={() => setIsUploadOpen(true)}
