@@ -343,7 +343,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
         </div>
       </div>
       <div className="p-4 border-t shrink-0">
-        <p className="text-xs text-muted-foreground">&copy; 2024 CronoCelda</p>
+        <p className="text-xs text-muted-foreground">&copy; 2024 DEAS TL</p>
       </div>
     </aside>
   );

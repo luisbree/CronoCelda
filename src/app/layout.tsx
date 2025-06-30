@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'CronoCelda',
+  title: 'DEAS TL',
   description: 'Tu repositorio de archivos personal en la nube con una línea de tiempo interactiva.',
 };
 

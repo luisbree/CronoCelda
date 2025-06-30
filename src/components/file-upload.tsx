@@ -89,7 +89,7 @@ export function FileUpload({
         <DialogHeader>
           <DialogTitle className="font-headline">Crear un nuevo hito</DialogTitle>
           <DialogDescription>
-            Añade un hito a tu CronoCelda. Describe el evento y, si lo deseas, adjunta uno o más archivos.
+            Añade un hito a tu DEAS TL. Describe el evento y, si lo deseas, adjunta uno o más archivos.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
