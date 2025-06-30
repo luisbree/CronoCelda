@@ -33,7 +33,6 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [dateRange, setDateRange] = React.useState<{ start: Date; end: Date } | null>(null);
   const [selectedMilestone, setSelectedMilestone] = React.useState<Milestone | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [isTrelloOpen, setTrelloOpen] = React.useState(false);
   const [selectedCard, setSelectedCard] = React.useState<TrelloCardBasic | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
@@ -48,7 +47,7 @@ export default function Home() {
         const storedMilestones = localStorage.getItem('crono-celda-milestones');
         const parsedMilestones = storedMilestones ? JSON.parse(storedMilestones) : null;
         if (parsedMilestones && parsedMilestones.length > 0) {
-          setMilestones(parsedMilestones);
+          setMilestones(parsedMilestones.map((m: Milestone) => ({...m, occurredAt: m.occurredAt})));
         } else {
           // If no milestones in storage, or if storage is empty, initialize with sample data
           setMilestones(SAMPLE_MILESTONES);
@@ -109,6 +108,7 @@ export default function Home() {
     }
 
     setIsLoadingTimeline(true);
+    setSelectedMilestone(null); // Close detail panel when changing card
 
     // Special case: If the selected card is the RSA060 project, load the sample data.
     if (card.name.includes('RSA060')) {
@@ -287,7 +287,10 @@ export default function Home() {
 
   const handleMilestoneClick = React.useCallback((milestone: Milestone) => {
     setSelectedMilestone(milestone);
-    setIsDetailOpen(true);
+  }, []);
+
+  const handleDetailClose = React.useCallback(() => {
+    setSelectedMilestone(null);
   }, []);
 
   const filteredMilestones = milestones
@@ -356,9 +359,7 @@ export default function Home() {
         selectedCard={selectedCard}
         onNewMilestoneClick={() => setIsUploadOpen(true)}
       />
-      <div
-        className="flex flex-1 flex-col transition-all duration-300"
-      >
+      <div className="flex flex-1 flex-col overflow-hidden">
         <Header 
           searchTerm={searchTerm} 
           setSearchTerm={setSearchTerm} 
@@ -366,43 +367,47 @@ export default function Home() {
           onOpenSummary={() => setIsSummaryOpen(true)}
           trelloCardUrl={selectedCard?.url ?? null}
         />
-        <main
-          className="flex-1 overflow-y-auto p-4 md:p-6"
-        >
-          {isLoadingTimeline ? (
-             <div className="flex flex-col items-center justify-center h-full text-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                <h2 className="text-2xl font-semibold font-headline mt-4">Cargando línea de tiempo...</h2>
-                <p className="mt-2 text-muted-foreground">
-                    Obteniendo los hitos desde Trello.
-                </p>
-            </div>
-          ) : dateRange && milestones.length > 0 ? (
-             <Timeline 
-                milestones={filteredMilestones} 
-                startDate={dateRange.start}
-                endDate={dateRange.end}
-                onMilestoneClick={handleMilestoneClick}
-              />
-          ) : (
-             <div className="flex flex-col items-center justify-center h-full text-center">
-                <GanttChartSquare className="h-16 w-16 text-muted-foreground/50" />
-                <h2 className="text-2xl font-semibold font-headline mt-4">Bienvenido a CronoCelda</h2>
-                <p className="mt-2 text-muted-foreground max-w-md">
-                  Para comenzar, utiliza los controles de la barra lateral para seleccionar un tablero, una lista y finalmente una tarjeta de Trello que represente tu proyecto. O, si tienes datos locales, crea un nuevo hito.
-                </p>
-              </div>
-          )}
-        </main>
+        <div className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            {isLoadingTimeline ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <h2 className="text-2xl font-semibold font-headline mt-4">Cargando línea de tiempo...</h2>
+                    <p className="mt-2 text-muted-foreground">
+                        Obteniendo los hitos desde Trello.
+                    </p>
+                </div>
+            ) : dateRange && milestones.length > 0 ? (
+                <div className="h-full w-full">
+                    <Timeline 
+                        milestones={filteredMilestones} 
+                        startDate={dateRange.start}
+                        endDate={dateRange.end}
+                        onMilestoneClick={handleMilestoneClick}
+                    />
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                    <GanttChartSquare className="h-16 w-16 text-muted-foreground/50" />
+                    <h2 className="text-2xl font-semibold font-headline mt-4">Bienvenido a CronoCelda</h2>
+                    <p className="mt-2 text-muted-foreground max-w-md">
+                    Para comenzar, utiliza los controles de la barra lateral para seleccionar un tablero, una lista y finalmente una tarjeta de Trello que represente tu proyecto. O, si tienes datos locales, crea un nuevo hito.
+                    </p>
+                </div>
+            )}
+            </main>
+            {selectedMilestone && (
+                 <div className="h-[45%] border-t bg-card shrink-0">
+                    <MilestoneDetail
+                        milestone={selectedMilestone}
+                        categories={categories}
+                        onMilestoneUpdate={handleMilestoneUpdate}
+                        onClose={handleDetailClose}
+                    />
+                 </div>
+            )}
+        </div>
       </div>
-
-      <MilestoneDetail
-        isOpen={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
-        milestone={selectedMilestone}
-        categories={categories}
-        onMilestoneUpdate={handleMilestoneUpdate}
-      />
 
       <FileUpload
         isOpen={isUploadOpen}
