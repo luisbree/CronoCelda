@@ -453,12 +453,12 @@ export default function Home() {
                         Obteniendo los hitos desde Trello.
                     </p>
                 </div>
-            ) : milestones.length > 0 ? (
+            ) : milestones.length > 0 && dateRange ? (
                 <div className="h-full w-full">
                     <Timeline 
                         milestones={filteredMilestones} 
-                        startDate={dateRange!.start}
-                        endDate={dateRange!.end}
+                        startDate={dateRange.start}
+                        endDate={dateRange.end}
                         onMilestoneClick={handleMilestoneClick}
                     />
                 </div>
