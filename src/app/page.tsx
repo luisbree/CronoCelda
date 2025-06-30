@@ -448,7 +448,7 @@ export default function Home() {
                       className="h-2 bg-border cursor-row-resize hover:bg-ring transition-colors flex-shrink-0"
                       title="Arrastrar para redimensionar"
                     />
-                    <div className="flex-1 bg-slate-100 shrink-0 overflow-y-auto">
+                    <div className="flex-1 bg-background shrink-0 overflow-y-auto light-panel">
                         <MilestoneDetail
                             milestone={selectedMilestone}
                             categories={categories}

@@ -237,13 +237,13 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         setEditableDescription(milestone.description);
                     }
                     }}
-                    className="text-xs leading-normal w-full bg-secondary/50"
+                    className="text-sm leading-normal w-full bg-background border"
                     autoFocus
                     rows={3}
                 />
                 ) : (
                 <div
-                    className="text-xs text-muted-foreground leading-normal cursor-pointer hover:bg-secondary/50 p-2 -m-2 rounded-md transition-colors relative group"
+                    className="text-sm text-muted-foreground leading-normal cursor-pointer hover:bg-accent p-2 -m-2 rounded-md transition-colors relative group"
                     onClick={() => setIsEditingDescription(true)}
                 >
                     <p className="whitespace-pre-wrap">{milestone.description || 'Añade una descripción...'}</p>
@@ -273,7 +273,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyDown={handleTagAdd}
                         placeholder="Añadir etiqueta y presionar Enter..."
-                        className="h-8 bg-secondary/50 text-xs"
+                        className="h-8 bg-input text-xs"
                     />
                 </div>
             
@@ -299,7 +299,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                     {milestone.associatedFiles.length > 0 ? (
                         <ul className="space-y-1.5">
                             {milestone.associatedFiles.map(file => (
-                                <li key={file.id} className="flex items-center justify-between p-1.5 rounded-md bg-secondary/50">
+                                <li key={file.id} className="flex items-center justify-between p-1.5 rounded-md bg-secondary">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <FileIcon type={file.type} />
                                         <span className="text-xs font-medium truncate" title={file.name}>{file.name}</span>
