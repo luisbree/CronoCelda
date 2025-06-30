@@ -7,7 +7,6 @@ import { Timeline } from '@/components/timeline';
 import { MilestoneDetail } from '@/components/milestone-detail';
 import { type Milestone, type Category, type AssociatedFile } from '@/types';
 import { CATEGORIES } from '@/lib/data';
-import { SAMPLE_MILESTONES_RSB002 } from '@/lib/sample-data';
 import { toast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
 import { addMonths, endOfDay, parseISO, startOfDay, subMonths, subYears, format } from 'date-fns';
@@ -114,14 +113,6 @@ export default function Home() {
     setIsLoadingTimeline(true);
     setSelectedMilestone(null); // Close detail panel when changing card
     
-    // Special case: If the selected card is the RSB002 project, load the sample data.
-    if (card.name.toLowerCase().includes('san roque') || card.name.includes('RSB002')) {
-        setMilestones(SAMPLE_MILESTONES_RSB002);
-        setIsLoadingTimeline(false);
-        return;
-    }
-
-
     // Default behavior for other cards: fetch attachments from Trello
     try {
         const attachments = await getCardAttachments(card.id);
