@@ -85,7 +85,7 @@ export function FileUpload({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[480px] bg-zinc-800/90 backdrop-blur-sm text-card-foreground">
         <DialogHeader>
           <DialogTitle className="font-headline">Crear un nuevo hito</DialogTitle>
           <DialogDescription>
@@ -101,7 +101,7 @@ export function FileUpload({
                 <FormItem>
                   <FormLabel>Título del Hito</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Inicio de Estudio de Impacto Ambiental" {...field} />
+                    <Input placeholder="Ej: Inicio de Estudio de Impacto Ambiental" {...field} className="bg-zinc-200 text-black border-zinc-300 placeholder:text-zinc-500" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -116,7 +116,7 @@ export function FileUpload({
                   <FormControl>
                     <Textarea
                       placeholder="Describe el hito, su importancia y contexto."
-                      className="resize-none"
+                      className="resize-none bg-zinc-200 text-black border-zinc-300 placeholder:text-zinc-500"
                       {...field}
                     />
                   </FormControl>
@@ -133,7 +133,7 @@ export function FileUpload({
                   <FormControl>
                     <div className="space-y-3">
                       <div 
-                        className="border-2 border-dashed border-muted-foreground/50 rounded-lg p-6 text-center cursor-pointer hover:bg-accent hover:border-primary"
+                        className="border-2 border-dashed border-muted-foreground/50 rounded-lg p-6 text-center cursor-pointer hover:bg-accent/50 hover:border-primary"
                         onClick={() => document.getElementById('file-input')?.click()}
                       >
                         <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
@@ -144,7 +144,7 @@ export function FileUpload({
                       </div>
                       {selectedFiles.length > 0 && (
                         <div className="space-y-1">
-                          <ul className="max-h-32 overflow-y-auto space-y-2 rounded-md border p-2">
+                          <ul className="max-h-32 overflow-y-auto space-y-2 rounded-md border border-black/20 p-2 bg-black/20">
                             {selectedFiles.map((file, index) => (
                               <li key={index} className="flex items-center justify-between text-sm p-1.5 bg-secondary/50 rounded-md">
                                 <div className="flex items-center gap-2 min-w-0">
@@ -178,7 +178,7 @@ export function FileUpload({
                   <FormLabel>Categoría</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-zinc-200 text-black border-zinc-300">
                         <SelectValue placeholder="Selecciona una categoría" />
                       </SelectTrigger>
                     </FormControl>
@@ -201,7 +201,7 @@ export function FileUpload({
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="bg-zinc-200 text-black border-zinc-300 hover:bg-zinc-300">
                 Cancelar
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
