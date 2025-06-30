@@ -42,6 +42,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
   const [viewRange, setViewRange] = React.useState({ start: startDate, end: endDate });
   const [isPanning, setIsPanning] = React.useState(false);
   const panStartRef = React.useRef({x: 0, rangeStart: new Date(), rangeEnd: new Date()});
+  const [activeMilestoneId, setActiveMilestoneId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setViewRange({ start: startDate, end: endDate });
@@ -363,10 +364,18 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
             return (
               <div
                 key={milestone.id}
-                className="absolute bottom-7 flex flex-col items-center"
+                className={cn(
+                  "absolute bottom-7 flex flex-col items-center",
+                  activeMilestoneId === milestone.id && 'z-20'
+                )}
                 style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
               >
-                <Tooltip delayDuration={100}>
+                <Tooltip 
+                    delayDuration={100} 
+                    onOpenChange={(isOpen) => {
+                        setActiveMilestoneId(isOpen ? milestone.id : null);
+                    }}
+                >
                   <TooltipTrigger asChild>
                     <div 
                       className="relative flex flex-col-reverse items-center cursor-pointer group"
