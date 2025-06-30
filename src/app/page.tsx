@@ -107,22 +107,18 @@ export default function Home() {
 
   const handleCardSelect = React.useCallback(async (card: TrelloCardBasic | null) => {
     setSelectedCard(card);
-    if (!card) {
+    setSelectedMilestone(null); // Always close detail panel when changing card
+
+    // If no card is selected or it's the example card, show the welcome screen.
+    if (!card || card.name.includes('RSB002')) {
+      setMilestones([]);
+      setIsLoadingTimeline(false);
       return;
     }
 
-    // If the selected card is the example one, clear the timeline to keep the welcome screen.
-    if (card.name.includes('RSB002')) {
-        setMilestones([]);
-        setSelectedMilestone(null);
-        setIsLoadingTimeline(false);
-        return;
-    }
-
+    // For any other card, show loader and fetch data.
     setIsLoadingTimeline(true);
-    setSelectedMilestone(null); // Close detail panel when changing card
     
-    // Default behavior for other cards: fetch attachments from Trello
     try {
         const attachments = await getCardAttachments(card.id);
         const defaultCategory = categories.find(c => c.name.toLowerCase().includes('trello')) || CATEGORIES[1];
