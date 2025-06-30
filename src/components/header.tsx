@@ -1,5 +1,5 @@
 import { Input } from './ui/input';
-import { Search, List, ExternalLink } from 'lucide-react';
+import { Search, List, ExternalLink, Home } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import {
@@ -14,10 +14,11 @@ interface HeaderProps {
   setSearchTerm: (term: string) => void;
   onSetRange: (range: '1D' | '1M' | '1Y' | 'All') => void;
   onOpenSummary: () => void;
+  onGoHome: () => void;
   trelloCardUrl: string | null;
 }
 
-export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, trelloCardUrl }: HeaderProps) {
+export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, onGoHome, trelloCardUrl }: HeaderProps) {
   return (
     <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 w-full shrink-0 gap-4">
       <div className="flex-1">
@@ -34,6 +35,16 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, t
       </div>
       <div className="flex items-center gap-2">
             <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button size="icon" variant="outline" onClick={onGoHome}>
+                            <Home className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Volver al inicio</p>
+                    </TooltipContent>
+                </Tooltip>
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button size="icon" variant="outline" onClick={onOpenSummary}>

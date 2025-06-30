@@ -277,6 +277,13 @@ export default function Home() {
   const handleDetailClose = React.useCallback(() => {
     setSelectedMilestone(null);
   }, []);
+  
+  const handleGoHome = React.useCallback(() => {
+    setMilestones([]);
+    setSelectedCard(null);
+    setSelectedMilestone(null);
+    setSearchTerm('');
+  }, []);
 
   const filteredMilestones = milestones
     .filter(milestone => {
@@ -426,6 +433,7 @@ export default function Home() {
           setSearchTerm={setSearchTerm} 
           onSetRange={handleSetRange}
           onOpenSummary={() => setIsSummaryOpen(true)}
+          onGoHome={handleGoHome}
           trelloCardUrl={selectedCard?.url ?? null}
         />
         <div 
