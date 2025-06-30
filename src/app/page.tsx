@@ -109,8 +109,10 @@ export default function Home() {
     setSelectedCard(card);
     setSelectedMilestone(null); // Always close detail panel when changing card
 
+    const isExampleCard = card && card.name.toLowerCase().includes('rsb002');
+
     // If no card is selected or it's the example card, show the welcome screen.
-    if (!card || card.name.includes('RSB002')) {
+    if (!card || isExampleCard) {
       setMilestones([]);
       setIsLoadingTimeline(false);
       return;
