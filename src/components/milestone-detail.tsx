@@ -152,7 +152,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
   };
 
   return (
-    <div className="flex flex-col h-full p-4 overflow-hidden">
+    <div className="flex flex-col h-full p-4 overflow-hidden text-card-foreground">
         <div className="flex items-start justify-between gap-4 shrink-0">
             <div className="flex-1 min-w-0">
                 {isEditingTitle ? (
@@ -164,7 +164,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                     if (e.key === 'Enter') handleTitleSave();
                     if (e.key === 'Escape') setIsEditingTitle(false);
                     }}
-                    className="text-xl font-headline font-semibold h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0"
+                    className="text-xl font-headline font-semibold h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 bg-transparent"
                     autoFocus
                 />
                 ) : (
@@ -177,7 +177,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                 )}
                 <div className="flex items-center pt-2">
                     <Select value={milestone.category.id} onValueChange={handleCategoryChange}>
-                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-sm font-medium text-muted-foreground hover:text-foreground focus:text-foreground">
+                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-sm font-medium text-muted-foreground hover:text-card-foreground focus:text-card-foreground">
                             <SelectValue asChild>
                                 <div className="flex items-center cursor-pointer">
                                     <div
@@ -233,13 +233,13 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         setEditableDescription(milestone.description);
                     }
                     }}
-                    className="text-sm leading-relaxed w-full"
+                    className="text-sm leading-relaxed w-full bg-transparent"
                     autoFocus
                     rows={5}
                 />
                 ) : (
                 <div
-                    className="text-sm text-foreground leading-relaxed cursor-pointer hover:bg-secondary/50 p-2 -m-2 rounded-md transition-colors relative group"
+                    className="text-sm text-muted-foreground leading-relaxed cursor-pointer hover:bg-secondary/50 p-2 -m-2 rounded-md transition-colors relative group"
                     onClick={() => setIsEditingDescription(true)}
                 >
                     <p className="whitespace-pre-wrap">{milestone.description || 'Añade una descripción...'}</p>
@@ -269,7 +269,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyDown={handleTagAdd}
                         placeholder="Añadir etiqueta y presionar Enter..."
-                        className="h-9"
+                        className="h-9 bg-secondary/50"
                     />
                 </div>
             
