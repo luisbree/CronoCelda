@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Logo } from './logo';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Plus, Search, UploadCloud, Loader2 } from 'lucide-react';
+import { Plus, Search, UploadCloud, Loader2, X } from 'lucide-react';
 import type { Category } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ColorPicker } from './color-picker';
@@ -186,6 +186,10 @@ export function Sidebar({ categories, onCategoryColorChange, onCategoryAdd, onCa
     }
 };
 
+const handleClearSearch = () => {
+  setCardSearchTerm('');
+};
+
 const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Resultados (${filteredCards.length})` : `Tarjetas (${filteredCards.length})`;
 
 
@@ -228,12 +232,22 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                     placeholder="Buscar tarjeta y presionar Enter..."
-                    className="pl-9 h-9"
+                    className="pl-9 pr-9 h-9"
                     value={cardSearchTerm}
                     onChange={(e) => setCardSearchTerm(e.target.value)}
                     onKeyDown={handleGlobalSearch}
                 />
-                {isSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                {isSearching ? (
+                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                ) : cardSearchTerm && (
+                    <button
+                        onClick={handleClearSearch}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:bg-accent"
+                        aria-label="Limpiar búsqueda"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                )}
             </div>
         </div>
         
