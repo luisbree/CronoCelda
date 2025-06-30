@@ -12,9 +12,8 @@ import { toast } from '@/hooks/use-toast';
 import { autoTagFiles } from '@/ai/flows/auto-tag-files';
 import { addMonths, endOfDay, parseISO, startOfDay, subMonths, subYears, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { TrelloSummary } from '@/components/trello-summary';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Loader2, GanttChartSquare } from 'lucide-react';
+import { Loader2, GanttChartSquare } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -33,7 +32,6 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [dateRange, setDateRange] = React.useState<{ start: Date; end: Date } | null>(null);
   const [selectedMilestone, setSelectedMilestone] = React.useState<Milestone | null>(null);
-  const [isTrelloOpen, setTrelloOpen] = React.useState(false);
   const [selectedCard, setSelectedCard] = React.useState<TrelloCardBasic | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
@@ -469,11 +467,6 @@ export default function Home() {
         categories={categories}
         onUpload={handleUpload}
       />
-
-      <TrelloSummary
-        isOpen={isTrelloOpen}
-        onOpenChange={setTrelloOpen}
-      />
       
       <MilestoneSummarySheet
         isOpen={isSummaryOpen}
@@ -481,25 +474,6 @@ export default function Home() {
         milestones={filteredMilestones}
       />
 
-      <div className="absolute bottom-6 right-6 z-20">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                className="rounded-full h-14 w-14 shadow-lg bg-accent text-accent-foreground hover:bg-accent/90"
-                onClick={() => setTrelloOpen(true)}
-                aria-label="Abrir Resumen de Trello"
-              >
-                <MessageSquare className="h-6 w-6" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Resumen de Trello con IA</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
     </div>
   );
 }
