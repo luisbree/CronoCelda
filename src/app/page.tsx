@@ -111,81 +111,80 @@ export default function Home() {
 
     const isExampleCard = card && card.name.toLowerCase().includes('rsb002');
 
-    // If no card is selected or it's the example card, show the welcome screen.
     if (!card || isExampleCard) {
+      // This is the case for no selection or the example card.
+      // We ensure the timeline is cleared and not loading.
       setMilestones([]);
       setIsLoadingTimeline(false);
-      return;
-    }
+    } else {
+      // This is for any other REAL card.
+      setIsLoadingTimeline(true);
+      try {
+          const attachments = await getCardAttachments(card.id);
+          const defaultCategory = categories.find(c => c.name.toLowerCase().includes('trello')) || CATEGORIES[1];
 
-    // For any other card, show loader and fetch data.
-    setIsLoadingTimeline(true);
-    
-    try {
-        const attachments = await getCardAttachments(card.id);
-        const defaultCategory = categories.find(c => c.name.toLowerCase().includes('trello')) || CATEGORIES[1];
+          const newMilestones: Milestone[] = attachments.map(att => {
+              const fileType: AssociatedFile['type'] = 
+                  att.mimeType.startsWith('image/') ? 'image' : 
+                  att.mimeType.startsWith('video/') ? 'video' :
+                  att.mimeType.startsWith('audio/') ? 'audio' :
+                  ['application/pdf', 'application/msword', 'text/plain'].some(t => att.mimeType.includes(t)) ? 'document' : 'other';
+              
+              const associatedFile: AssociatedFile = {
+                  id: `file-${att.id}`,
+                  name: att.fileName,
+                  size: `${(att.bytes / 1024).toFixed(2)} KB`,
+                  type: fileType
+              };
+              
+              const creationLog = `${format(new Date(), "PPpp", { locale: es })} - Creación desde Trello.`;
 
-        const newMilestones: Milestone[] = attachments.map(att => {
-            const fileType: AssociatedFile['type'] = 
-                att.mimeType.startsWith('image/') ? 'image' : 
-                att.mimeType.startsWith('video/') ? 'video' :
-                att.mimeType.startsWith('audio/') ? 'audio' :
-                ['application/pdf', 'application/msword', 'text/plain'].some(t => att.mimeType.includes(t)) ? 'document' : 'other';
-            
-            const associatedFile: AssociatedFile = {
-                id: `file-${att.id}`,
-                name: att.fileName,
-                size: `${(att.bytes / 1024).toFixed(2)} KB`,
-                type: fileType
-            };
-            
-            const creationLog = `${format(new Date(), "PPpp", { locale: es })} - Creación desde Trello.`;
+              return {
+                  id: `hito-${att.id}`,
+                  name: att.fileName,
+                  description: `Archivo adjuntado a la tarjeta de Trello el ${new Date(att.date).toLocaleDateString()}.`,
+                  occurredAt: att.date,
+                  category: defaultCategory,
+                  tags: null,
+                  associatedFiles: [associatedFile],
+                  isImportant: false,
+                  history: [creationLog],
+              };
+          });
 
-            return {
-                id: `hito-${att.id}`,
-                name: att.fileName,
-                description: `Archivo adjuntado a la tarjeta de Trello el ${new Date(att.date).toLocaleDateString()}.`,
-                occurredAt: att.date,
-                category: defaultCategory,
-                tags: null,
-                associatedFiles: [associatedFile],
-                isImportant: false,
-                history: [creationLog],
-            };
-        });
+          setMilestones(newMilestones);
+          
+          newMilestones.forEach(async (milestone) => {
+               try {
+                  if (milestone.name) {
+                      const result = await autoTagFiles({ textToAnalyze: milestone.name });
+                      setMilestones(prev =>
+                        prev.map(m =>
+                          m.id === milestone.id ? { ...m, tags: result.tags } : m
+                        )
+                      );
+                  }
+               } catch (error) {
+                  console.error('AI tagging failed:', error);
+                  setMilestones(prev =>
+                    prev.map(m =>
+                      m.id === milestone.id ? { ...m, tags: [] } : m
+                    )
+                  );
+               }
+          });
 
-        setMilestones(newMilestones);
-        
-        newMilestones.forEach(async (milestone) => {
-             try {
-                if (milestone.name) {
-                    const result = await autoTagFiles({ textToAnalyze: milestone.name });
-                    setMilestones(prev =>
-                      prev.map(m =>
-                        m.id === milestone.id ? { ...m, tags: result.tags } : m
-                      )
-                    );
-                }
-             } catch (error) {
-                console.error('AI tagging failed:', error);
-                setMilestones(prev =>
-                  prev.map(m =>
-                    m.id === milestone.id ? { ...m, tags: [] } : m
-                  )
-                );
-             }
-        });
-
-    } catch(error) {
-        console.error("Failed to process card attachments:", error);
-        setMilestones([]); // Clear milestones on error
-        toast({
-            variant: "destructive",
-            title: "Error al cargar hitos",
-            description: "No se pudieron obtener los datos de la tarjeta de Trello."
-        });
-    } finally {
-        setIsLoadingTimeline(false);
+      } catch(error) {
+          console.error("Failed to process card attachments:", error);
+          setMilestones([]); // Clear milestones on error
+          toast({
+              variant: "destructive",
+              title: "Error al cargar hitos",
+              description: "No se pudieron obtener los datos de la tarjeta de Trello."
+          });
+      } finally {
+          setIsLoadingTimeline(false);
+      }
     }
   }, [categories]);
 
@@ -454,12 +453,12 @@ export default function Home() {
                         Obteniendo los hitos desde Trello.
                     </p>
                 </div>
-            ) : dateRange && milestones.length > 0 ? (
+            ) : milestones.length > 0 ? (
                 <div className="h-full w-full">
                     <Timeline 
                         milestones={filteredMilestones} 
-                        startDate={dateRange.start}
-                        endDate={dateRange.end}
+                        startDate={dateRange!.start}
+                        endDate={dateRange!.end}
                         onMilestoneClick={handleMilestoneClick}
                     />
                 </div>
