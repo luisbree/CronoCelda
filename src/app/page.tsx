@@ -111,6 +111,14 @@ export default function Home() {
       return;
     }
 
+    // If the selected card is the example one, clear the timeline to keep the welcome screen.
+    if (card.name.includes('RSB002')) {
+        setMilestones([]);
+        setSelectedMilestone(null);
+        setIsLoadingTimeline(false);
+        return;
+    }
+
     setIsLoadingTimeline(true);
     setSelectedMilestone(null); // Close detail panel when changing card
     
