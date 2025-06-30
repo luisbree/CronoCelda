@@ -7,9 +7,9 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Paperclip, Tag, X, Star, Pencil, History, UploadCloud } from 'lucide-react';
+import { Paperclip, Tag, X, Star, Pencil, History, UploadCloud, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from './ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
@@ -152,8 +152,8 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
   };
 
   return (
-    <div className="flex flex-col h-full p-4 overflow-hidden text-card-foreground">
-        <div className="flex items-start justify-between gap-4 shrink-0">
+    <div className="flex flex-col h-full p-3 overflow-hidden text-foreground">
+        <div className="flex items-start justify-between gap-2 shrink-0">
             <div className="flex-1 min-w-0">
                 {isEditingTitle ? (
                 <Input
@@ -164,24 +164,24 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                     if (e.key === 'Enter') handleTitleSave();
                     if (e.key === 'Escape') setIsEditingTitle(false);
                     }}
-                    className="text-xl font-headline font-medium h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 bg-transparent"
+                    className="text-lg font-headline font-medium h-auto p-0 border-0 border-b-2 border-primary rounded-none focus-visible:ring-0 bg-transparent"
                     autoFocus
                 />
                 ) : (
-                <h2 className="font-headline text-xl font-medium flex items-center gap-2 truncate">
+                <h2 className="font-headline text-lg font-medium flex items-center gap-2 truncate">
                     <span className="truncate" title={milestone.name}>{milestone.name}</span>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setIsEditingTitle(true)}>
-                        <Pencil className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setIsEditingTitle(true)}>
+                        <Pencil className="h-3 w-3" />
                     </Button>
                 </h2>
                 )}
-                <div className="flex items-center pt-2">
+                <div className="flex items-center pt-1.5">
                     <Select value={milestone.category.id} onValueChange={handleCategoryChange}>
-                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-sm font-medium text-muted-foreground hover:text-card-foreground focus:text-card-foreground">
+                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-xs font-medium text-muted-foreground hover:text-foreground focus:text-foreground">
                             <SelectValue asChild>
                                 <div className="flex items-center cursor-pointer">
                                     <div
-                                        className="w-3 h-3 rounded-full mr-2 shrink-0"
+                                        className="w-2.5 h-2.5 rounded-full mr-2 shrink-0"
                                         style={{ backgroundColor: milestone.category.color }}
                                     />
                                     <span>{milestone.category.name}</span>
@@ -203,6 +203,10 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         </SelectContent>
                     </Select>
                 </div>
+                 <div className="flex items-center text-xs text-muted-foreground mt-1.5">
+                    <Clock className="h-3 w-3 mr-1.5" />
+                    <span>{format(parseISO(milestone.occurredAt), "PPP 'a las' p", { locale: es })}</span>
+                </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">
                 <button 
@@ -218,10 +222,10 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
             </div>
         </div>
         
-        <Separator className="my-3 shrink-0" />
+        <Separator className="my-2 shrink-0" />
         
-        <ScrollArea className="flex-1 -mr-4 pr-4">
-            <div className="space-y-4">
+        <ScrollArea className="flex-1 -mr-3 pr-3">
+            <div className="space-y-3">
                 {isEditingDescription ? (
                 <Textarea
                     value={editableDescription}
@@ -233,21 +237,21 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         setEditableDescription(milestone.description);
                     }
                     }}
-                    className="text-sm leading-relaxed w-full bg-transparent"
+                    className="text-xs leading-normal w-full bg-secondary/50"
                     autoFocus
-                    rows={5}
+                    rows={3}
                 />
                 ) : (
                 <div
-                    className="text-sm text-muted-foreground leading-relaxed cursor-pointer hover:bg-secondary/50 p-2 -m-2 rounded-md transition-colors relative group"
+                    className="text-xs text-muted-foreground leading-normal cursor-pointer hover:bg-secondary/50 p-2 -m-2 rounded-md transition-colors relative group"
                     onClick={() => setIsEditingDescription(true)}
                 >
                     <p className="whitespace-pre-wrap">{milestone.description || 'Añade una descripción...'}</p>
-                    <Pencil className="h-4 w-4 absolute top-2 right-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Pencil className="h-3 w-3 absolute top-1 right-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 )}
                 
-                <div className="space-y-3">
+                <div className="space-y-2">
                     <div className="flex flex-wrap gap-2 items-center">
                         <Tag className="h-4 w-4 text-muted-foreground" />
                         {(milestone.tags || []).map(tag => (
@@ -269,19 +273,19 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyDown={handleTagAdd}
                         placeholder="Añadir etiqueta y presionar Enter..."
-                        className="h-9 bg-secondary/50"
+                        className="h-8 bg-secondary/50 text-xs"
                     />
                 </div>
             
                 <Separator />
 
-                <div className="space-y-3">
-                    <h3 className="font-semibold flex items-center justify-between gap-2 text-base">
+                <div className="space-y-2">
+                    <h3 className="font-semibold flex items-center justify-between gap-2 text-sm">
                         <div className="flex items-center gap-2">
                             <Paperclip className="h-4 w-4" /> Archivos Adjuntos
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                            <UploadCloud className="mr-2 h-4 w-4"/>
+                        <Button variant="outline" size="sm" className="h-7" onClick={() => fileInputRef.current?.click()}>
+                            <UploadCloud className="mr-2 h-3 w-3"/>
                             Añadir
                         </Button>
                         <input
@@ -293,19 +297,19 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         />
                     </h3>
                     {milestone.associatedFiles.length > 0 ? (
-                        <ul className="space-y-2">
+                        <ul className="space-y-1.5">
                             {milestone.associatedFiles.map(file => (
-                                <li key={file.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
-                                    <div className="flex items-center gap-3 min-w-0">
+                                <li key={file.id} className="flex items-center justify-between p-1.5 rounded-md bg-secondary/50">
+                                    <div className="flex items-center gap-2 min-w-0">
                                         <FileIcon type={file.type} />
-                                        <span className="text-sm font-medium truncate" title={file.name}>{file.name}</span>
+                                        <span className="text-xs font-medium truncate" title={file.name}>{file.name}</span>
                                     </div>
                                     <span className="text-xs text-muted-foreground shrink-0">{file.size}</span>
                                 </li>
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-sm text-muted-foreground italic">No hay archivos adjuntos para este hito.</p>
+                        <p className="text-xs text-muted-foreground italic">No hay archivos adjuntos para este hito.</p>
                     )}
                 </div>
                 
@@ -313,19 +317,17 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
 
                 <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="history" className="border-b-0">
-                        <AccordionTrigger className="text-base font-semibold hover:no-underline py-2">
+                        <AccordionTrigger className="text-sm font-semibold hover:no-underline py-1">
                             <div className="flex items-center gap-2">
                                 <History className="h-4 w-4" /> Historial de Cambios
                             </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                        <ScrollArea className="h-32">
-                            <ul className="space-y-2 text-xs text-muted-foreground pr-4">
+                            <ul className="space-y-1.5 text-xs text-muted-foreground pr-4 max-h-24 overflow-y-auto">
                             {milestone.history.slice().reverse().map((entry, index) => (
                                 <li key={index}>{entry}</li>
                             ))}
                             </ul>
-                        </ScrollArea>
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>

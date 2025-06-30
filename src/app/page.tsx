@@ -397,7 +397,7 @@ export default function Home() {
             )}
             </main>
             {selectedMilestone && (
-                 <div className="h-[45%] border-t bg-card shrink-0">
+                 <div className="h-[45%] border-t bg-background shrink-0">
                     <MilestoneDetail
                         milestone={selectedMilestone}
                         categories={categories}
