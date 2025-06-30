@@ -257,7 +257,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
       </div>
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
         
-        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm" style={{ backgroundColor: '#326681' }}>
+        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm" style={{ backgroundColor: '#326681', color: '#cccccc' }}>
           <UploadCloud className="mr-2 h-4 w-4" />
           Hito nuevo
         </Button>
