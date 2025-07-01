@@ -23,6 +23,7 @@ import { getCardAttachments, type TrelloCardBasic } from '@/services/trello';
 import { FileUpload } from '@/components/file-upload';
 import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
 import { WelcomeScreen } from '@/components/welcome-screen';
+import { RLU004_MILESTONES } from '@/lib/rlu004-data';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -99,15 +100,46 @@ export default function Home() {
   const handleCardSelect = React.useCallback(async (card: TrelloCardBasic | null) => {
     setSelectedCard(card);
     setSelectedMilestone(null); // Always close detail panel when changing card
-
+    
     const isExampleCard = card && card.name.toLowerCase().includes('rsb002');
+    const isRLU004Card = card && card.name.toLowerCase().includes('rlu004');
 
     if (!card || isExampleCard) {
       // This is the case for no selection or the example card.
       // We ensure the timeline is cleared and not loading.
       setMilestones([]);
       setIsLoadingTimeline(false);
-    } else {
+    } else if (isRLU004Card) {
+        setIsLoadingTimeline(true);
+        // Use a short timeout to allow the loading spinner to appear
+        setTimeout(() => {
+            const milestonesWithTags = RLU004_MILESTONES.map(m => ({...m, tags: null}));
+            setMilestones(milestonesWithTags);
+
+            milestonesWithTags.forEach(async (milestone) => {
+                try {
+                   if (milestone.name) {
+                       const result = await autoTagFiles({ textToAnalyze: `${milestone.name} ${milestone.description}` });
+                       setMilestones(prev =>
+                         prev.map(m =>
+                           m.id === milestone.id ? { ...m, tags: result.tags } : m
+                         )
+                       );
+                   }
+                } catch (error) {
+                   console.error('AI tagging failed:', error);
+                   setMilestones(prev =>
+                     prev.map(m =>
+                       m.id === milestone.id ? { ...m, tags: [] } : m
+                     )
+                   );
+                }
+           });
+
+            setIsLoadingTimeline(false);
+        }, 500);
+    }
+    else {
       // This is for any other REAL card.
       setIsLoadingTimeline(true);
       try {
