@@ -257,14 +257,14 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
       </div>
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
         
-        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm" style={{ backgroundColor: '#326681', color: '#cccccc' }}>
+        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm" className="h-7" style={{ backgroundColor: '#326681', color: '#cccccc' }}>
           <UploadCloud className="mr-2 h-4 w-4" />
           Hito nuevo
         </Button>
 
         <div className="space-y-2">
             <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
-            <SelectTrigger className="w-full h-9">
+            <SelectTrigger className="w-full h-7">
                 <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
             </SelectTrigger>
             <SelectContent>
@@ -275,7 +275,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
             </Select>
 
             <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
-            <SelectTrigger className="w-full h-9">
+            <SelectTrigger className="w-full h-7">
                 <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
             </SelectTrigger>
             <SelectContent>
@@ -289,7 +289,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                     placeholder="Buscar tarjeta y presionar Enter..."
-                    className="pl-9 pr-9 h-9"
+                    className="pl-9 pr-9 h-7"
                     value={cardSearchTerm}
                     onChange={(e) => setCardSearchTerm(e.target.value)}
                     onKeyDown={handleGlobalSearch}
@@ -308,14 +308,14 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
             </div>
 
             <Select disabled>
-              <SelectTrigger className="w-full h-9">
+              <SelectTrigger className="w-full h-7">
                 <SelectValue placeholder="Seleccionar Etapa" />
               </SelectTrigger>
               <SelectContent></SelectContent>
             </Select>
 
             <Select disabled>
-              <SelectTrigger className="w-full h-9">
+              <SelectTrigger className="w-full h-7">
                 <SelectValue placeholder="Seleccionar Lote" />
               </SelectTrigger>
               <SelectContent></SelectContent>
