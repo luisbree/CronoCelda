@@ -306,6 +306,20 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                     </button>
                 )}
             </div>
+
+            <Select disabled>
+              <SelectTrigger className="w-full h-9">
+                <SelectValue placeholder="Seleccionar Etapa" />
+              </SelectTrigger>
+              <SelectContent></SelectContent>
+            </Select>
+
+            <Select disabled>
+              <SelectTrigger className="w-full h-9">
+                <SelectValue placeholder="Seleccionar Lote" />
+              </SelectTrigger>
+              <SelectContent></SelectContent>
+            </Select>
         </div>
         
         {(selectedList || isSearching || (!selectedBoard && cardSearchTerm)) && (
