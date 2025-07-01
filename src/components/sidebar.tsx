@@ -264,7 +264,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
 
         <div className="space-y-2">
             <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
-            <SelectTrigger className="w-full h-7">
+            <SelectTrigger className="w-full h-7 text-xs">
                 <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
             </SelectTrigger>
             <SelectContent>
@@ -275,7 +275,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
             </Select>
 
             <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
-            <SelectTrigger className="w-full h-7">
+            <SelectTrigger className="w-full h-7 text-xs">
                 <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
             </SelectTrigger>
             <SelectContent>
@@ -289,7 +289,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                     placeholder="Buscar tarjeta y presionar Enter..."
-                    className="pl-9 pr-9 h-7"
+                    className="pl-9 pr-9 h-7 text-xs"
                     value={cardSearchTerm}
                     onChange={(e) => setCardSearchTerm(e.target.value)}
                     onKeyDown={handleGlobalSearch}
@@ -308,14 +308,14 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
             </div>
 
             <Select disabled>
-              <SelectTrigger className="w-full h-7">
+              <SelectTrigger className="w-full h-7 text-xs">
                 <SelectValue placeholder="Seleccionar Etapa" />
               </SelectTrigger>
               <SelectContent></SelectContent>
             </Select>
 
             <Select disabled>
-              <SelectTrigger className="w-full h-7">
+              <SelectTrigger className="w-full h-7 text-xs">
                 <SelectValue placeholder="Seleccionar Lote" />
               </SelectTrigger>
               <SelectContent></SelectContent>
@@ -343,7 +343,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                                 key={card.id}
                                 onClick={() => handleCardClick(card)}
                                 className={cn(
-                                    "w-full text-left text-sm p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-card-foreground",
+                                    "w-full text-left text-xs p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-card-foreground",
                                     selectedCard?.id === card.id && "bg-primary text-primary-foreground hover:bg-primary/90"
                                 )}
                             >
