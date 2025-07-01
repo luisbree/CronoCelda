@@ -21,7 +21,7 @@ export function WelcomeScreen() {
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
                         <p>
-                            Usa el panel lateral para conectar con Trello. Selecciona un <strong>tablero</strong>, luego una <strong>lista</strong> y finalmente una <strong>tarjeta</strong>. Los archivos adjuntos de esa tarjeta se cargarán automáticamente como hitos.
+                            Usá el panel lateral para conectar con Trello. Seleccioná un <strong>tablero</strong>, luego una <strong>lista</strong> y finalmente una <strong>tarjeta</strong>. Los archivos adjuntos de esa tarjeta se cargarán automáticamente como hitos.
                         </p>
                     </CardContent>
                 </Card>
@@ -34,7 +34,7 @@ export function WelcomeScreen() {
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
                         <p>
-                            Una vez seleccionada una tarjeta, activa el botón <strong>"Hito nuevo"</strong> para añadir eventos o documentos que no están en Trello, completando el formulario con sus detalles y archivos.
+                            Una vez seleccionada una tarjeta, activá el botón <strong>"Hito nuevo"</strong> para añadir eventos o documentos que no están en Trello, completando el formulario con sus detalles y archivos.
                         </p>
                     </CardContent>
                 </Card>
@@ -47,10 +47,10 @@ export function WelcomeScreen() {
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
                         <ul className="list-disc list-inside space-y-1">
-                            <li><strong>Zoom:</strong> Usa la rueda del ratón.</li>
-                            <li><strong>Desplazar:</strong> Clic derecho/rueda y arrastra.</li>
-                            <li><strong>Ver Detalles:</strong> Clic en cualquier punto.</li>
-                            <li><strong>Redimensionar:</strong> Arrastra la barra divisoria.</li>
+                            <li><strong>Zoom:</strong> Usá la rueda del ratón.</li>
+                            <li><strong>Desplazar:</strong> Clic derecho/rueda y arrastrá.</li>
+                            <li><strong>Ver Detalles:</strong> Hacé clic en cualquier punto.</li>
+                            <li><strong>Redimensionar:</strong> Arrastrá la barra divisoria.</li>
                         </ul>
                     </CardContent>
                 </Card>
@@ -63,7 +63,7 @@ export function WelcomeScreen() {
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
                         <p>
-                            Al seleccionar un hito, se abrirá el <strong>panel de inspección</strong>. Desde allí puedes editar el título, descripción, añadir/quitar etiquetas, cambiar la categoría y marcarlo como importante.
+                            Al seleccionar un hito, se abrirá el <strong>panel de inspección</strong>. Desde allí podés editar el título, descripción, añadir/quitar etiquetas, cambiar la categoría y marcarlo como importante.
                         </p>
                     </CardContent>
                 </Card>
@@ -76,7 +76,7 @@ export function WelcomeScreen() {
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
                         <p>
-                            Utiliza la barra de búsqueda superior para encontrar hitos por nombre, descripción o etiqueta. Los botones de rango de tiempo (Hoy, 1M, 1A, Todo) te permiten enfocar la línea de tiempo rápidamente.
+                            Utilizá la barra de búsqueda superior para encontrar hitos por nombre, descripción o etiqueta. Los botones de rango de tiempo (Hoy, 1M, 1A, Todo) te permiten enfocar la línea de tiempo rápidamente.
                         </p>
                     </CardContent>
                 </Card>
@@ -90,8 +90,8 @@ export function WelcomeScreen() {
                     <CardContent className="text-sm text-muted-foreground">
                        <ul className="list-disc list-inside space-y-1">
                             <li><strong>Etiquetado con IA:</strong> Los hitos se etiquetan automáticamente para facilitar la búsqueda.</li>
-                            <li><strong>Gestión de Categorías:</strong> Edita, elimina y cambia el color de las categorías en la barra lateral.</li>
-                            <li><strong>Resumen de Hitos:</strong> Haz clic en el icono de lista en la cabecera para ver un resumen.</li>
+                            <li><strong>Gestión de Categorías:</strong> Editá, eliminá y cambiá el color de las categorías en la barra lateral.</li>
+                            <li><strong>Resumen de Hitos:</strong> Hacé clic en el icono de lista en la cabecera para ver un resumen.</li>
                        </ul>
                     </CardContent>
                 </Card>
