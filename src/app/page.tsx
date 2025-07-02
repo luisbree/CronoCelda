@@ -44,6 +44,44 @@ export default function Home() {
   const [timelinePanelHeight, setTimelinePanelHeight] = React.useState(55); // Initial percentage
   const resizeContainerRef = React.useRef<HTMLDivElement>(null);
 
+  const runAITagging = async (milestonesToTag: Milestone[]) => {
+    const taggingPayload = milestonesToTag
+      .filter(m => m.name)
+      .map(m => ({
+        id: m.id,
+        textToAnalyze: `${m.name} ${m.description}`,
+      }));
+  
+    if (taggingPayload.length === 0) {
+      return;
+    }
+  
+    try {
+      const results = await autoTagFiles(taggingPayload);
+      
+      const tagsMap = new Map(results.map(r => [r.id, r.tags]));
+  
+      setMilestones(prev =>
+        prev.map(m => {
+          if (tagsMap.has(m.id)) {
+            return { ...m, tags: tagsMap.get(m.id) ?? [] };
+          }
+          if (taggingPayload.some(p => p.id === m.id)) {
+            return { ...m, tags: [] };
+          }
+          return m;
+        })
+      );
+    } catch (error) {
+      console.error('AI batch tagging failed:', error);
+      const processedIds = new Set(taggingPayload.map(p => p.id));
+      setMilestones(prev =>
+        prev.map(m =>
+          processedIds.has(m.id) ? { ...m, tags: [] } : m
+        )
+      );
+    }
+  };
 
   // Load state from localStorage on initial mount
   React.useEffect(() => {
@@ -143,25 +181,7 @@ export default function Home() {
         setMilestones(milestonesWithCategory);
         
         // Run AI tagging in the background
-        milestonesWithCategory.forEach(async (milestone) => {
-            try {
-              if (milestone.name) {
-                  const result = await autoTagFiles({ textToAnalyze: `${milestone.name} ${milestone.description}` });
-                  setMilestones(prev =>
-                    prev.map(m =>
-                      m.id === milestone.id ? { ...m, tags: result.tags } : m
-                    )
-                  );
-              }
-            } catch (error) {
-              console.error('AI tagging failed:', error);
-              setMilestones(prev =>
-                prev.map(m =>
-                  m.id === milestone.id ? { ...m, tags: [] } : m
-                )
-              );
-            }
-        });
+        runAITagging(milestonesWithCategory);
 
         setIsLoadingTimeline(false);
         return;
@@ -204,25 +224,7 @@ export default function Home() {
 
         setMilestones(newMilestones);
         
-        newMilestones.forEach(async (milestone) => {
-             try {
-                if (milestone.name) {
-                    const result = await autoTagFiles({ textToAnalyze: milestone.name });
-                    setMilestones(prev =>
-                      prev.map(m =>
-                        m.id === milestone.id ? { ...m, tags: result.tags } : m
-                      )
-                    );
-                }
-             } catch (error) {
-                console.error('AI tagging failed:', error);
-                setMilestones(prev =>
-                  prev.map(m =>
-                    m.id === milestone.id ? { ...m, tags: [] } : m
-                  )
-                );
-             }
-        });
+        runAITagging(newMilestones);
 
     } catch(error) {
         console.error("Failed to process card attachments:", error);
@@ -290,10 +292,16 @@ export default function Home() {
 
     // Run AI tagging in the background
     try {
-        const result = await autoTagFiles({ textToAnalyze: `${name} ${description}` });
+        const payload = [{
+            id: newMilestone.id,
+            textToAnalyze: `${name} ${description}`
+        }];
+        const results = await autoTagFiles(payload);
+        const newTags = results.find(r => r.id === newMilestone.id)?.tags ?? [];
+
         setMilestones(prev =>
           prev.map(m =>
-            m.id === newMilestone.id ? { ...m, tags: result.tags } : m
+            m.id === newMilestone.id ? { ...m, tags: newTags } : m
           )
         );
     } catch (error) {
