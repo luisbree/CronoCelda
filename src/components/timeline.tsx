@@ -43,69 +43,71 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
   const [isPanning, setIsPanning] = React.useState(false);
   const panStartRef = React.useRef({x: 0, rangeStart: new Date(), rangeEnd: new Date()});
   const [activeMilestoneId, setActiveMilestoneId] = React.useState<string | null>(null);
+  const prevMilestoneIdsRef = React.useRef<string>('');
 
   React.useEffect(() => {
     setViewRange({ start: startDate, end: endDate });
   }, [startDate, endDate]);
 
   React.useEffect(() => {
-    if (milestones.length > 0) {
-      const newHeights = new Map<string, number>();
-      const sortedMilestones = [...milestones].sort(
-        (a, b) => parseISO(a.occurredAt).getTime() - parseISO(b.occurredAt).getTime()
-      );
+    const currentMilestoneIds = milestones.map(m => m.id).sort().join(',');
 
-      // Define parameters for height generation and collision
-      const MIN_HEIGHT = 60;
-      const MAX_HEIGHT = 150;
-      const VERTICAL_SEPARATION = 35; // Min vertical distance between dots
+    // Only recalculate heights if the set of milestone IDs has changed.
+    // This prevents re-calculation when only metadata (like tags) is updated.
+    if (currentMilestoneIds !== prevMilestoneIdsRef.current) {
+      prevMilestoneIdsRef.current = currentMilestoneIds;
 
-      // Calculate the total time span of all milestones to determine a relative "closeness"
-      const allDates = sortedMilestones.map(m => parseISO(m.occurredAt));
-      const oldestTime = allDates[0]?.getTime() ?? 0;
-      const newestTime = allDates[allDates.length - 1]?.getTime() ?? 0;
-      const totalDuration = newestTime - oldestTime;
-      
-      // Consider milestones close if they are within 1.5% of the total duration.
-      // This value is tuned to avoid crowding on the default view.
-      const TIME_SEPARATION_THRESHOLD = totalDuration > 0 ? totalDuration * 0.015 : 1;
+      if (milestones.length > 0) {
+        const newHeights = new Map<string, number>();
+        const sortedMilestones = [...milestones].sort(
+          (a, b) => parseISO(a.occurredAt).getTime() - parseISO(b.occurredAt).getTime()
+        );
 
-      const placedMilestones: { time: number; height: number }[] = [];
+        const MIN_HEIGHT = 60;
+        const MAX_HEIGHT = 150;
+        const VERTICAL_SEPARATION = 35;
 
-      sortedMilestones.forEach(milestone => {
-        const milestoneTime = parseISO(milestone.occurredAt).getTime();
+        const allDates = sortedMilestones.map(m => parseISO(m.occurredAt));
+        const oldestTime = allDates[0]?.getTime() ?? 0;
+        const newestTime = allDates[allDates.length - 1]?.getTime() ?? 0;
+        const totalDuration = newestTime - oldestTime;
         
-        let finalHeight: number = MIN_HEIGHT;
-        let collision = true;
-        let attempts = 0;
-        const MAX_ATTEMPTS = 20;
+        const TIME_SEPARATION_THRESHOLD = totalDuration > 0 ? totalDuration * 0.015 : 1;
 
-        // Try to find a random height that doesn't collide with recent milestones
-        while (collision && attempts < MAX_ATTEMPTS) {
-          attempts++;
-          collision = false;
-          finalHeight = Math.floor(Math.random() * (MAX_HEIGHT - MIN_HEIGHT + 1)) + MIN_HEIGHT;
+        const placedMilestones: { time: number; height: number }[] = [];
 
-          for (const placed of placedMilestones) {
-            const timeDiff = Math.abs(milestoneTime - placed.time);
-            const heightDiff = Math.abs(finalHeight - placed.height);
-            
-            // If milestones are close in time and also close in height, it's a collision
-            if (timeDiff < TIME_SEPARATION_THRESHOLD && heightDiff < VERTICAL_SEPARATION) {
-              collision = true;
-              break; // Found a collision, try a new random height
+        sortedMilestones.forEach(milestone => {
+          const milestoneTime = parseISO(milestone.occurredAt).getTime();
+          
+          let finalHeight: number = MIN_HEIGHT;
+          let collision = true;
+          let attempts = 0;
+          const MAX_ATTEMPTS = 20;
+
+          while (collision && attempts < MAX_ATTEMPTS) {
+            attempts++;
+            collision = false;
+            finalHeight = Math.floor(Math.random() * (MAX_HEIGHT - MIN_HEIGHT + 1)) + MIN_HEIGHT;
+
+            for (const placed of placedMilestones) {
+              const timeDiff = Math.abs(milestoneTime - placed.time);
+              const heightDiff = Math.abs(finalHeight - placed.height);
+              
+              if (timeDiff < TIME_SEPARATION_THRESHOLD && heightDiff < VERTICAL_SEPARATION) {
+                collision = true;
+                break;
+              }
             }
           }
-        }
-        
-        // After attempts, we use the last generated height, accepting a potential overlap in very crowded cases.
-        newHeights.set(milestone.id, finalHeight);
-        placedMilestones.push({ time: milestoneTime, height: finalHeight });
-      });
+          
+          newHeights.set(milestone.id, finalHeight);
+          placedMilestones.push({ time: milestoneTime, height: finalHeight });
+        });
 
-      heights.current = newHeights;
-    } else {
-      heights.current.clear();
+        heights.current = newHeights;
+      } else {
+        heights.current.clear();
+      }
     }
   }, [milestones]);
   
