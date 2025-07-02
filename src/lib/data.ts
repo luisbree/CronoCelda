@@ -7,5 +7,5 @@ export const CATEGORIES: Category[] = [
   { id: 'cat-4', name: 'Documentación Legal', color: '#FF4500' },
   { id: 'cat-5', name: 'Planos y Cartografía', color: '#708090' },
   { id: 'cat-6', name: 'Reuniones con contratista', color: '#FFA500' },
-  { id: 'cat-rsb002', name: 'Proyecto RSB002', color: '#4682B4' },
+  { id: 'cat-otros', name: 'Otros', color: '#888888' },
 ];

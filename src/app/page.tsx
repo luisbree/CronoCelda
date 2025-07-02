@@ -59,13 +59,13 @@ export default function Home() {
           finalCategories = [...CATEGORIES]; // Create a copy
         }
         
-        // Ensure the essential RSB002 category always exists.
+        // Ensure the essential 'Otros' category always exists.
         // This prevents errors if it's missing from localStorage.
-        const rsb002CategoryExists = finalCategories.some(c => c.id === 'cat-rsb002');
-        if (!rsb002CategoryExists) {
-          const rsb002CategoryDefault = CATEGORIES.find(c => c.id === 'cat-rsb002');
-          if (rsb002CategoryDefault) {
-              finalCategories.push(rsb002CategoryDefault);
+        const otrosCategoryExists = finalCategories.some(c => c.id === 'cat-otros');
+        if (!otrosCategoryExists) {
+          const otrosCategoryDefault = CATEGORIES.find(c => c.id === 'cat-otros');
+          if (otrosCategoryDefault) {
+              finalCategories.push(otrosCategoryDefault);
           }
         }
         setCategories(finalCategories);
@@ -127,9 +127,9 @@ export default function Home() {
         setIsLoadingTimeline(true);
 
         // Find the correct category object from the main state
-        const rsb002Category = categories.find(c => c.id === 'cat-rsb002');
-        if (!rsb002Category) {
-            console.error("RSB002 category not found");
+        const otrosCategory = categories.find(c => c.id === 'cat-otros');
+        if (!otrosCategory) {
+            console.error("'Otros' category not found");
             setIsLoadingTimeline(false);
             return;
         }
@@ -137,7 +137,7 @@ export default function Home() {
         // Map the hardcoded milestones to use the up-to-date category object
         const milestonesWithCategory = RSB002_MILESTONES.map(m => ({
             ...m,
-            category: rsb002Category,
+            category: otrosCategory,
         }));
         
         setMilestones(milestonesWithCategory);
