@@ -48,15 +48,28 @@ export default function Home() {
   // Load state from localStorage on initial mount
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
+      let finalCategories: Category[] = [];
       try {
-        // Categories are loaded from storage to preserve user customizations.
         const storedCategories = localStorage.getItem('deas-tl-categories');
         const parsedCategories = storedCategories ? JSON.parse(storedCategories) : null;
+        
         if (parsedCategories && parsedCategories.length > 0) {
-          setCategories(parsedCategories);
+          finalCategories = parsedCategories;
         } else {
-          setCategories(CATEGORIES);
+          finalCategories = [...CATEGORIES]; // Create a copy
         }
+        
+        // Ensure the essential RSB002 category always exists.
+        // This prevents errors if it's missing from localStorage.
+        const rsb002CategoryExists = finalCategories.some(c => c.id === 'cat-rsb002');
+        if (!rsb002CategoryExists) {
+          const rsb002CategoryDefault = CATEGORIES.find(c => c.id === 'cat-rsb002');
+          if (rsb002CategoryDefault) {
+              finalCategories.push(rsb002CategoryDefault);
+          }
+        }
+        setCategories(finalCategories);
+
       } catch (error) {
           console.error("Failed to load categories from localStorage", error);
           setCategories(CATEGORIES);
