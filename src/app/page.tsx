@@ -23,6 +23,7 @@ import { getCardAttachments, type TrelloCardBasic } from '@/services/trello';
 import { FileUpload } from '@/components/file-upload';
 import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
 import { WelcomeScreen } from '@/components/welcome-screen';
+import { RSB002_MILESTONES } from '@/lib/rsb002-data';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -100,82 +101,126 @@ export default function Home() {
     setSelectedCard(card);
     setSelectedMilestone(null); // Always close detail panel when changing card
     
-    const isExampleCard = card && card.name.toLowerCase().includes('rsb002');
-
-    if (!card || isExampleCard) {
-      // This is the case for no selection or the example card.
-      // We ensure the timeline is cleared and not loading.
+    // Case 1: No card is selected. Clear everything and show welcome screen.
+    if (!card) {
       setMilestones([]);
       setIsLoadingTimeline(false);
-    } else {
-      // This is for any other REAL card.
-      setIsLoadingTimeline(true);
-      try {
-          const attachments = await getCardAttachments(card.id);
-          const defaultCategory = categories.find(c => c.name.toLowerCase().includes('trello')) || CATEGORIES[1];
+      return;
+    }
 
-          const newMilestones: Milestone[] = attachments.map(att => {
-              const fileType: AssociatedFile['type'] = 
-                  att.mimeType.startsWith('image/') ? 'image' : 
-                  att.mimeType.startsWith('video/') ? 'video' :
-                  att.mimeType.startsWith('audio/') ? 'audio' :
-                  ['application/pdf', 'application/msword', 'text/plain'].some(t => att.mimeType.includes(t)) ? 'document' : 'other';
-              
-              const associatedFile: AssociatedFile = {
-                  id: `file-${att.id}`,
-                  name: att.fileName,
-                  size: `${(att.bytes / 1024).toFixed(2)} KB`,
-                  type: fileType
-              };
-              
-              const creationLog = `${format(new Date(), "PPpp", { locale: es })} - Creación desde Trello.`;
+    // Case 2: The special RSB002 card is selected.
+    const isRsb002Card = card.name.toLowerCase().includes('rsb002');
+    if (isRsb002Card) {
+        setIsLoadingTimeline(true);
 
-              return {
-                  id: `hito-${att.id}`,
-                  name: att.fileName,
-                  description: `Archivo adjuntado a la tarjeta de Trello el ${new Date(att.date).toLocaleDateString()}.`,
-                  occurredAt: att.date,
-                  category: defaultCategory,
-                  tags: null,
-                  associatedFiles: [associatedFile],
-                  isImportant: false,
-                  history: [creationLog],
-              };
-          });
+        // Find the correct category object from the main state
+        const rsb002Category = categories.find(c => c.id === 'cat-rsb002');
+        if (!rsb002Category) {
+            console.error("RSB002 category not found");
+            setIsLoadingTimeline(false);
+            return;
+        }
 
-          setMilestones(newMilestones);
-          
-          newMilestones.forEach(async (milestone) => {
-               try {
-                  if (milestone.name) {
-                      const result = await autoTagFiles({ textToAnalyze: milestone.name });
-                      setMilestones(prev =>
-                        prev.map(m =>
-                          m.id === milestone.id ? { ...m, tags: result.tags } : m
-                        )
-                      );
-                  }
-               } catch (error) {
-                  console.error('AI tagging failed:', error);
+        // Map the hardcoded milestones to use the up-to-date category object
+        const milestonesWithCategory = RSB002_MILESTONES.map(m => ({
+            ...m,
+            category: rsb002Category,
+        }));
+        
+        setMilestones(milestonesWithCategory);
+        
+        // Run AI tagging in the background
+        milestonesWithCategory.forEach(async (milestone) => {
+            try {
+              if (milestone.name) {
+                  const result = await autoTagFiles({ textToAnalyze: `${milestone.name} ${milestone.description}` });
                   setMilestones(prev =>
                     prev.map(m =>
-                      m.id === milestone.id ? { ...m, tags: [] } : m
+                      m.id === milestone.id ? { ...m, tags: result.tags } : m
                     )
                   );
-               }
-          });
+              }
+            } catch (error) {
+              console.error('AI tagging failed:', error);
+              setMilestones(prev =>
+                prev.map(m =>
+                  m.id === milestone.id ? { ...m, tags: [] } : m
+                )
+              );
+            }
+        });
 
-      } catch(error) {
-          console.error("Failed to process card attachments:", error);
-          setMilestones([]); // Clear milestones on error
-          toast({
-              variant: "destructive",
-              title: "Error al cargar hitos",
-              description: "No se pudieron obtener los datos de la tarjeta de Trello."
-          });
-      } finally {
-          setIsLoadingTimeline(false);
-      }
+        setIsLoadingTimeline(false);
+        return;
+    } 
+    
+    // Case 3: Any other Trello card is selected.
+    setIsLoadingTimeline(true);
+    try {
+        const attachments = await getCardAttachments(card.id);
+        const defaultCategory = categories.find(c => c.name.toLowerCase().includes('trello')) || CATEGORIES[1];
+
+        const newMilestones: Milestone[] = attachments.map(att => {
+            const fileType: AssociatedFile['type'] = 
+                att.mimeType.startsWith('image/') ? 'image' : 
+                att.mimeType.startsWith('video/') ? 'video' :
+                att.mimeType.startsWith('audio/') ? 'audio' :
+                ['application/pdf', 'application/msword', 'text/plain'].some(t => att.mimeType.includes(t)) ? 'document' : 'other';
+            
+            const associatedFile: AssociatedFile = {
+                id: `file-${att.id}`,
+                name: att.fileName,
+                size: `${(att.bytes / 1024).toFixed(2)} KB`,
+                type: fileType
+            };
+            
+            const creationLog = `${format(new Date(), "PPpp", { locale: es })} - Creación desde Trello.`;
+
+            return {
+                id: `hito-${att.id}`,
+                name: att.fileName,
+                description: `Archivo adjuntado a la tarjeta de Trello el ${new Date(att.date).toLocaleDateString()}.`,
+                occurredAt: att.date,
+                category: defaultCategory,
+                tags: null,
+                associatedFiles: [associatedFile],
+                isImportant: false,
+                history: [creationLog],
+            };
+        });
+
+        setMilestones(newMilestones);
+        
+        newMilestones.forEach(async (milestone) => {
+             try {
+                if (milestone.name) {
+                    const result = await autoTagFiles({ textToAnalyze: milestone.name });
+                    setMilestones(prev =>
+                      prev.map(m =>
+                        m.id === milestone.id ? { ...m, tags: result.tags } : m
+                      )
+                    );
+                }
+             } catch (error) {
+                console.error('AI tagging failed:', error);
+                setMilestones(prev =>
+                  prev.map(m =>
+                    m.id === milestone.id ? { ...m, tags: [] } : m
+                  )
+                );
+             }
+        });
+
+    } catch(error) {
+        console.error("Failed to process card attachments:", error);
+        setMilestones([]); // Clear milestones on error
+        toast({
+            variant: "destructive",
+            title: "Error al cargar hitos",
+            description: "No se pudieron obtener los datos de la tarjeta de Trello."
+        });
+    } finally {
+        setIsLoadingTimeline(false);
     }
   }, [categories]);
 
