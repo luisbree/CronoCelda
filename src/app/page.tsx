@@ -89,7 +89,12 @@ export default function Home() {
       let finalCategories: Category[] = [];
       try {
         const storedCategories = localStorage.getItem('deas-tl-categories');
-        const parsedCategories = storedCategories ? JSON.parse(storedCategories) : null;
+        let parsedCategories = storedCategories ? JSON.parse(storedCategories) : null;
+        
+        // Explicitly filter out the old category if it exists in localStorage
+        if (parsedCategories) {
+            parsedCategories = parsedCategories.filter((c: Category) => c.id !== 'cat-rsb002');
+        }
         
         if (parsedCategories && parsedCategories.length > 0) {
           finalCategories = parsedCategories;
