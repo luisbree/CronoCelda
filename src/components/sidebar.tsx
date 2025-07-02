@@ -367,72 +367,76 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                         Categorías
                     </AccordionTrigger>
                     <AccordionContent className="pt-2">
-                        {isAdding && (
-                            <div className="px-1 py-2 mb-2 space-y-2 border rounded-md bg-secondary/30">
-                                <Input
-                                placeholder="Nombre de la categoría"
-                                value={newCategoryName}
-                                onChange={(e) => setNewCategoryName(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategoryConfirm() }}
-                                autoFocus
-                                className="h-8 text-xs"
-                                />
-                                <div className="flex justify-end gap-1">
-                                <Button variant="ghost" size="sm" className="h-7" onClick={handleAddCategoryCancel}>Cancelar</Button>
-                                <Button size="sm" onClick={handleAddCategoryConfirm} disabled={!newCategoryName.trim()} className="h-7">Añadir</Button>
-                                </div>
-                            </div>
-                        )}
-                        <div className="space-y-0.5">
-                            {categories.map((category) => (
-                                <div key={category.id} className="group relative flex items-center w-full justify-start rounded-md text-xs font-medium h-8 px-3 hover:bg-accent">
-                                    <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
-                                        <PopoverTrigger asChild>
-                                            <button
-                                            className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                            style={{ backgroundColor: category.color }}
-                                            aria-label={`Cambiar color de la categoría ${category.name}`}
-                                            disabled={!!editingCategoryId}
-                                            />
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                            <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
-                                        </PopoverContent>
-                                    </Popover>
-                                    {editingCategoryId === category.id ? (
-                                    <Input
-                                        ref={editInputRef}
-                                        value={editingCategoryName}
-                                        onChange={(e) => setEditingCategoryName(e.target.value)}
-                                        onBlur={handleEditConfirm}
-                                        onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleEditConfirm();
-                                        if (e.key === 'Escape') handleEditCancel();
-                                        }}
-                                        className="h-6 ml-3 text-xs"
-                                    />
-                                    ) : (
-                                    <>
-                                        <span className="ml-3 text-muted-foreground truncate" title={category.name}>{category.name}</span>
-                                        <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditStart(category)}>
-                                            <Pencil className="h-3.5 w-3.5" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-destructive/10 text-destructive" onClick={() => setCategoryToDelete(category)}>
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                        </Button>
+                        <ScrollArea className="max-h-56">
+                            <div className="pr-4">
+                                {isAdding && (
+                                    <div className="px-1 py-2 mb-2 space-y-2 border rounded-md bg-secondary/30">
+                                        <Input
+                                        placeholder="Nombre de la categoría"
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategoryConfirm() }}
+                                        autoFocus
+                                        className="h-8 text-xs"
+                                        />
+                                        <div className="flex justify-end gap-1">
+                                        <Button variant="ghost" size="sm" className="h-7" onClick={handleAddCategoryCancel}>Cancelar</Button>
+                                        <Button size="sm" onClick={handleAddCategoryConfirm} disabled={!newCategoryName.trim()} className="h-7">Añadir</Button>
                                         </div>
-                                    </>
-                                    )}
+                                    </div>
+                                )}
+                                <div className="space-y-0.5">
+                                    {categories.map((category) => (
+                                        <div key={category.id} className="group relative flex items-center w-full justify-start rounded-md text-xs font-medium h-8 px-3 hover:bg-accent">
+                                            <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
+                                                <PopoverTrigger asChild>
+                                                    <button
+                                                    className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                                    style={{ backgroundColor: category.color }}
+                                                    aria-label={`Cambiar color de la categoría ${category.name}`}
+                                                    disabled={!!editingCategoryId}
+                                                    />
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0" align="start">
+                                                    <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
+                                                </PopoverContent>
+                                            </Popover>
+                                            {editingCategoryId === category.id ? (
+                                            <Input
+                                                ref={editInputRef}
+                                                value={editingCategoryName}
+                                                onChange={(e) => setEditingCategoryName(e.target.value)}
+                                                onBlur={handleEditConfirm}
+                                                onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleEditConfirm();
+                                                if (e.key === 'Escape') handleEditCancel();
+                                                }}
+                                                className="h-6 ml-3 text-xs"
+                                            />
+                                            ) : (
+                                            <>
+                                                <span className="ml-3 text-muted-foreground truncate" title={category.name}>{category.name}</span>
+                                                <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditStart(category)}>
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-destructive/10 text-destructive" onClick={() => setCategoryToDelete(category)}>
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </Button>
+                                                </div>
+                                            </>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                        {!isAdding && (
-                            <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground mt-1" onClick={() => setIsAdding(true)}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Añadir Categoría
-                            </Button>
-                        )}
+                                {!isAdding && (
+                                    <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground mt-1" onClick={() => setIsAdding(true)}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Añadir Categoría
+                                    </Button>
+                                )}
+                            </div>
+                        </ScrollArea>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
