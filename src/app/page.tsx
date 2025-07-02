@@ -24,6 +24,7 @@ import { FileUpload } from '@/components/file-upload';
 import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
 import { WelcomeScreen } from '@/components/welcome-screen';
 import { RSB002_MILESTONES } from '@/lib/rsb002-data';
+import { RSA060_MILESTONES } from '@/lib/rsa060-data';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -168,10 +169,15 @@ export default function Home() {
       return;
     }
 
-    // Case 2: The special RSB002 card is selected.
-    const isRsb002Card = card.name.toLowerCase().includes('rsb002');
-    if (isRsb002Card) {
+    const cardNameLower = card.name.toLowerCase();
+
+    // Case 2: A special local data card is selected (RSB002 or RSA060).
+    const isRsb002Card = cardNameLower.includes('rsb002');
+    const isRsa060Card = cardNameLower.includes('rsa060');
+    
+    if (isRsb002Card || isRsa060Card) {
         setIsLoadingTimeline(true);
+        const localMilestones = isRsb002Card ? RSB002_MILESTONES : RSA060_MILESTONES;
 
         // Find the correct category object from the main state
         const otrosCategory = categories.find(c => c.id === 'cat-otros');
@@ -182,7 +188,7 @@ export default function Home() {
         }
 
         // Map the hardcoded milestones to use the up-to-date category object
-        const milestonesWithCategory = RSB002_MILESTONES.map(m => ({
+        const milestonesWithCategory = localMilestones.map(m => ({
             ...m,
             category: otrosCategory,
         }));
@@ -194,7 +200,7 @@ export default function Home() {
 
         setIsLoadingTimeline(false);
         return;
-    } 
+    }
     
     // Case 3: Any other Trello card is selected.
     setIsLoadingTimeline(true);
