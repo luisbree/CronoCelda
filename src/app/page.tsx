@@ -86,35 +86,39 @@ export default function Home() {
   // Load state from localStorage on initial mount
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      let finalCategories: Category[] = [];
       try {
         const storedCategories = localStorage.getItem('deas-tl-categories');
-        let parsedCategories = storedCategories ? JSON.parse(storedCategories) : null;
+        const parsedCategories: Category[] | null = storedCategories ? JSON.parse(storedCategories) : null;
         
-        // Explicitly filter out the old category if it exists in localStorage
+        let finalCategories: Category[];
+
         if (parsedCategories) {
-            parsedCategories = parsedCategories.filter((c: Category) => c.id !== 'cat-rsb002');
-        }
-        
-        if (parsedCategories && parsedCategories.length > 0) {
-          finalCategories = parsedCategories;
+          // We have saved categories. Let's merge them with the defaults to get new additions.
+          const defaultCategoriesMap = new Map(CATEGORIES.map(c => [c.id, c]));
+          const parsedCategoriesMap = new Map(parsedCategories.map(c => [c.id, c]));
+
+          // Start with the default categories, but update them with any user changes (like color)
+          const mergedBaseCategories = CATEGORIES.map(defaultCat => {
+            return parsedCategoriesMap.get(defaultCat.id) || defaultCat;
+          });
+
+          // Now, add any truly custom categories the user created themselves
+          const customUserCategories = parsedCategories.filter(parsedCat => !defaultCategoriesMap.has(parsedCat.id));
+
+          finalCategories = [...mergedBaseCategories, ...customUserCategories];
+
         } else {
-          finalCategories = [...CATEGORIES]; // Create a copy
+          // No saved data, just use the defaults from the code.
+          finalCategories = [...CATEGORIES];
         }
         
-        // Ensure the essential 'Otros' category always exists.
-        // This prevents errors if it's missing from localStorage.
-        const otrosCategoryExists = finalCategories.some(c => c.id === 'cat-otros');
-        if (!otrosCategoryExists) {
-          const otrosCategoryDefault = CATEGORIES.find(c => c.id === 'cat-otros');
-          if (otrosCategoryDefault) {
-              finalCategories.push(otrosCategoryDefault);
-          }
-        }
+        // Final cleanup: remove the old hardcoded 'cat-rsb002' if it somehow slipped in
+        finalCategories = finalCategories.filter(c => c.id !== 'cat-rsb002');
+        
         setCategories(finalCategories);
 
       } catch (error) {
-          console.error("Failed to load categories from localStorage", error);
+          console.error("Failed to load or merge categories from localStorage", error);
           setCategories(CATEGORIES);
       } finally {
         // Milestones always start empty to ensure a clean slate.
