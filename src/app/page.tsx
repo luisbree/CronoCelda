@@ -179,19 +179,16 @@ export default function Home() {
         setIsLoadingTimeline(true);
         const localMilestones = isRsb002Card ? RSB002_MILESTONES : RSA060_MILESTONES;
 
-        // Find the correct category object from the main state
-        const otrosCategory = categories.find(c => c.id === 'cat-otros');
-        if (!otrosCategory) {
-            console.error("'Otros' category not found");
-            setIsLoadingTimeline(false);
-            return;
-        }
+        const categoriesMap = new Map(categories.map(c => [c.id, c]));
 
-        // Map the hardcoded milestones to use the up-to-date category object
-        const milestonesWithCategory = localMilestones.map(m => ({
+        // Map the hardcoded milestones to use the up-to-date category object from the main state
+        const milestonesWithCategory = localMilestones.map(m => {
+          const freshCategory = categoriesMap.get(m.category.id) || m.category;
+          return {
             ...m,
-            category: otrosCategory,
-        }));
+            category: freshCategory,
+          };
+        });
         
         setMilestones(milestonesWithCategory);
         
