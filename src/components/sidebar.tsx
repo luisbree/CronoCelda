@@ -14,7 +14,6 @@ import type { TrelloBoard, TrelloListBasic, TrelloCardBasic } from '@/services/t
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -205,7 +204,6 @@ export function Sidebar({
     }
 
     e.preventDefault();
-    setIsSearching(true);
     onCardSelect(null);
 
     try {
@@ -257,30 +255,30 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
       </div>
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
         
-        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm" className="h-7" style={{ backgroundColor: '#326681', color: '#cccccc' }}>
+        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm" className="h-8">
           <UploadCloud className="mr-2 h-4 w-4" />
           Hito nuevo
         </Button>
 
         <div className="space-y-2">
             <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
-            <SelectTrigger className="w-full h-7 text-xs">
+            <SelectTrigger className="w-full h-8 text-xs">
                 <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
             </SelectTrigger>
             <SelectContent>
                 {boards.map(board => (
-                <SelectItem key={board.id} value={board.id}>{board.name}</SelectItem>
+                <SelectItem key={board.id} value={board.id} className="text-xs">{board.name}</SelectItem>
                 ))}
             </SelectContent>
             </Select>
 
             <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
-            <SelectTrigger className="w-full h-7 text-xs">
+            <SelectTrigger className="w-full h-8 text-xs">
                 <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
             </SelectTrigger>
             <SelectContent>
                 {lists.map(list => (
-                <SelectItem key={list.id} value={list.id}>{list.name}</SelectItem>
+                <SelectItem key={list.id} value={list.id} className="text-xs">{list.name}</SelectItem>
                 ))}
             </SelectContent>
             </Select>
@@ -289,7 +287,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                     placeholder="Buscar tarjeta y presionar Enter..."
-                    className="pl-9 pr-9 h-7 text-xs"
+                    className="pl-9 pr-9 h-8 text-xs"
                     value={cardSearchTerm}
                     onChange={(e) => setCardSearchTerm(e.target.value)}
                     onKeyDown={handleGlobalSearch}
@@ -308,14 +306,14 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
             </div>
 
             <Select disabled>
-              <SelectTrigger className="w-full h-7 text-xs">
+              <SelectTrigger className="w-full h-8 text-xs">
                 <SelectValue placeholder="Seleccionar Etapa" />
               </SelectTrigger>
               <SelectContent></SelectContent>
             </Select>
 
             <Select disabled>
-              <SelectTrigger className="w-full h-7 text-xs">
+              <SelectTrigger className="w-full h-8 text-xs">
                 <SelectValue placeholder="Seleccionar Lote" />
               </SelectTrigger>
               <SelectContent></SelectContent>
@@ -351,7 +349,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                             </button>
                         ))
                     ) : (
-                        <p className="p-4 text-sm text-muted-foreground text-center">
+                        <p className="p-4 text-xs text-muted-foreground text-center">
                             No se encontraron tarjetas.
                         </p>
                     )}
@@ -360,86 +358,80 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
             </div>
         )}
         
-        <div className="mt-auto shrink-0 border-t pt-3 space-y-4">
-             <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-1" className="border-b-0">
-                    <AccordionTrigger className="py-1 px-1 hover:no-underline text-xs font-semibold tracking-wider uppercase text-muted-foreground justify-start gap-2">
-                        Categorías
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2">
-                        <ScrollArea className="max-h-56">
-                            <div className="pr-4">
-                                {isAdding && (
-                                    <div className="px-1 py-2 mb-2 space-y-2 border rounded-md bg-secondary/30">
-                                        <Input
-                                        placeholder="Nombre de la categoría"
-                                        value={newCategoryName}
-                                        onChange={(e) => setNewCategoryName(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategoryConfirm() }}
-                                        autoFocus
-                                        className="h-8 text-xs"
+        <div className="mt-auto shrink-0 border-t pt-3 space-y-2">
+             <div className="flex justify-between items-center px-1">
+                <h3 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">
+                    Categorías
+                </h3>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsAdding(true)} disabled={isAdding}>
+                    <Plus className="h-4 w-4" />
+                    <span className="sr-only">Añadir Categoría</span>
+                </Button>
+            </div>
+            <ScrollArea className="h-48">
+                <div className="pr-3 space-y-1">
+                    {isAdding && (
+                        <div className="p-2 mb-2 space-y-2 border rounded-md bg-secondary/30">
+                            <Input
+                            placeholder="Nombre de la categoría"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategoryConfirm() }}
+                            autoFocus
+                            className="h-8 text-xs"
+                            />
+                            <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="sm" className="h-7" onClick={handleAddCategoryCancel}>Cancelar</Button>
+                            <Button size="sm" onClick={handleAddCategoryConfirm} disabled={!newCategoryName.trim()} className="h-7">Añadir</Button>
+                            </div>
+                        </div>
+                    )}
+                    <div className="space-y-0.5">
+                        {categories.map((category) => (
+                            <div key={category.id} className="group relative flex items-center w-full justify-start rounded-md text-xs font-medium h-8 px-3 hover:bg-accent">
+                                <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
+                                    <PopoverTrigger asChild>
+                                        <button
+                                        className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                        style={{ backgroundColor: category.color }}
+                                        aria-label={`Cambiar color de la categoría ${category.name}`}
+                                        disabled={!!editingCategoryId}
                                         />
-                                        <div className="flex justify-end gap-1">
-                                        <Button variant="ghost" size="sm" className="h-7" onClick={handleAddCategoryCancel}>Cancelar</Button>
-                                        <Button size="sm" onClick={handleAddCategoryConfirm} disabled={!newCategoryName.trim()} className="h-7">Añadir</Button>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="space-y-0.5">
-                                    {categories.map((category) => (
-                                        <div key={category.id} className="group relative flex items-center w-full justify-start rounded-md text-xs font-medium h-8 px-3 hover:bg-accent">
-                                            <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
-                                                <PopoverTrigger asChild>
-                                                    <button
-                                                    className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                                    style={{ backgroundColor: category.color }}
-                                                    aria-label={`Cambiar color de la categoría ${category.name}`}
-                                                    disabled={!!editingCategoryId}
-                                                    />
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto p-0" align="start">
-                                                    <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
-                                                </PopoverContent>
-                                            </Popover>
-                                            {editingCategoryId === category.id ? (
-                                            <Input
-                                                ref={editInputRef}
-                                                value={editingCategoryName}
-                                                onChange={(e) => setEditingCategoryName(e.target.value)}
-                                                onBlur={handleEditConfirm}
-                                                onKeyDown={(e) => {
-                                                if (e.key === 'Enter') handleEditConfirm();
-                                                if (e.key === 'Escape') handleEditCancel();
-                                                }}
-                                                className="h-6 ml-3 text-xs"
-                                            />
-                                            ) : (
-                                            <>
-                                                <span className="ml-3 text-muted-foreground truncate" title={category.name}>{category.name}</span>
-                                                <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditStart(category)}>
-                                                    <Pencil className="h-3.5 w-3.5" />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-destructive/10 text-destructive" onClick={() => setCategoryToDelete(category)}>
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </Button>
-                                                </div>
-                                            </>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                                {!isAdding && (
-                                    <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground mt-1" onClick={() => setIsAdding(true)}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Añadir Categoría
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <ColorPicker onColorSelect={(color) => handleColorSelect(category.id, color)} />
+                                    </PopoverContent>
+                                </Popover>
+                                {editingCategoryId === category.id ? (
+                                <Input
+                                    ref={editInputRef}
+                                    value={editingCategoryName}
+                                    onChange={(e) => setEditingCategoryName(e.target.value)}
+                                    onBlur={handleEditConfirm}
+                                    onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleEditConfirm();
+                                    if (e.key === 'Escape') handleEditCancel();
+                                    }}
+                                    className="h-6 ml-3 text-xs"
+                                />
+                                ) : (
+                                <>
+                                    <span className="ml-3 text-muted-foreground truncate" title={category.name}>{category.name}</span>
+                                    <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditStart(category)}>
+                                        <Pencil className="h-3.5 w-3.5" />
                                     </Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-destructive/10 text-destructive" onClick={() => setCategoryToDelete(category)}>
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                    </div>
+                                </>
                                 )}
                             </div>
-                        </ScrollArea>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
+                        ))}
+                    </div>
+                </div>
+            </ScrollArea>
         </div>
       </div>
       <div className="p-4 border-t shrink-0">
