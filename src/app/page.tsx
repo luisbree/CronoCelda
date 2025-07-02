@@ -251,8 +251,8 @@ export default function Home() {
     }
   }, [categories]);
 
-  const handleUpload = React.useCallback(async (data: { files?: File[], categoryId: string, name: string, description: string }) => {
-    const { files, categoryId, name, description } = data;
+  const handleUpload = React.useCallback(async (data: { files?: File[], categoryId: string, name: string, description: string, occurredAt: Date }) => {
+    const { files, categoryId, name, description, occurredAt } = data;
     const category = categories.find(c => c.id === categoryId);
     if (!category) {
         toast({
@@ -287,7 +287,7 @@ export default function Home() {
         id: `hito-local-${Date.now()}`,
         name: name,
         description: description,
-        occurredAt: new Date().toISOString(), // Use current time for new milestones
+        occurredAt: occurredAt.toISOString(),
         category: category,
         tags: null, // Start with null to show loading spinner
         associatedFiles: associatedFiles,

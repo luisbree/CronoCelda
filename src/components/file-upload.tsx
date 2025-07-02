@@ -18,11 +18,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { Textarea } from './ui/textarea';
-import { UploadCloud, X, File as FileIconLucide } from 'lucide-react';
+import { UploadCloud, X, File as FileIconLucide, CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Calendar } from './ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const uploadSchema = z.object({
   name: z.string().min(5, { message: 'El título del hito debe tener al menos 5 caracteres.' }),
   description: z.string().min(10, { message: 'La descripción debe tener al menos 10 caracteres.' }),
+  occurredAt: z.date({
+    required_error: "Se requiere una fecha para el hito.",
+  }),
   files: z.array(z.instanceof(File)).optional(),
   categoryId: z.string().min(1, 'Por favor, selecciona una categoría.'),
 });
@@ -33,7 +41,7 @@ interface FileUploadProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   categories: Category[];
-  onUpload: (data: { files?: File[], categoryId: string, name: string, description: string }) => void;
+  onUpload: (data: { files?: File[], categoryId: string, name: string, description: string, occurredAt: Date }) => void;
 }
 
 export function FileUpload({
@@ -49,12 +57,14 @@ export function FileUpload({
       description: '',
       files: [],
       categoryId: '',
+      occurredAt: new Date(),
     },
   });
 
   React.useEffect(() => {
     if (!isOpen) {
       form.reset();
+      form.setValue('occurredAt', new Date());
     }
   }, [form, isOpen]);
 
@@ -120,6 +130,47 @@ export function FileUpload({
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="occurredAt"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Fecha del Hito</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal bg-zinc-200 text-black border-zinc-300 hover:bg-zinc-300",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP", { locale: es })
+                          ) : (
+                            <span>Selecciona una fecha</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
