@@ -15,10 +15,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { LogIn, LogOut, User as UserIcon, UserPlus } from 'lucide-react';
+import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
-export function AuthButton({ onRegisterClick }: { onRegisterClick: () => void }) {
+export function AuthButton() {
   const { user, loading } = useAuth();
 
   const handleSignIn = async () => {
@@ -51,23 +51,13 @@ export function AuthButton({ onRegisterClick }: { onRegisterClick: () => void })
   };
 
   if (loading) {
-    return <Skeleton className="h-10 w-24 rounded-md" />;
+    return <Skeleton className="h-10 w-10 rounded-md" />;
   }
 
   if (!user) {
     return (
       <TooltipProvider>
         <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button onClick={onRegisterClick} variant="outline" size="icon" disabled={!auth}>
-                <UserPlus className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Registrarse</p>
-            </TooltipContent>
-          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button onClick={handleSignIn} variant="outline" size="icon" disabled={!auth}>

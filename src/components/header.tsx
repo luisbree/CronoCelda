@@ -15,11 +15,10 @@ interface HeaderProps {
   onSetRange: (range: '1D' | '1M' | '1Y' | 'All') => void;
   onOpenSummary: () => void;
   onGoHome: () => void;
-  onRegisterClick: () => void;
   trelloCardUrl: string | null;
 }
 
-export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, onGoHome, onRegisterClick, trelloCardUrl }: HeaderProps) {
+export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, onGoHome, trelloCardUrl }: HeaderProps) {
   return (
     <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 w-full shrink-0 gap-4">
       <div className="flex-1">
@@ -81,7 +80,7 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, o
           <Button size="sm" variant="outline" onClick={() => onSetRange('1Y')}>1A</Button>
           <Button size="sm" variant="outline" onClick={() => onSetRange('All')}>Todo</Button>
       </div>
-      <AuthButton onRegisterClick={onRegisterClick} />
+      <AuthButton />
     </header>
   );
 }
