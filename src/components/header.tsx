@@ -8,6 +8,7 @@ import {
     TooltipTrigger,
   } from '@/components/ui/tooltip';
 import { AuthButton } from './auth-button';
+import { useAuth } from '@/context/auth-context';
 
 interface HeaderProps {
   searchTerm: string;
@@ -19,6 +20,8 @@ interface HeaderProps {
 }
 
 export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, onGoHome, trelloCardUrl }: HeaderProps) {
+  const { user } = useAuth();
+  
   return (
     <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 w-full shrink-0 gap-4">
       <div className="flex-1">
@@ -61,11 +64,11 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, o
                            href={trelloCardUrl ?? undefined}
                            target="_blank"
                            rel="noopener noreferrer"
-                           aria-disabled={!trelloCardUrl}
-                           tabIndex={!trelloCardUrl ? -1 : undefined}
-                           className={!trelloCardUrl ? 'pointer-events-none' : ''}
+                           aria-disabled={!trelloCardUrl || !user}
+                           tabIndex={!trelloCardUrl || !user ? -1 : undefined}
+                           className={!trelloCardUrl || !user ? 'pointer-events-none' : ''}
                         >
-                            <Button size="icon" variant="outline" disabled={!trelloCardUrl}>
+                            <Button size="icon" variant="outline" disabled={!trelloCardUrl || !user}>
                                 <ExternalLink className="h-4 w-4" />
                             </Button>
                         </a>

@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Paperclip, Tag, X, Star, Pencil, History, UploadCloud, Clock } from 'lucide-react';
+import { Paperclip, Tag, X, Star, Pencil, History, UploadCloud, Clock, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -15,6 +15,7 @@ import { Button } from './ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { ScrollArea } from './ui/scroll-area';
 import { Textarea } from './ui/textarea';
+import { useAuth } from '@/context/auth-context';
 
 interface MilestoneDetailProps {
   milestone: Milestone;
@@ -24,6 +25,7 @@ interface MilestoneDetailProps {
 }
 
 export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onClose }: MilestoneDetailProps) {
+  const { user } = useAuth();
   const [newTag, setNewTag] = React.useState('');
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [editableTitle, setEditableTitle] = React.useState('');
@@ -170,14 +172,14 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                 ) : (
                 <h2 className="font-headline text-lg font-medium flex items-center gap-2 truncate">
                     <span className="truncate" title={milestone.name}>{milestone.name}</span>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setIsEditingTitle(true)}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setIsEditingTitle(true)} disabled={!user}>
                         <Pencil className="h-3 w-3" />
                     </Button>
                 </h2>
                 )}
                 <div className="flex items-center pt-1.5">
-                    <Select value={milestone.category.id} onValueChange={handleCategoryChange}>
-                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-xs font-medium text-muted-foreground hover:text-foreground focus:text-foreground">
+                    <Select value={milestone.category.id} onValueChange={handleCategoryChange} disabled={!user}>
+                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-xs font-medium text-muted-foreground hover:text-foreground focus:text-foreground disabled:cursor-not-allowed disabled:opacity-100">
                             <SelectValue asChild>
                                 <div className="flex items-center cursor-pointer">
                                     <div
@@ -211,7 +213,8 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
             <div className="flex items-center gap-1 shrink-0">
                 <button 
                     onClick={handleToggleImportant} 
-                    className="p-1 rounded-full text-muted-foreground hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors"
+                    disabled={!user}
+                    className="p-1 rounded-full text-muted-foreground hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors disabled:cursor-not-allowed disabled:hover:text-muted-foreground disabled:hover:bg-transparent"
                     aria-label={milestone.isImportant ? 'Quitar de importantes' : 'Marcar como importante'}
                 >
                     <Star className={cn("h-5 w-5", milestone.isImportant && "fill-yellow-400 text-yellow-400")} />
@@ -243,11 +246,14 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                 />
                 ) : (
                 <div
-                    className="text-sm text-muted-foreground leading-normal cursor-pointer hover:bg-accent p-2 -m-2 rounded-md transition-colors relative group"
-                    onClick={() => setIsEditingDescription(true)}
+                    className={cn(
+                        "text-sm text-muted-foreground leading-normal relative",
+                         user && "cursor-pointer hover:bg-accent p-2 -m-2 rounded-md transition-colors group"
+                    )}
+                    onClick={() => user && setIsEditingDescription(true)}
                 >
-                    <p className="whitespace-pre-wrap">{milestone.description || 'Añade una descripción...'}</p>
-                    <Pencil className="h-3 w-3 absolute top-1 right-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <p className="whitespace-pre-wrap">{milestone.description || (user ? 'Añade una descripción...' : 'Descripción no editable.')}</p>
+                    {user && <Pencil className="h-3 w-3 absolute top-1 right-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </div>
                 )}
                 
@@ -259,8 +265,9 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                                 {tag}
                                 <button 
                                     onClick={() => handleTagRemove(tag)} 
-                                    className="ml-1 rounded-full opacity-50 group-hover/badge:opacity-100 hover:bg-destructive/20 p-0.5 transition-opacity"
+                                    className="ml-1 rounded-full opacity-50 group-hover/badge:opacity-100 hover:bg-destructive/20 p-0.5 transition-opacity disabled:cursor-not-allowed disabled:hover:bg-transparent"
                                     aria-label={`Quitar etiqueta ${tag}`}
+                                    disabled={!user}
                                 >
                                     <X className="h-3 w-3" />
                                 </button>
@@ -272,8 +279,9 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyDown={handleTagAdd}
-                        placeholder="Añadir etiqueta y presionar Enter..."
+                        placeholder={user ? "Añadir etiqueta y presionar Enter..." : "Inicia sesión para editar etiquetas"}
                         className="h-8 bg-input text-xs"
+                        disabled={!user}
                     />
                 </div>
             
@@ -284,7 +292,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         <div className="flex items-center gap-2">
                             <Paperclip className="h-4 w-4" /> Archivos Adjuntos
                         </div>
-                        <Button variant="outline" size="sm" className="h-7" onClick={() => fileInputRef.current?.click()}>
+                        <Button variant="outline" size="sm" className="h-7" onClick={() => fileInputRef.current?.click()} disabled={!user}>
                             <UploadCloud className="mr-2 h-3 w-3"/>
                             Añadir
                         </Button>
@@ -294,6 +302,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                             className="hidden"
                             multiple
                             onChange={handleFileAdd}
+                            disabled={!user}
                         />
                     </h3>
                     {milestone.associatedFiles.length > 0 ? (

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Logo } from './logo';
 import { Button, buttonVariants } from './ui/button';
 import { Input } from './ui/input';
-import { Plus, Search, UploadCloud, Loader2, X, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, UploadCloud, Loader2, X, Pencil, Trash2, Lock } from 'lucide-react';
 import type { Category } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ColorPicker } from './color-picker';
@@ -24,6 +24,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from '@/context/auth-context';
+import { Card } from './ui/card';
 
 interface SidebarProps {
   categories: Category[];
@@ -46,6 +48,7 @@ export function Sidebar({
     selectedCard, 
     onNewMilestoneClick 
 }: SidebarProps) {
+  const { user } = useAuth();
   const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
   const [isAdding, setIsAdding] = React.useState(false);
   const [newCategoryName, setNewCategoryName] = React.useState('');
@@ -70,6 +73,15 @@ export function Sidebar({
   const [isSearching, setIsSearching] = React.useState(false);
 
   React.useEffect(() => {
+    if (!user) {
+        setBoards([]);
+        setLists([]);
+        setCards([]);
+        setFilteredCards([]);
+        setSelectedBoard('');
+        setSelectedList('');
+        return;
+    };
     const fetchBoards = async () => {
       setIsLoadingBoards(true);
       try {
@@ -82,10 +94,10 @@ export function Sidebar({
       }
     };
     fetchBoards();
-  }, []);
+  }, [user]);
 
   React.useEffect(() => {
-    if (!selectedBoard) {
+    if (!selectedBoard || !user) {
       setLists([]);
       setSelectedList('');
       return;
@@ -104,11 +116,11 @@ export function Sidebar({
       }
     };
     fetchLists();
-  }, [selectedBoard]);
+  }, [selectedBoard, user]);
 
   React.useEffect(() => {
     onCardSelect(null);
-    if (!selectedList) {
+    if (!selectedList || !user) {
         setCards([]);
         setFilteredCards([]);
         return;
@@ -130,7 +142,7 @@ export function Sidebar({
     };
     fetchCards();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedList]);
+  }, [selectedList, user]);
   
   React.useEffect(() => {
     if (!cardSearchTerm) {
@@ -195,7 +207,9 @@ export function Sidebar({
   }, [editingCategoryId]);
 
   const handleCardClick = (card: TrelloCardBasic) => {
-    onCardSelect(card);
+    if (user) {
+        onCardSelect(card);
+    }
   }
 
   const handleGlobalSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -255,107 +269,116 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
       </div>
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
         
-        <Button onClick={onNewMilestoneClick} disabled={!selectedCard} size="sm" className="h-8">
+        <Button onClick={onNewMilestoneClick} disabled={!selectedCard || !user} size="sm" className="h-8">
           <UploadCloud className="mr-2 h-4 w-4" />
           Hito nuevo
         </Button>
 
-        <div className="space-y-2">
-            <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
-            <SelectTrigger className="w-full h-8 text-xs">
-                <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
-            </SelectTrigger>
-            <SelectContent>
-                {boards.map(board => (
-                <SelectItem key={board.id} value={board.id} className="text-xs">{board.name}</SelectItem>
-                ))}
-            </SelectContent>
-            </Select>
+        {user ? (
+          <>
+            <div className="space-y-2">
+                <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
+                <SelectTrigger className="w-full h-8 text-xs">
+                    <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
+                </SelectTrigger>
+                <SelectContent>
+                    {boards.map(board => (
+                    <SelectItem key={board.id} value={board.id} className="text-xs">{board.name}</SelectItem>
+                    ))}
+                </SelectContent>
+                </Select>
 
-            <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
-            <SelectTrigger className="w-full h-8 text-xs">
-                <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
-            </SelectTrigger>
-            <SelectContent>
-                {lists.map(list => (
-                <SelectItem key={list.id} value={list.id} className="text-xs">{list.name}</SelectItem>
-                ))}
-            </SelectContent>
-            </Select>
+                <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
+                <SelectTrigger className="w-full h-8 text-xs">
+                    <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
+                </SelectTrigger>
+                <SelectContent>
+                    {lists.map(list => (
+                    <SelectItem key={list.id} value={list.id} className="text-xs">{list.name}</SelectItem>
+                    ))}
+                </SelectContent>
+                </Select>
 
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Buscar tarjeta y presionar Enter..."
-                    className="pl-9 pr-9 h-8 text-xs"
-                    value={cardSearchTerm}
-                    onChange={(e) => setCardSearchTerm(e.target.value)}
-                    onKeyDown={handleGlobalSearch}
-                />
-                {isSearching ? (
-                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                ) : cardSearchTerm && (
-                    <button
-                        onClick={handleClearSearch}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:bg-accent"
-                        aria-label="Limpiar búsqueda"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
-                )}
-            </div>
-
-            <Select disabled>
-              <SelectTrigger className="w-full h-8 text-xs">
-                <SelectValue placeholder="Seleccionar Etapa" />
-              </SelectTrigger>
-              <SelectContent></SelectContent>
-            </Select>
-
-            <Select disabled>
-              <SelectTrigger className="w-full h-8 text-xs">
-                <SelectValue placeholder="Seleccionar Lote" />
-              </SelectTrigger>
-              <SelectContent></SelectContent>
-            </Select>
-        </div>
-        
-        {(selectedList || isSearching || (!selectedBoard && cardSearchTerm)) && (
-            <div className="flex-1 flex flex-col min-h-0 border rounded-md">
-                <div className="p-2 border-b shrink-0">
-                    <p className="text-xs font-semibold text-muted-foreground">
-                        {cardListTitle}
-                    </p>
-                </div>
-                <ScrollArea className="flex-1">
-                    <div className="p-1 space-y-1">
-                    {isLoadingCards || isSearching ? (
-                        <div className="p-2 space-y-2">
-                           <Skeleton className="h-6 w-full" />
-                           <Skeleton className="h-6 w-full" />
-                           <Skeleton className="h-6 w-5/6" />
-                        </div>
-                    ) : filteredCards.length > 0 ? (
-                        filteredCards.map(card => (
-                            <button
-                                key={card.id}
-                                onClick={() => handleCardClick(card)}
-                                className={cn(
-                                    "w-full text-left text-xs p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-card-foreground",
-                                    selectedCard?.id === card.id && "bg-primary text-primary-foreground hover:bg-primary/90"
-                                )}
-                            >
-                                {card.name}
-                            </button>
-                        ))
-                    ) : (
-                        <p className="p-4 text-xs text-muted-foreground text-center">
-                            No se encontraron tarjetas.
-                        </p>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar tarjeta y presionar Enter..."
+                        className="pl-9 pr-9 h-8 text-xs"
+                        value={cardSearchTerm}
+                        onChange={(e) => setCardSearchTerm(e.target.value)}
+                        onKeyDown={handleGlobalSearch}
+                    />
+                    {isSearching ? (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : cardSearchTerm && (
+                        <button
+                            onClick={handleClearSearch}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:bg-accent"
+                            aria-label="Limpiar búsqueda"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
                     )}
-                    </div>
-                </ScrollArea>
+                </div>
+
+                <Select disabled>
+                <SelectTrigger className="w-full h-8 text-xs">
+                    <SelectValue placeholder="Seleccionar Etapa" />
+                </SelectTrigger>
+                <SelectContent></SelectContent>
+                </Select>
+
+                <Select disabled>
+                <SelectTrigger className="w-full h-8 text-xs">
+                    <SelectValue placeholder="Seleccionar Lote" />
+                </SelectTrigger>
+                <SelectContent></SelectContent>
+                </Select>
             </div>
+            
+            {(selectedList || isSearching || (!selectedBoard && cardSearchTerm)) && (
+                <div className="flex-1 flex flex-col min-h-0 border rounded-md">
+                    <div className="p-2 border-b shrink-0">
+                        <p className="text-xs font-semibold text-muted-foreground">
+                            {cardListTitle}
+                        </p>
+                    </div>
+                    <ScrollArea className="flex-1">
+                        <div className="p-1 space-y-1">
+                        {isLoadingCards || isSearching ? (
+                            <div className="p-2 space-y-2">
+                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-6 w-5/6" />
+                            </div>
+                        ) : filteredCards.length > 0 ? (
+                            filteredCards.map(card => (
+                                <button
+                                    key={card.id}
+                                    onClick={() => handleCardClick(card)}
+                                    className={cn(
+                                        "w-full text-left text-xs p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-card-foreground",
+                                        selectedCard?.id === card.id && "bg-primary text-primary-foreground hover:bg-primary/90"
+                                    )}
+                                >
+                                    {card.name}
+                                </button>
+                            ))
+                        ) : (
+                            <p className="p-4 text-xs text-muted-foreground text-center">
+                                No se encontraron tarjetas.
+                            </p>
+                        )}
+                        </div>
+                    </ScrollArea>
+                </div>
+            )}
+          </>
+        ) : (
+            <Card className="p-4 text-center text-sm text-muted-foreground bg-secondary/30 border-dashed">
+                <Lock className="mx-auto h-6 w-6 mb-2" />
+                Inicia sesión para conectar con Trello y cargar proyectos.
+            </Card>
         )}
         
         <div className="mt-auto shrink-0 border-t pt-3 space-y-2">
@@ -363,7 +386,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                 <h3 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">
                     Categorías
                 </h3>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsAdding(true)} disabled={isAdding}>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsAdding(true)} disabled={isAdding || !user}>
                     <Plus className="h-4 w-4" />
                     <span className="sr-only">Añadir Categoría</span>
                 </Button>
@@ -392,10 +415,10 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                                 <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
                                     <PopoverTrigger asChild>
                                         <button
-                                        className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                        className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed"
                                         style={{ backgroundColor: category.color }}
                                         aria-label={`Cambiar color de la categoría ${category.name}`}
-                                        disabled={!!editingCategoryId}
+                                        disabled={!!editingCategoryId || !user}
                                         />
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
@@ -418,10 +441,10 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                                 <>
                                     <span className="ml-3 text-muted-foreground truncate" title={category.name}>{category.name}</span>
                                     <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditStart(category)}>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditStart(category)} disabled={!user || !!editingCategoryId}>
                                         <Pencil className="h-3.5 w-3.5" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-destructive/10 text-destructive" onClick={() => setCategoryToDelete(category)}>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-destructive/10 text-destructive" onClick={() => setCategoryToDelete(category)} disabled={!user || !!editingCategoryId}>
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
                                     </div>
