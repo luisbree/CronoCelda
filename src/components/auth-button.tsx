@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { LogIn, LogOut, User as UserIcon, UserPlus } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 export function AuthButton({ onRegisterClick }: { onRegisterClick: () => void }) {
   const { user, loading } = useAuth();
@@ -55,16 +56,30 @@ export function AuthButton({ onRegisterClick }: { onRegisterClick: () => void })
 
   if (!user) {
     return (
-      <div className="flex items-center gap-2">
-        <Button onClick={onRegisterClick} variant="secondary" disabled={!auth}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Registrarse
-        </Button>
-        <Button onClick={handleSignIn} variant="outline" disabled={!auth}>
-          <LogIn className="mr-2 h-4 w-4" />
-          Acceder (Google)
-        </Button>
-      </div>
+      <TooltipProvider>
+        <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={onRegisterClick} variant="outline" size="icon" disabled={!auth}>
+                <UserPlus className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Registrarse</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={handleSignIn} variant="outline" size="icon" disabled={!auth}>
+                <LogIn className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Acceder con Google</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
     );
   }
 
