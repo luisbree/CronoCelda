@@ -43,18 +43,21 @@ export interface TrelloAttachment {
 }
 
 
-function getTrelloAuthParams() {
+function getTrelloAuthParams(): string | null {
     const apiKey = process.env.TRELLO_API_KEY;
     const apiToken = process.env.TRELLO_API_TOKEN;
 
     if (!apiKey || !apiToken) {
-        throw new Error('Trello API key or token not configured in .env file.');
+        console.warn('Trello API key or token not configured in .env file. Trello integration is disabled.');
+        return null;
     }
     return `key=${apiKey}&token=${apiToken}`;
 }
 
-export async function getBoardSummary(boardId: string): Promise<TrelloBoardSummary> {
+export async function getBoardSummary(boardId: string): Promise<TrelloBoardSummary | null> {
   const authParams = getTrelloAuthParams();
+  if (!authParams) return null;
+
   const url = `https://api.trello.com/1/boards/${boardId}?lists=open&cards=open&card_fields=name,due&list_fields=name&fields=name&${authParams}`;
 
   try {
@@ -62,18 +65,20 @@ export async function getBoardSummary(boardId: string): Promise<TrelloBoardSumma
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Trello API Error:', errorText);
-      throw new Error(`Failed to fetch Trello board data: ${response.statusText}`);
+      return null;
     }
     const data = await response.json();
     return data as TrelloBoardSummary;
   } catch (error) {
     console.error('Error fetching from Trello:', error);
-    throw new Error('An error occurred while communicating with the Trello API.');
+    return null;
   }
 }
 
 export async function getMemberBoards(): Promise<TrelloBoard[]> {
   const authParams = getTrelloAuthParams();
+  if (!authParams) return [];
+
   const url = `https://api.trello.com/1/members/me/boards?fields=name&${authParams}`;
 
   try {
@@ -81,18 +86,20 @@ export async function getMemberBoards(): Promise<TrelloBoard[]> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Trello API Error (getMemberBoards):', errorText);
-      throw new Error(`Failed to fetch Trello boards: ${response.statusText}`);
+      return [];
     }
     const data = await response.json();
     return data as TrelloBoard[];
   } catch (error) {
     console.error('Error fetching boards from Trello:', error);
-    throw new Error('An error occurred while communicating with the Trello API.');
+    return [];
   }
 }
 
 export async function getBoardLists(boardId: string): Promise<TrelloListBasic[]> {
   const authParams = getTrelloAuthParams();
+  if (!authParams) return [];
+
   const url = `https://api.trello.com/1/boards/${boardId}/lists?fields=name&${authParams}`;
 
   try {
@@ -100,18 +107,20 @@ export async function getBoardLists(boardId: string): Promise<TrelloListBasic[]>
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Trello API Error (getBoardLists):', errorText);
-      throw new Error(`Failed to fetch Trello lists: ${response.statusText}`);
+      return [];
     }
     const data = await response.json();
     return data as TrelloListBasic[];
   } catch (error) {
     console.error('Error fetching lists from Trello:', error);
-    throw new Error('An error occurred while communicating with the Trello API.');
+    return [];
   }
 }
 
 export async function getCardsInList(listId: string): Promise<TrelloCardBasic[]> {
   const authParams = getTrelloAuthParams();
+  if (!authParams) return [];
+
   const url = `https://api.trello.com/1/lists/${listId}/cards?fields=name,id,url&${authParams}`;
 
   try {
@@ -119,18 +128,21 @@ export async function getCardsInList(listId: string): Promise<TrelloCardBasic[]>
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Trello API Error (getCardsInList):', errorText);
-      throw new Error(`Failed to fetch Trello cards: ${response.statusText}`);
+      return [];
     }
     const data = await response.json();
     return data as TrelloCardBasic[];
-  } catch (error) {
+  } catch (error)
+ {
     console.error('Error fetching cards from Trello:', error);
-    throw new Error('An error occurred while communicating with the Trello API.');
+    return [];
   }
 }
 
 export async function getCardAttachments(cardId: string): Promise<TrelloAttachment[]> {
   const authParams = getTrelloAuthParams();
+  if (!authParams) return [];
+
   const url = `https://api.trello.com/1/cards/${cardId}/attachments?fields=id,name,url,bytes,mimeType,date&${authParams}`;
 
   try {
@@ -138,18 +150,20 @@ export async function getCardAttachments(cardId: string): Promise<TrelloAttachme
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Trello API Error (getCardAttachments):', errorText);
-      throw new Error(`Failed to fetch Trello card attachments: ${response.statusText}`);
+      return [];
     }
     const data = await response.json();
     return data.map((att: any) => ({...att, fileName: att.name})) as TrelloAttachment[];
   } catch (error) {
     console.error('Error fetching attachments from Trello:', error);
-    throw new Error('An error occurred while communicating with the Trello API.');
+    return [];
   }
 }
 
 export async function searchTrelloCards(query: string): Promise<TrelloCardBasic[]> {
     const authParams = getTrelloAuthParams();
+    if (!authParams) return [];
+
     const url = `https://api.trello.com/1/search?query=${encodeURIComponent(query)}&idBoards=mine&modelTypes=cards&card_fields=name,id,url,idBoard,idList&cards_limit=50&${authParams}`;
   
     try {
@@ -157,12 +171,12 @@ export async function searchTrelloCards(query: string): Promise<TrelloCardBasic[
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Trello API Error (searchTrelloCards):', errorText);
-        throw new Error(`Failed to fetch Trello search results: ${response.statusText}`);
+        return [];
       }
       const data = await response.json();
       return data.cards as TrelloCardBasic[];
     } catch (error) {
       console.error('Error searching cards on Trello:', error);
-      throw new Error('An error occurred while communicating with the Trello API.');
+      return [];
     }
 }
