@@ -25,6 +25,7 @@ import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
 import { WelcomeScreen } from '@/components/welcome-screen';
 import { RSB002_MILESTONES } from '@/lib/rsb002-data';
 import { RSA060_MILESTONES } from '@/lib/rsa060-data';
+import { FeedbackButton } from '@/components/feedback-button';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -587,6 +588,7 @@ export default function Home() {
         milestones={filteredMilestones}
       />
 
+      <FeedbackButton />
     </div>
   );
 }
