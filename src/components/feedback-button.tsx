@@ -9,27 +9,22 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-// IMPORTANTE: Reemplaza esta dirección de correo con la tuya.
-const FEEDBACK_EMAIL = 'tu-correo-aqui@dominio.com';
+interface FeedbackButtonProps {
+    onClick: () => void;
+}
 
-export function FeedbackButton() {
-  const mailtoLink = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(
-    'Feedback para la aplicación DEAS TL'
-  )}`;
-
+export function FeedbackButton({ onClick }: FeedbackButtonProps) {
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            asChild
+            onClick={onClick}
             size="icon"
             className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-2xl bg-cyan-500 hover:bg-cyan-600 text-white z-50 transition-all duration-200 ease-in-out hover:scale-110"
           >
-            <a href={mailtoLink}>
-              <MessageSquare className="h-8 w-8" />
-              <span className="sr-only">Enviar Feedback</span>
-            </a>
+            <MessageSquare className="h-8 w-8" />
+            <span className="sr-only">Enviar Comentarios</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">

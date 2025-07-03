@@ -26,6 +26,7 @@ import { WelcomeScreen } from '@/components/welcome-screen';
 import { RSB002_MILESTONES } from '@/lib/rsb002-data';
 import { RSA060_MILESTONES } from '@/lib/rsa060-data';
 import { FeedbackButton } from '@/components/feedback-button';
+import { FeedbackDialog } from '@/components/feedback-dialog';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -39,6 +40,7 @@ export default function Home() {
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = React.useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   // Resizing state
@@ -261,6 +263,7 @@ export default function Home() {
     } finally {
         setIsLoadingTimeline(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories]);
 
   const handleUpload = React.useCallback(async (data: { files?: File[], categoryId: string, name: string, description: string, occurredAt: Date }) => {
@@ -588,7 +591,8 @@ export default function Home() {
         milestones={filteredMilestones}
       />
 
-      <FeedbackButton />
+      <FeedbackButton onClick={() => setIsFeedbackOpen(true)} />
+      <FeedbackDialog isOpen={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
     </div>
   );
 }
