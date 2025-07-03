@@ -3,7 +3,7 @@
 import * as React from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
-import { getFirebaseServices } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import type { User } from '@/types';
 
 interface AuthContextType {
@@ -21,39 +21,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const initializeAuth = async () => {
-      const { auth } = await getFirebaseServices();
-      if (!auth) {
-        console.error("Firebase Auth is not available. Check your configuration.");
-        setLoading(false);
-        return () => {};
-      }
+    if (!auth) {
+      console.warn("Firebase config is missing or invalid. Authentication features are disabled. Please check your .env file.");
+      setLoading(false);
+      return;
+    }
 
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
-        if (firebaseUser) {
-          setUser({
-            uid: firebaseUser.uid,
-            displayName: firebaseUser.displayName,
-            email: firebaseUser.email,
-            photoURL: firebaseUser.photoURL,
-          });
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      });
-      
-      return unsubscribe;
-    };
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        setUser({
+          uid: firebaseUser.uid,
+          displayName: firebaseUser.displayName,
+          email: firebaseUser.email,
+          photoURL: firebaseUser.photoURL,
+        });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
     
-    let unsubscribe: (() => void) | undefined;
-    initializeAuth().then(unsub => unsubscribe = unsub);
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return () => unsubscribe();
   }, []);
 
   return (

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { useAuth } from '@/context/auth-context';
-import { getFirebaseServices } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Skeleton } from './ui/skeleton';
@@ -21,8 +21,10 @@ export function AuthButton() {
   const { user, loading } = useAuth();
 
   const handleSignIn = async () => {
-    const { auth } = await getFirebaseServices();
-    if (!auth) return;
+    if (!auth) {
+        console.error("Auth is not initialized, cannot sign in. Please check your Firebase credentials in the .env file.");
+        return;
+    };
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -32,7 +34,6 @@ export function AuthButton() {
   };
 
   const handleSignOut = async () => {
-    const { auth } = await getFirebaseServices();
     if (!auth) return;
     try {
       await signOut(auth);
@@ -47,7 +48,7 @@ export function AuthButton() {
 
   if (!user) {
     return (
-      <Button onClick={handleSignIn} variant="outline">
+      <Button onClick={handleSignIn} variant="outline" disabled={!auth}>
         <LogIn className="mr-2 h-4 w-4" />
         Acceder
       </Button>

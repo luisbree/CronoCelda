@@ -11,42 +11,21 @@ const firebaseConfig = {
 };
 
 let auth: Auth | null = null;
-let initialized = false;
 
-/**
- * Initializes Firebase services on the first call and returns the auth instance.
- * This lazy initialization prevents app-breaking errors on startup if the config is invalid.
- * @returns {Promise<{ auth: Auth | null }>} - A promise that resolves to an object containing the Firebase Auth instance or null if initialization fails.
- */
-export async function getFirebaseServices(): Promise<{ auth: Auth | null }> {
-    if (initialized) {
-        return { auth };
-    }
+// This check ensures that all environment variables are strings and are not empty.
+const allConfigValuesPresent = Object.values(firebaseConfig).every(
+  (value) => typeof value === 'string' && value.length > 0
+);
 
-    initialized = true; // Attempt initialization only once per session.
-
-    const allConfigValuesPresent =
-        firebaseConfig.apiKey?.trim() &&
-        firebaseConfig.authDomain?.trim() &&
-        firebaseConfig.projectId?.trim() &&
-        firebaseConfig.storageBucket?.trim() &&
-        firebaseConfig.messagingSenderId?.trim() &&
-        firebaseConfig.appId?.trim();
-
-    if (allConfigValuesPresent) {
-        try {
-            const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-            auth = getAuth(app);
-        } catch (error) {
-            console.error("Firebase initialization failed:", error);
-            // This is a critical error, likely due to invalid config values.
-            // We set auth to null to prevent further issues.
-            auth = null;
-        }
-    } else {
-        // Config values are not present, so auth remains null.
-        auth = null;
-    }
-
-    return { auth };
+if (allConfigValuesPresent) {
+  try {
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+  } catch (error) {
+    console.error("Firebase initialization failed. Make sure your credentials in the .env file are correct.", error);
+    auth = null;
+  }
 }
+
+// Export auth directly. It will be null if the config is missing or invalid.
+export { auth };
