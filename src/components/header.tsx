@@ -1,6 +1,5 @@
 import { Input } from './ui/input';
 import { Search, List, ExternalLink, Home } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import {
     Tooltip,
@@ -8,6 +7,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
   } from '@/components/ui/tooltip';
+import { AuthButton } from './auth-button';
 
 interface HeaderProps {
   searchTerm: string;
@@ -80,10 +80,7 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, o
           <Button size="sm" variant="outline" onClick={() => onSetRange('1Y')}>1A</Button>
           <Button size="sm" variant="outline" onClick={() => onSetRange('All')}>Todo</Button>
       </div>
-      <Avatar>
-        <AvatarImage src="https://placehold.co/100x100.png" alt="Usuario" data-ai-hint="person portrait" />
-        <AvatarFallback>U</AvatarFallback>
-      </Avatar>
+      <AuthButton />
     </header>
   );
 }

@@ -1,0 +1,80 @@
+'use client';
+
+import * as React from 'react';
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { useAuth } from '@/context/auth-context';
+import { getFirebaseServices } from '@/lib/firebase';
+import { Button } from './ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Skeleton } from './ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
+
+export function AuthButton() {
+  const { user, loading } = useAuth();
+
+  const handleSignIn = async () => {
+    const { auth } = await getFirebaseServices();
+    if (!auth) return;
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error('Error signing in with Google', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    const { auth } = await getFirebaseServices();
+    if (!auth) return;
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out', error);
+    }
+  };
+
+  if (loading) {
+    return <Skeleton className="h-10 w-10 rounded-full" />;
+  }
+
+  if (!user) {
+    return (
+      <Button onClick={handleSignIn} variant="outline">
+        <LogIn className="mr-2 h-4 w-4" />
+        Acceder
+      </Button>
+    );
+  }
+
+  const userInitial = user.displayName ? user.displayName.charAt(0).toUpperCase() : <UserIcon className="h-5 w-5" />;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Avatar className="cursor-pointer h-10 w-10">
+          <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'Usuario'} />
+          <AvatarFallback>{userInitial}</AvatarFallback>
+        </Avatar>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          <p className="font-medium truncate">{user.displayName}</p>
+          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Cerrar Sesión</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
