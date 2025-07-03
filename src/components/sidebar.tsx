@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Logo } from './logo';
 import { Button, buttonVariants } from './ui/button';
 import { Input } from './ui/input';
-import { Plus, Search, UploadCloud, Loader2, X, Pencil, Trash2, Lock } from 'lucide-react';
+import { Plus, Search, UploadCloud, Loader2, X, Pencil, Trash2, Lock, Info } from 'lucide-react';
 import type { Category } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ColorPicker } from './color-picker';
@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/context/auth-context';
-import { Card } from './ui/card';
+import { Card, CardContent } from './ui/card';
 
 interface SidebarProps {
   categories: Category[];
@@ -67,24 +67,29 @@ export function Sidebar({
   const [selectedList, setSelectedList] = React.useState('');
   const [cardSearchTerm, setCardSearchTerm] = React.useState('');
   
+  const [isTrelloAvailable, setIsTrelloAvailable] = React.useState<boolean | null>(null);
   const [isLoadingBoards, setIsLoadingBoards] = React.useState(false);
   const [isLoadingLists, setIsLoadingLists] = React.useState(false);
   const [isLoadingCards, setIsLoadingCards] = React.useState(false);
   const [isSearching, setIsSearching] = React.useState(false);
 
   React.useEffect(() => {
-    const fetchBoards = async () => {
+    const fetchInitialData = async () => {
       setIsLoadingBoards(true);
       try {
-        const memberBoards = await getMemberBoards();
-        setBoards(memberBoards);
+        const { boards: memberBoards, isConfigured } = await getMemberBoards();
+        setIsTrelloAvailable(isConfigured);
+        if (isConfigured) {
+          setBoards(memberBoards);
+        }
       } catch (error) {
-        console.error("Failed to fetch boards", error);
+        console.error("Failed to fetch boards or check Trello config", error);
+        setIsTrelloAvailable(false);
       } finally {
         setIsLoadingBoards(false);
       }
     };
-    fetchBoards();
+    fetchInitialData();
   }, []);
 
   React.useEffect(() => {
@@ -132,7 +137,8 @@ export function Sidebar({
         }
     };
     fetchCards();
-  }, [selectedList, onCardSelect]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedList]);
   
   React.useEffect(() => {
     if (!cardSearchTerm) {
@@ -264,50 +270,67 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
 
         
           <div className="space-y-2">
-              <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
-              <SelectTrigger className="w-full h-8 text-xs">
-                  <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
-              </SelectTrigger>
-              <SelectContent>
-                  {boards.map(board => (
-                  <SelectItem key={board.id} value={board.id} className="text-xs">{board.name}</SelectItem>
-                  ))}
-              </SelectContent>
-              </Select>
+            {isTrelloAvailable === false ? (
+                 <Card className="bg-amber-500/10 border-amber-500/30">
+                    <CardContent className="pt-4 text-xs text-amber-200/80 flex items-start gap-3">
+                        <Info className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-amber-200">Integración con Trello no configurada</p>
+                            <p className="mt-1">Para habilitar esta función, un administrador debe agregar las credenciales de la API de Trello al archivo de configuración del servidor.</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            ) : (
+                <>
+                    <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards || isTrelloAvailable === null}>
+                    <SelectTrigger className="w-full h-8 text-xs">
+                        <SelectValue placeholder={
+                            isTrelloAvailable === null ? "Verificando Trello..." :
+                            isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"
+                        } />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {boards.map(board => (
+                        <SelectItem key={board.id} value={board.id} className="text-xs">{board.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
 
-              <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
-              <SelectTrigger className="w-full h-8 text-xs">
-                  <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
-              </SelectTrigger>
-              <SelectContent>
-                  {lists.map(list => (
-                  <SelectItem key={list.id} value={list.id} className="text-xs">{list.name}</SelectItem>
-                  ))}
-              </SelectContent>
-              </Select>
+                    <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
+                    <SelectTrigger className="w-full h-8 text-xs">
+                        <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {lists.map(list => (
+                        <SelectItem key={list.id} value={list.id} className="text-xs">{list.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
 
-              <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                      placeholder="Buscar tarjeta y presionar Enter..."
-                      className="pl-9 pr-9 h-8 text-xs"
-                      value={cardSearchTerm}
-                      onChange={(e) => setCardSearchTerm(e.target.value)}
-                      onKeyDown={handleGlobalSearch}
-                  />
-                  {isSearching ? (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                  ) : cardSearchTerm && (
-                      <button
-                          onClick={handleClearSearch}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:bg-accent"
-                          aria-label="Limpiar búsqueda"
-                      >
-                          <X className="h-4 w-4" />
-                      </button>
-                  )}
-              </div>
-
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Buscar tarjeta y presionar Enter..."
+                            className="pl-9 pr-9 h-8 text-xs"
+                            value={cardSearchTerm}
+                            onChange={(e) => setCardSearchTerm(e.target.value)}
+                            onKeyDown={handleGlobalSearch}
+                            disabled={isTrelloAvailable === null}
+                        />
+                        {isSearching ? (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                        ) : cardSearchTerm && (
+                            <button
+                                onClick={handleClearSearch}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:bg-accent"
+                                aria-label="Limpiar búsqueda"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        )}
+                    </div>
+                </>
+            )}
               <Select disabled>
               <SelectTrigger className="w-full h-8 text-xs">
                   <SelectValue placeholder="Seleccionar Etapa" />

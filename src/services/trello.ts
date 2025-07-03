@@ -48,7 +48,6 @@ function getTrelloAuthParams(): string | null {
     const apiToken = process.env.TRELLO_API_TOKEN;
 
     if (!apiKey || !apiToken) {
-        console.warn('Trello API key or token not configured in .env file. Trello integration is disabled.');
         return null;
     }
     return `key=${apiKey}&token=${apiToken}`;
@@ -75,10 +74,15 @@ export async function getBoardSummary(boardId: string): Promise<TrelloBoardSumma
   }
 }
 
-export async function getMemberBoards(): Promise<TrelloBoard[]> {
-  const authParams = getTrelloAuthParams();
-  if (!authParams) return [];
+export async function getMemberBoards(): Promise<{ boards: TrelloBoard[]; isConfigured: boolean }> {
+  const apiKey = process.env.TRELLO_API_KEY;
+  const apiToken = process.env.TRELLO_API_TOKEN;
 
+  if (!apiKey || !apiToken) {
+    return { boards: [], isConfigured: false };
+  }
+
+  const authParams = `key=${apiKey}&token=${apiToken}`;
   const url = `https://api.trello.com/1/members/me/boards?fields=name&${authParams}`;
 
   try {
@@ -86,15 +90,16 @@ export async function getMemberBoards(): Promise<TrelloBoard[]> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Trello API Error (getMemberBoards):', errorText);
-      return [];
+      return { boards: [], isConfigured: true };
     }
     const data = await response.json();
-    return data as TrelloBoard[];
+    return { boards: data as TrelloBoard[], isConfigured: true };
   } catch (error) {
     console.error('Error fetching boards from Trello:', error);
-    return [];
+    return { boards: [], isConfigured: true };
   }
 }
+
 
 export async function getBoardLists(boardId: string): Promise<TrelloListBasic[]> {
   const authParams = getTrelloAuthParams();
