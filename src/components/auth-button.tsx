@@ -36,8 +36,11 @@ export function AuthButton() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Error signing in with Google', error);
+    } catch (error: any) {
+      // This error code indicates the user closed the popup. It's not a real error, so we can ignore it.
+      if (error.code !== 'auth/cancelled-popup-request') {
+        console.error('Error signing in with Google', error);
+      }
     }
   };
 
