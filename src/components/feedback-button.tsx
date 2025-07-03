@@ -33,7 +33,7 @@ export function FeedbackButton() {
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          <p>Enviar feedback o reportar un error</p>
+          <p>Comentarios</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
