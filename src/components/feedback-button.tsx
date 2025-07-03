@@ -24,10 +24,10 @@ export function FeedbackButton() {
           <Button
             asChild
             size="icon"
-            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-teal-500 hover:bg-teal-600 text-white z-50"
+            className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-2xl bg-cyan-500 hover:bg-cyan-600 text-white z-50 transition-all duration-200 ease-in-out hover:scale-110"
           >
             <a href={mailtoLink}>
-              <MessageSquare className="h-7 w-7" />
+              <MessageSquare className="h-8 w-8" />
               <span className="sr-only">Enviar Feedback</span>
             </a>
           </Button>
