@@ -260,7 +260,7 @@ export default function Home() {
     } finally {
         setIsLoadingTimeline(false);
     }
-  }, [categories, dateRange]);
+  }, [categories]);
 
   const handleUpload = React.useCallback(async (data: { files?: File[], categoryId: string, name: string, description: string, occurredAt: Date }) => {
     const { files, categoryId, name, description, occurredAt } = data;
