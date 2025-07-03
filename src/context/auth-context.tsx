@@ -2,9 +2,10 @@
 
 import * as React from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import type { User } from '@/types';
+import { toast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -27,14 +28,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        setUser({
-          uid: firebaseUser.uid,
-          displayName: firebaseUser.displayName,
-          email: firebaseUser.email,
-          photoURL: firebaseUser.photoURL,
-        });
+        const authorizedEmailsEnv = process.env.NEXT_PUBLIC_AUTHORIZED_EMAILS || '';
+        // Only enforce allowlist if it's not empty
+        if (authorizedEmailsEnv) {
+          const authorizedEmails = authorizedEmailsEnv.split(',').map(email => email.trim().toLowerCase());
+          const userEmail = firebaseUser.email?.toLowerCase();
+
+          if (userEmail && authorizedEmails.includes(userEmail)) {
+            // User is on the allowlist, grant access
+            setUser({
+              uid: firebaseUser.uid,
+              displayName: firebaseUser.displayName,
+              email: firebaseUser.email,
+              photoURL: firebaseUser.photoURL,
+            });
+          } else {
+            // User is NOT on the allowlist, deny access
+            setUser(null);
+            await signOut(auth);
+            toast({
+              variant: "destructive",
+              title: "Acceso denegado",
+              description: "No tienes permiso para acceder a esta aplicación.",
+              duration: 5000,
+            });
+          }
+        } else {
+          // No allowlist configured, allow any authenticated user
+           setUser({
+              uid: firebaseUser.uid,
+              displayName: firebaseUser.displayName,
+              email: firebaseUser.email,
+              photoURL: firebaseUser.photoURL,
+            });
+        }
       } else {
         setUser(null);
       }
