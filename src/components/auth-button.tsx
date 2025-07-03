@@ -15,9 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { LogIn, LogOut, User as UserIcon, UserPlus } from 'lucide-react';
 
-export function AuthButton() {
+export function AuthButton({ onRegisterClick }: { onRegisterClick: () => void }) {
   const { user, loading } = useAuth();
 
   const handleSignIn = async () => {
@@ -50,15 +50,21 @@ export function AuthButton() {
   };
 
   if (loading) {
-    return <Skeleton className="h-10 w-10 rounded-full" />;
+    return <Skeleton className="h-10 w-24 rounded-md" />;
   }
 
   if (!user) {
     return (
-      <Button onClick={handleSignIn} variant="outline" disabled={!auth}>
-        <LogIn className="mr-2 h-4 w-4" />
-        Acceder
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button onClick={onRegisterClick} variant="secondary" disabled={!auth}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Registrarse
+        </Button>
+        <Button onClick={handleSignIn} variant="outline" disabled={!auth}>
+          <LogIn className="mr-2 h-4 w-4" />
+          Acceder (Google)
+        </Button>
+      </div>
     );
   }
 

@@ -25,6 +25,7 @@ import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
 import { WelcomeScreen } from '@/components/welcome-screen';
 import { RSB002_MILESTONES } from '@/lib/rsb002-data';
 import { RSA060_MILESTONES } from '@/lib/rsa060-data';
+import { RegisterDialog } from '@/components/register-dialog';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
@@ -38,6 +39,7 @@ export default function Home() {
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = React.useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = React.useState(false);
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   // Resizing state
@@ -523,6 +525,7 @@ export default function Home() {
           onSetRange={handleSetRange}
           onOpenSummary={() => setIsSummaryOpen(true)}
           onGoHome={handleGoHome}
+          onRegisterClick={() => setIsRegisterOpen(true)}
           trelloCardUrl={selectedCard?.url ?? null}
         />
         <div 
@@ -585,6 +588,11 @@ export default function Home() {
         isOpen={isSummaryOpen}
         onOpenChange={setIsSummaryOpen}
         milestones={filteredMilestones}
+      />
+
+      <RegisterDialog 
+        isOpen={isRegisterOpen}
+        onOpenChange={setIsRegisterOpen}
       />
 
     </div>
