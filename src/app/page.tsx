@@ -44,6 +44,7 @@ export default function Home() {
   const [isResizing, setIsResizing] = React.useState(false);
   const [timelinePanelHeight, setTimelinePanelHeight] = React.useState(55); // Initial percentage
   const resizeContainerRef = React.useRef<HTMLDivElement>(null);
+  const milestoneDateBounds = React.useRef<{start: string; end: string} | null>(null);
 
   const runAITagging = async (milestonesToTag: Milestone[]) => {
     const taggingPayload = milestonesToTag
@@ -149,13 +150,23 @@ export default function Home() {
       const allDates = milestones.map(m => parseISO(m.occurredAt));
       const oldest = new Date(Math.min(...allDates.map(d => d.getTime())));
       const newest = new Date(Math.max(...allDates.map(d => d.getTime())));
-      setDateRange({
-        start: subMonths(oldest, 1),
-        end: addMonths(newest, 1),
-      });
+
+      const newBounds = { start: oldest.toISOString(), end: newest.toISOString() };
+
+      const hasBoundsChanged = newBounds.start !== milestoneDateBounds.current?.start || newBounds.end !== milestoneDateBounds.current?.end;
+      
+      if (hasBoundsChanged || !dateRange) {
+        milestoneDateBounds.current = newBounds;
+        setDateRange({
+          start: subMonths(oldest, 1),
+          end: addMonths(newest, 1),
+        });
+      }
     } else {
+        milestoneDateBounds.current = null;
         setDateRange(null);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [milestones]);
 
   const handleCardSelect = React.useCallback(async (card: TrelloCardBasic | null) => {
@@ -249,7 +260,7 @@ export default function Home() {
     } finally {
         setIsLoadingTimeline(false);
     }
-  }, [categories]);
+  }, [categories, dateRange]);
 
   const handleUpload = React.useCallback(async (data: { files?: File[], categoryId: string, name: string, description: string, occurredAt: Date }) => {
     const { files, categoryId, name, description, occurredAt } = data;
