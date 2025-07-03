@@ -42,7 +42,7 @@ export default function Home() {
 
   // Resizing state
   const [isResizing, setIsResizing] = React.useState(false);
-  const [timelinePanelHeight, setTimelinePanelHeight] = React.useState(55); // Initial percentage
+  const [timelinePanelHeight, setTimelinePanelHeight] = React.useState(40); // Initial percentage
   const resizeContainerRef = React.useRef<HTMLDivElement>(null);
   const milestoneDateBounds = React.useRef<{start: string; end: string} | null>(null);
 
