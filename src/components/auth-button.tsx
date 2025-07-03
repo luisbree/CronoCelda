@@ -25,6 +25,13 @@ export function AuthButton() {
         console.error("Auth is not initialized, cannot sign in. Please check your Firebase credentials in the .env file.");
         return;
     };
+    
+    console.log('--- Firebase Auth Debug ---');
+    console.log('Current Hostname:', window.location.hostname);
+    console.log('Firebase Auth Domain:', auth.config.authDomain);
+    console.log('Por favor, asegúrate que el "Current Hostname" está en la lista de "Dominios autorizados" de tu proyecto de Firebase.');
+    console.log('---------------------------');
+
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
