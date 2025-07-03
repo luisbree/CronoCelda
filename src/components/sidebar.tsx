@@ -73,15 +73,6 @@ export function Sidebar({
   const [isSearching, setIsSearching] = React.useState(false);
 
   React.useEffect(() => {
-    if (!user) {
-        setBoards([]);
-        setLists([]);
-        setCards([]);
-        setFilteredCards([]);
-        setSelectedBoard('');
-        setSelectedList('');
-        return;
-    };
     const fetchBoards = async () => {
       setIsLoadingBoards(true);
       try {
@@ -94,10 +85,10 @@ export function Sidebar({
       }
     };
     fetchBoards();
-  }, [user]);
+  }, []);
 
   React.useEffect(() => {
-    if (!selectedBoard || !user) {
+    if (!selectedBoard) {
       setLists([]);
       setSelectedList('');
       return;
@@ -116,11 +107,11 @@ export function Sidebar({
       }
     };
     fetchLists();
-  }, [selectedBoard, user]);
+  }, [selectedBoard]);
 
   React.useEffect(() => {
     onCardSelect(null);
-    if (!selectedList || !user) {
+    if (!selectedList) {
         setCards([]);
         setFilteredCards([]);
         return;
@@ -141,8 +132,7 @@ export function Sidebar({
         }
     };
     fetchCards();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedList, user]);
+  }, [selectedList, onCardSelect]);
   
   React.useEffect(() => {
     if (!cardSearchTerm) {
@@ -207,9 +197,7 @@ export function Sidebar({
   }, [editingCategoryId]);
 
   const handleCardClick = (card: TrelloCardBasic) => {
-    if (user) {
-        onCardSelect(card);
-    }
+    onCardSelect(card);
   }
 
   const handleGlobalSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -274,112 +262,104 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
           Hito nuevo
         </Button>
 
-        {user ? (
-          <>
-            <div className="space-y-2">
-                <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
-                <SelectTrigger className="w-full h-8 text-xs">
-                    <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
-                </SelectTrigger>
-                <SelectContent>
-                    {boards.map(board => (
-                    <SelectItem key={board.id} value={board.id} className="text-xs">{board.name}</SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
+        
+          <div className="space-y-2">
+              <Select onValueChange={setSelectedBoard} value={selectedBoard} disabled={isLoadingBoards}>
+              <SelectTrigger className="w-full h-8 text-xs">
+                  <SelectValue placeholder={isLoadingBoards ? "Cargando tableros..." : "Seleccionar tablero"} />
+              </SelectTrigger>
+              <SelectContent>
+                  {boards.map(board => (
+                  <SelectItem key={board.id} value={board.id} className="text-xs">{board.name}</SelectItem>
+                  ))}
+              </SelectContent>
+              </Select>
 
-                <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
-                <SelectTrigger className="w-full h-8 text-xs">
-                    <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
-                </SelectTrigger>
-                <SelectContent>
-                    {lists.map(list => (
-                    <SelectItem key={list.id} value={list.id} className="text-xs">{list.name}</SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
+              <Select onValueChange={setSelectedList} value={selectedList} disabled={!selectedBoard || isLoadingLists}>
+              <SelectTrigger className="w-full h-8 text-xs">
+                  <SelectValue placeholder={isLoadingLists ? "Cargando listas..." : "Seleccionar lista"} />
+              </SelectTrigger>
+              <SelectContent>
+                  {lists.map(list => (
+                  <SelectItem key={list.id} value={list.id} className="text-xs">{list.name}</SelectItem>
+                  ))}
+              </SelectContent>
+              </Select>
 
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Buscar tarjeta y presionar Enter..."
-                        className="pl-9 pr-9 h-8 text-xs"
-                        value={cardSearchTerm}
-                        onChange={(e) => setCardSearchTerm(e.target.value)}
-                        onKeyDown={handleGlobalSearch}
-                    />
-                    {isSearching ? (
-                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                    ) : cardSearchTerm && (
-                        <button
-                            onClick={handleClearSearch}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:bg-accent"
-                            aria-label="Limpiar búsqueda"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
-                    )}
-                </div>
+              <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                      placeholder="Buscar tarjeta y presionar Enter..."
+                      className="pl-9 pr-9 h-8 text-xs"
+                      value={cardSearchTerm}
+                      onChange={(e) => setCardSearchTerm(e.target.value)}
+                      onKeyDown={handleGlobalSearch}
+                  />
+                  {isSearching ? (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : cardSearchTerm && (
+                      <button
+                          onClick={handleClearSearch}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:bg-accent"
+                          aria-label="Limpiar búsqueda"
+                      >
+                          <X className="h-4 w-4" />
+                      </button>
+                  )}
+              </div>
 
-                <Select disabled>
-                <SelectTrigger className="w-full h-8 text-xs">
-                    <SelectValue placeholder="Seleccionar Etapa" />
-                </SelectTrigger>
-                <SelectContent></SelectContent>
-                </Select>
+              <Select disabled>
+              <SelectTrigger className="w-full h-8 text-xs">
+                  <SelectValue placeholder="Seleccionar Etapa" />
+              </SelectTrigger>
+              <SelectContent></SelectContent>
+              </Select>
 
-                <Select disabled>
-                <SelectTrigger className="w-full h-8 text-xs">
-                    <SelectValue placeholder="Seleccionar Lote" />
-                </SelectTrigger>
-                <SelectContent></SelectContent>
-                </Select>
-            </div>
-            
-            {(selectedList || isSearching || (!selectedBoard && cardSearchTerm)) && (
-                <div className="flex-1 flex flex-col min-h-0 border rounded-md">
-                    <div className="p-2 border-b shrink-0">
-                        <p className="text-xs font-semibold text-muted-foreground">
-                            {cardListTitle}
-                        </p>
-                    </div>
-                    <ScrollArea className="flex-1">
-                        <div className="p-1 space-y-1">
-                        {isLoadingCards || isSearching ? (
-                            <div className="p-2 space-y-2">
-                            <Skeleton className="h-6 w-full" />
-                            <Skeleton className="h-6 w-full" />
-                            <Skeleton className="h-6 w-5/6" />
-                            </div>
-                        ) : filteredCards.length > 0 ? (
-                            filteredCards.map(card => (
-                                <button
-                                    key={card.id}
-                                    onClick={() => handleCardClick(card)}
-                                    className={cn(
-                                        "w-full text-left text-xs p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-card-foreground",
-                                        selectedCard?.id === card.id && "bg-primary text-primary-foreground hover:bg-primary/90"
-                                    )}
-                                >
-                                    {card.name}
-                                </button>
-                            ))
-                        ) : (
-                            <p className="p-4 text-xs text-muted-foreground text-center">
-                                No se encontraron tarjetas.
-                            </p>
-                        )}
-                        </div>
-                    </ScrollArea>
-                </div>
-            )}
-          </>
-        ) : (
-            <Card className="p-4 text-center text-sm text-muted-foreground bg-secondary/30 border-dashed">
-                <Lock className="mx-auto h-6 w-6 mb-2" />
-                Inicia sesión para conectar con Trello y cargar proyectos.
-            </Card>
-        )}
+              <Select disabled>
+              <SelectTrigger className="w-full h-8 text-xs">
+                  <SelectValue placeholder="Seleccionar Lote" />
+              </SelectTrigger>
+              <SelectContent></SelectContent>
+              </Select>
+          </div>
+          
+          {(selectedList || isSearching || (!selectedBoard && cardSearchTerm)) && (
+              <div className="flex-1 flex flex-col min-h-0 border rounded-md">
+                  <div className="p-2 border-b shrink-0">
+                      <p className="text-xs font-semibold text-muted-foreground">
+                          {cardListTitle}
+                      </p>
+                  </div>
+                  <ScrollArea className="flex-1">
+                      <div className="p-1 space-y-1">
+                      {isLoadingCards || isSearching ? (
+                          <div className="p-2 space-y-2">
+                          <Skeleton className="h-6 w-full" />
+                          <Skeleton className="h-6 w-full" />
+                          <Skeleton className="h-6 w-5/6" />
+                          </div>
+                      ) : filteredCards.length > 0 ? (
+                          filteredCards.map(card => (
+                              <button
+                                  key={card.id}
+                                  onClick={() => handleCardClick(card)}
+                                  className={cn(
+                                      "w-full text-left text-xs p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-card-foreground",
+                                      selectedCard?.id === card.id && "bg-primary text-primary-foreground hover:bg-primary/90"
+                                  )}
+                              >
+                                  {card.name}
+                              </button>
+                          ))
+                      ) : (
+                          <p className="p-4 text-xs text-muted-foreground text-center">
+                              No se encontraron tarjetas.
+                          </p>
+                      )}
+                      </div>
+                  </ScrollArea>
+              </div>
+          )}
         
         <div className="mt-auto shrink-0 border-t pt-3 space-y-2">
              <div className="flex justify-between items-center px-1">
