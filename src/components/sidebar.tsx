@@ -261,7 +261,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
       <div className="h-16 flex items-center border-b shrink-0">
         <Logo />
       </div>
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
+      <div className="flex-1 p-3 flex flex-col gap-4">
         
         <Button onClick={onNewMilestoneClick} disabled={!selectedCard || !user} size="sm" className="h-8">
           <UploadCloud className="mr-2 h-4 w-4" />
