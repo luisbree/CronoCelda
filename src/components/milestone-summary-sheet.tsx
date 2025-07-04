@@ -34,16 +34,16 @@ export function MilestoneSummaryTable({ milestones, projectName }: MilestoneSumm
   };
 
   return (
-    <div className="p-4 md:p-6 printable-area">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between p-4">
-            <CardTitle className="font-headline text-lg truncate" title={projectName || ''}>
+    <div className="p-4 md:p-8 printable-area">
+      <Card className="max-w-5xl mx-auto bg-white shadow-xl text-black">
+        <CardHeader className="flex flex-row items-center justify-between p-6">
+            <CardTitle className="font-headline text-xl font-bold text-black truncate" title={projectName || ''}>
                 {projectName || 'Resumen de Hitos'}
             </CardTitle>
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button onClick={handlePrint} size="icon" variant="outline" className="no-print text-black">
+                        <Button onClick={handlePrint} size="icon" variant="outline" className="no-print text-black border-zinc-400 hover:bg-zinc-100">
                             <Printer className="h-4 w-4" />
                         </Button>
                     </TooltipTrigger>
@@ -53,44 +53,44 @@ export function MilestoneSummaryTable({ milestones, projectName }: MilestoneSumm
                 </Tooltip>
             </TooltipProvider>
         </CardHeader>
-        <CardContent className="pt-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b-0">
-                <TableHead className="w-[40%]">Nombre del Hito</TableHead>
-                <TableHead className="w-[15%]">Fecha</TableHead>
-                <TableHead className="w-[20%]">Categoría</TableHead>
-                <TableHead className="w-[25%]">Etiquetas</TableHead>
+        <CardContent className="p-0">
+          <Table className="text-xs">
+            <TableHeader className="border-b border-zinc-200">
+              <TableRow className="hover:bg-transparent border-b-0">
+                <TableHead className="w-[40%] text-black font-semibold px-6 py-3">Nombre del Hito</TableHead>
+                <TableHead className="w-[15%] text-black font-semibold px-6 py-3">Fecha</TableHead>
+                <TableHead className="w-[20%] text-black font-semibold px-6 py-3">Categoría</TableHead>
+                <TableHead className="w-[25%] text-black font-semibold px-6 py-3">Etiquetas</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {milestones.length > 0 ? (
                 milestones.map((milestone) => (
                   <TableRow key={milestone.id} className="border-b-0">
-                    <TableCell className="py-2 px-4 font-medium">
+                    <TableCell className="py-2 px-6 font-medium">
                       <div className="flex items-center gap-2">
                         {milestone.isImportant && (
-                          <Star className="h-4 w-4 text-yellow-400 fill-yellow-400 shrink-0" />
+                          <Star className="h-3 w-3 text-yellow-500 fill-yellow-400 shrink-0" />
                         )}
                         <span>{milestone.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2 px-4">
+                    <TableCell className="py-2 px-6">
                       {format(parseISO(milestone.occurredAt), "dd/MM/yyyy", { locale: es })}
                     </TableCell>
-                    <TableCell className="py-2 px-4">
+                    <TableCell className="py-2 px-6">
                         <div className="flex items-center gap-2">
                             <div
                                 className="w-2.5 h-2.5 rounded-full shrink-0"
                                 style={{ backgroundColor: milestone.category.color }}
                             />
-                            <span className="text-xs">{milestone.category.name}</span>
+                            <span>{milestone.category.name}</span>
                         </div>
                     </TableCell>
-                    <TableCell className="py-2 px-4">
+                    <TableCell className="py-2 px-6">
                       <div className="flex flex-wrap gap-1">
                         {milestone.tags?.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="font-normal">
+                          <Badge key={tag} variant="secondary" className="font-normal bg-zinc-200 text-black hover:bg-zinc-300">
                             {tag}
                           </Badge>
                         ))}
@@ -100,7 +100,7 @@ export function MilestoneSummaryTable({ milestones, projectName }: MilestoneSumm
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={4} className="h-24 text-center text-zinc-500">
                     No hay hitos para mostrar.
                   </TableCell>
                 </TableRow>

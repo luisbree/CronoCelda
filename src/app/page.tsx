@@ -583,7 +583,9 @@ export default function Home() {
               )}
             </>
           ) : (
-            <MilestoneSummaryTable milestones={filteredMilestones} projectName={selectedCard?.name} />
+            <div className="flex-1 overflow-y-auto bg-zinc-200">
+              <MilestoneSummaryTable milestones={filteredMilestones} projectName={selectedCard?.name} />
+            </div>
           )}
         </div>
       </div>
