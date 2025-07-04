@@ -583,7 +583,7 @@ export default function Home() {
               )}
             </>
           ) : (
-            <MilestoneSummaryTable milestones={filteredMilestones} />
+            <MilestoneSummaryTable milestones={filteredMilestones} projectName={selectedCard?.name} />
           )}
         </div>
       </div>

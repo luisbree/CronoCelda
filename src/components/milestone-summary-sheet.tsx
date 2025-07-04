@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Printer, Star } from 'lucide-react';
@@ -19,9 +19,10 @@ import { es } from 'date-fns/locale';
 
 interface MilestoneSummaryTableProps {
   milestones: Milestone[];
+  projectName?: string | null;
 }
 
-export function MilestoneSummaryTable({ milestones }: MilestoneSummaryTableProps) {
+export function MilestoneSummaryTable({ milestones, projectName }: MilestoneSummaryTableProps) {
   const handlePrint = () => {
     window.print();
   };
@@ -29,22 +30,19 @@ export function MilestoneSummaryTable({ milestones }: MilestoneSummaryTableProps
   return (
     <div className="p-4 md:p-6 printable-area">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-                <CardTitle className="font-headline text-2xl">Resumen de Hitos</CardTitle>
-                <CardDescription>
-                    Una tabla con todos los hitos visibles, ordenados por fecha.
-                </CardDescription>
-            </div>
-            <Button onClick={handlePrint} size="sm" variant="outline" className="no-print">
+        <CardHeader className="flex flex-row items-center justify-between p-4">
+            <CardTitle className="font-headline text-lg truncate" title={projectName || ''}>
+                {projectName || 'Resumen de Hitos'}
+            </CardTitle>
+            <Button onClick={handlePrint} size="sm" variant="outline" className="no-print text-black">
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimir o Guardar como PDF
             </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="border-b-0">
                 <TableHead className="w-[40%]">Nombre del Hito</TableHead>
                 <TableHead className="w-[15%]">Fecha</TableHead>
                 <TableHead className="w-[20%]">Categoría</TableHead>
@@ -54,8 +52,8 @@ export function MilestoneSummaryTable({ milestones }: MilestoneSummaryTableProps
             <TableBody>
               {milestones.length > 0 ? (
                 milestones.map((milestone) => (
-                  <TableRow key={milestone.id}>
-                    <TableCell className="font-medium">
+                  <TableRow key={milestone.id} className="border-b-0">
+                    <TableCell className="py-2 px-4 font-medium">
                       <div className="flex items-center gap-2">
                         {milestone.isImportant && (
                           <Star className="h-4 w-4 text-yellow-400 fill-yellow-400 shrink-0" />
@@ -63,10 +61,10 @@ export function MilestoneSummaryTable({ milestones }: MilestoneSummaryTableProps
                         <span>{milestone.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2 px-4">
                       {format(parseISO(milestone.occurredAt), "dd/MM/yyyy", { locale: es })}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2 px-4">
                         <div className="flex items-center gap-2">
                             <div
                                 className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -75,7 +73,7 @@ export function MilestoneSummaryTable({ milestones }: MilestoneSummaryTableProps
                             <span className="text-xs">{milestone.category.name}</span>
                         </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2 px-4">
                       <div className="flex flex-wrap gap-1">
                         {milestone.tags?.map((tag) => (
                           <Badge key={tag} variant="secondary" className="font-normal">
