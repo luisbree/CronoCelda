@@ -1,5 +1,5 @@
 import { Input } from './ui/input';
-import { Search, List, ExternalLink, Home } from 'lucide-react';
+import { Search, List, ExternalLink, Home, GanttChartSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import {
     Tooltip,
@@ -14,17 +14,18 @@ interface HeaderProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   onSetRange: (range: '1D' | '1M' | '1Y' | 'All') => void;
-  onOpenSummary: () => void;
+  onToggleView: () => void;
+  view: 'timeline' | 'summary';
   onGoHome: () => void;
   trelloCardUrl: string | null;
   isProjectLoaded: boolean;
 }
 
-export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, onGoHome, trelloCardUrl, isProjectLoaded }: HeaderProps) {
+export function Header({ searchTerm, setSearchTerm, onSetRange, onToggleView, view, onGoHome, trelloCardUrl, isProjectLoaded }: HeaderProps) {
   const { user } = useAuth();
   
   return (
-    <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 w-full shrink-0 gap-4">
+    <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 w-full shrink-0 gap-4 no-print">
       <div className="flex-1">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -52,12 +53,12 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, o
                 </Tooltip>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button size="icon" variant="outline" onClick={onOpenSummary} disabled={!isProjectLoaded}>
-                            <List className="h-4 w-4" />
+                        <Button size="icon" variant="outline" onClick={onToggleView} disabled={!isProjectLoaded}>
+                            {view === 'timeline' ? <List className="h-4 w-4" /> : <GanttChartSquare className="h-4 w-4" />}
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Ver resumen de hitos</p>
+                        <p>{view === 'timeline' ? 'Ver resumen en tabla' : 'Ver línea de tiempo'}</p>
                     </TooltipContent>
                 </Tooltip>
                 <Tooltip>

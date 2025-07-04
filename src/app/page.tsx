@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/tooltip';
 import { getCardAttachments, type TrelloCardBasic } from '@/services/trello';
 import { FileUpload } from '@/components/file-upload';
-import { MilestoneSummarySheet } from '@/components/milestone-summary-sheet';
+import { MilestoneSummaryTable } from '@/components/milestone-summary-sheet';
 import { WelcomeScreen } from '@/components/welcome-screen';
 import { RSB002_MILESTONES } from '@/lib/rsb002-data';
 import { RSA060_MILESTONES } from '@/lib/rsa060-data';
@@ -39,9 +39,9 @@ export default function Home() {
   const [selectedCard, setSelectedCard] = React.useState<TrelloCardBasic | null>(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = React.useState(false);
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
-  const [isSummaryOpen, setIsSummaryOpen] = React.useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
   const [isLoaded, setIsLoaded] = React.useState(false);
+  const [view, setView] = React.useState<'timeline' | 'summary'>('timeline');
 
   // Resizing state
   const [isResizing, setIsResizing] = React.useState(false);
@@ -376,6 +376,7 @@ export default function Home() {
     setSelectedCard(null);
     setSelectedMilestone(null);
     setSearchTerm('');
+    setView('timeline');
   }, []);
 
   const filteredMilestones = milestones
@@ -507,6 +508,7 @@ export default function Home() {
     };
   }, [isResizing]);
 
+  const handleToggleView = () => setView(prev => prev === 'timeline' ? 'summary' : 'timeline');
 
   return (
     <div className="flex h-screen w-full bg-background">
@@ -525,7 +527,8 @@ export default function Home() {
           searchTerm={searchTerm} 
           setSearchTerm={setSearchTerm} 
           onSetRange={handleSetRange}
-          onOpenSummary={() => setIsSummaryOpen(true)}
+          onToggleView={handleToggleView}
+          view={view}
           onGoHome={handleGoHome}
           trelloCardUrl={selectedCard?.url ?? null}
           isProjectLoaded={!!selectedCard}
@@ -534,48 +537,54 @@ export default function Home() {
           ref={resizeContainerRef}
           className="flex-1 flex flex-col overflow-hidden"
         >
-            <main 
-              className="overflow-y-auto p-4 md:p-6"
-              style={{ height: selectedMilestone ? `${timelinePanelHeight}%` : '100%' }}
-            >
-            {isLoadingTimeline ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <h2 className="text-2xl font-medium font-headline mt-4">Cargando línea de tiempo...</h2>
-                    <p className="mt-2 text-muted-foreground">
-                        Obteniendo los hitos desde Trello.
-                    </p>
-                </div>
-            ) : milestones.length > 0 && dateRange ? (
-                <div className="h-full w-full">
-                    <Timeline 
-                        milestones={filteredMilestones} 
-                        startDate={dateRange.start}
-                        endDate={dateRange.end}
-                        onMilestoneClick={handleMilestoneClick}
-                    />
-                </div>
-            ) : (
-                <WelcomeScreen />
-            )}
-            </main>
-            {selectedMilestone && (
-                 <>
-                    <div
-                      onMouseDown={handleResizeMouseDown}
-                      className="h-2 bg-border cursor-row-resize hover:bg-ring transition-colors flex-shrink-0"
-                      title="Arrastrar para redimensionar"
-                    />
-                    <div className="flex-1 shrink-0 overflow-y-auto bg-zinc-300">
-                        <MilestoneDetail
-                            milestone={selectedMilestone}
-                            categories={categories}
-                            onMilestoneUpdate={handleMilestoneUpdate}
-                            onClose={handleDetailClose}
-                        />
-                    </div>
-                 </>
-            )}
+          {view === 'timeline' ? (
+            <>
+              <main 
+                className="overflow-y-auto p-4 md:p-6"
+                style={{ height: selectedMilestone ? `${timelinePanelHeight}%` : '100%' }}
+              >
+              {isLoadingTimeline ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center">
+                      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                      <h2 className="text-2xl font-medium font-headline mt-4">Cargando línea de tiempo...</h2>
+                      <p className="mt-2 text-muted-foreground">
+                          Obteniendo los hitos desde Trello.
+                      </p>
+                  </div>
+              ) : milestones.length > 0 && dateRange ? (
+                  <div className="h-full w-full">
+                      <Timeline 
+                          milestones={filteredMilestones} 
+                          startDate={dateRange.start}
+                          endDate={dateRange.end}
+                          onMilestoneClick={handleMilestoneClick}
+                      />
+                  </div>
+              ) : (
+                  <WelcomeScreen />
+              )}
+              </main>
+              {selectedMilestone && (
+                   <>
+                      <div
+                        onMouseDown={handleResizeMouseDown}
+                        className="h-2 bg-border cursor-row-resize hover:bg-ring transition-colors flex-shrink-0"
+                        title="Arrastrar para redimensionar"
+                      />
+                      <div className="flex-1 shrink-0 overflow-y-auto bg-zinc-300">
+                          <MilestoneDetail
+                              milestone={selectedMilestone}
+                              categories={categories}
+                              onMilestoneUpdate={handleMilestoneUpdate}
+                              onClose={handleDetailClose}
+                          />
+                      </div>
+                   </>
+              )}
+            </>
+          ) : (
+            <MilestoneSummaryTable milestones={filteredMilestones} />
+          )}
         </div>
       </div>
 
@@ -586,12 +595,6 @@ export default function Home() {
         onUpload={handleUpload}
       />
       
-      <MilestoneSummarySheet
-        isOpen={isSummaryOpen}
-        onOpenChange={setIsSummaryOpen}
-        milestones={filteredMilestones}
-      />
-
       <FeedbackButton onClick={() => setIsFeedbackOpen(true)} />
       <FeedbackDialog isOpen={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
     </div>

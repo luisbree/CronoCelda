@@ -1,83 +1,102 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { type Milestone } from '@/types';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Printer, Star } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Star } from 'lucide-react';
-import { Separator } from './ui/separator';
 
-interface MilestoneSummarySheetProps {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+interface MilestoneSummaryTableProps {
   milestones: Milestone[];
 }
 
-export function MilestoneSummarySheet({
-  isOpen,
-  onOpenChange,
-  milestones,
-}: MilestoneSummarySheetProps) {
+export function MilestoneSummaryTable({ milestones }: MilestoneSummaryTableProps) {
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle className="font-headline text-2xl">Resumen de Hitos</SheetTitle>
-          <SheetDescription>
-            Una lista de todos los hitos visibles en la línea de tiempo, ordenados por fecha.
-          </SheetDescription>
-        </SheetHeader>
-        <ScrollArea className="h-[calc(100vh-8rem)] mt-4 pr-4">
-          <div className="space-y-4">
-            {milestones.length > 0 ? (
-              milestones.map((milestone, index) => (
-                <div key={milestone.id}>
-                    <div className="flex flex-col items-start gap-2">
-                      <div className="flex w-full justify-between items-start">
-                        <p className="font-semibold text-base">{milestone.name}</p>
+    <div className="p-4 md:p-6 printable-area">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                <CardTitle className="font-headline text-2xl">Resumen de Hitos</CardTitle>
+                <CardDescription>
+                    Una tabla con todos los hitos visibles, ordenados por fecha.
+                </CardDescription>
+            </div>
+            <Button onClick={handlePrint} size="sm" variant="outline" className="no-print">
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir o Guardar como PDF
+            </Button>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40%]">Nombre del Hito</TableHead>
+                <TableHead className="w-[15%]">Fecha</TableHead>
+                <TableHead className="w-[20%]">Categoría</TableHead>
+                <TableHead className="w-[25%]">Etiquetas</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {milestones.length > 0 ? (
+                milestones.map((milestone) => (
+                  <TableRow key={milestone.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
                         {milestone.isImportant && (
                           <Star className="h-4 w-4 text-yellow-400 fill-yellow-400 shrink-0" />
                         )}
+                        <span>{milestone.name}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {format(parseISO(milestone.occurredAt), "d 'de' MMMM, yyyy", { locale: es })}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <div
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: milestone.category.color }}
-                        />
-                        <span className="text-sm">{milestone.category.name}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-1">
+                    </TableCell>
+                    <TableCell>
+                      {format(parseISO(milestone.occurredAt), "dd/MM/yyyy", { locale: es })}
+                    </TableCell>
+                    <TableCell>
+                        <div className="flex items-center gap-2">
+                            <div
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
+                                style={{ backgroundColor: milestone.category.color }}
+                            />
+                            <span className="text-xs">{milestone.category.name}</span>
+                        </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
                         {milestone.tags?.map((tag) => (
-                          <Badge key={tag} variant="secondary">
+                          <Badge key={tag} variant="secondary" className="font-normal">
                             {tag}
                           </Badge>
                         ))}
                       </div>
-                    </div>
-                    {index < milestones.length -1 && <Separator className="mt-4"/>}
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No hay hitos para mostrar.
-              </p>
-            )}
-          </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    No hay hitos para mostrar.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
