@@ -306,9 +306,9 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         />
                     </h3>
                     {milestone.associatedFiles.length > 0 ? (
-                        <ul className="space-y-1.5">
+                        <ul className="space-y-1.5 border border-zinc-400 rounded-md p-2 bg-zinc-200">
                             {milestone.associatedFiles.map(file => (
-                                <li key={file.id} className="flex items-center justify-between p-1.5 rounded-md bg-zinc-200">
+                                <li key={file.id} className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <FileIcon type={file.type} />
                                         <span className="text-xs font-medium truncate text-black" title={file.name}>{file.name}</span>

@@ -2,7 +2,7 @@ import { FileText, ImageIcon, Video, Music, FileQuestion } from 'lucide-react';
 import type { AssociatedFile } from '@/types';
 
 export function FileIcon({ type }: { type: AssociatedFile['type'] }) {
-  const className = "h-8 w-8 text-zinc-600";
+  const className = "h-4 w-4 text-zinc-600";
   switch (type) {
     case 'document':
       return <FileText className={className} />;
