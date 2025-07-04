@@ -528,6 +528,7 @@ export default function Home() {
           onOpenSummary={() => setIsSummaryOpen(true)}
           onGoHome={handleGoHome}
           trelloCardUrl={selectedCard?.url ?? null}
+          isProjectLoaded={!!selectedCard}
         />
         <div 
           ref={resizeContainerRef}

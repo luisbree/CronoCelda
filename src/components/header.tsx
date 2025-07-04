@@ -17,9 +17,10 @@ interface HeaderProps {
   onOpenSummary: () => void;
   onGoHome: () => void;
   trelloCardUrl: string | null;
+  isProjectLoaded: boolean;
 }
 
-export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, onGoHome, trelloCardUrl }: HeaderProps) {
+export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, onGoHome, trelloCardUrl, isProjectLoaded }: HeaderProps) {
   const { user } = useAuth();
   
   return (
@@ -29,10 +30,11 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, o
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Buscar archivos, categorías o etiquetas..."
+            placeholder={isProjectLoaded ? "Buscar archivos, categorías o etiquetas..." : "Cargá un proyecto para poder buscar"}
             className="pl-9 w-full md:w-1/2 lg:w-1/3"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            disabled={!isProjectLoaded}
           />
         </div>
       </div>
@@ -50,7 +52,7 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, o
                 </Tooltip>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button size="icon" variant="outline" onClick={onOpenSummary}>
+                        <Button size="icon" variant="outline" onClick={onOpenSummary} disabled={!isProjectLoaded}>
                             <List className="h-4 w-4" />
                         </Button>
                     </TooltipTrigger>
@@ -78,10 +80,10 @@ export function Header({ searchTerm, setSearchTerm, onSetRange, onOpenSummary, o
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-          <Button size="sm" variant="outline" onClick={() => onSetRange('1D')}>Hoy</Button>
-          <Button size="sm" variant="outline" onClick={() => onSetRange('1M')}>1M</Button>
-          <Button size="sm" variant="outline" onClick={() => onSetRange('1Y')}>1A</Button>
-          <Button size="sm" variant="outline" onClick={() => onSetRange('All')}>Todo</Button>
+          <Button size="sm" variant="outline" onClick={() => onSetRange('1D')} disabled={!isProjectLoaded}>Hoy</Button>
+          <Button size="sm" variant="outline" onClick={() => onSetRange('1M')} disabled={!isProjectLoaded}>1M</Button>
+          <Button size="sm" variant="outline" onClick={() => onSetRange('1Y')} disabled={!isProjectLoaded}>1A</Button>
+          <Button size="sm" variant="outline" onClick={() => onSetRange('All')} disabled={!isProjectLoaded}>Todo</Button>
       </div>
       <AuthButton />
     </header>
