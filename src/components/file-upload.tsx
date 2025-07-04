@@ -32,7 +32,7 @@ const uploadSchema = z.object({
     required_error: "Se requiere una fecha para el hito.",
   }),
   files: z.array(z.instanceof(File)).optional(),
-  categoryId: z.string().min(1, 'Por favor, selecciona una categoría.'),
+  categoryId: z.string().min(1, 'Por favor, seleccioná una categoría.'),
 });
 
 type UploadFormValues = z.infer<typeof uploadSchema>;
@@ -97,9 +97,9 @@ export function FileUpload({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px] bg-zinc-300 text-black">
         <DialogHeader>
-          <DialogTitle className="font-headline">Crear un nuevo hito</DialogTitle>
+          <DialogTitle className="font-headline">Cargar un nuevo hito</DialogTitle>
           <DialogDescription className="text-zinc-700">
-            Añade un hito a tu DEAS TL. Describe el evento y, si lo deseas, adjunta uno o más archivos.
+            Agregá un hito a la línea de tiempo. Describí el evento y, si querés, adjuntá uno o más archivos.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -109,9 +109,9 @@ export function FileUpload({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Título del Hito</FormLabel>
+                  <FormLabel>Título del hito</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Inicio de Estudio de Impacto Ambiental" {...field} className="bg-zinc-100 text-black border-zinc-400 placeholder:text-zinc-500" />
+                    <Input placeholder="Ej: Presentación de Avance a Cliente" {...field} className="bg-zinc-100 text-black border-zinc-400 placeholder:text-zinc-500" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -125,7 +125,7 @@ export function FileUpload({
                   <FormLabel>Descripción</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Describe el hito, su importancia y contexto."
+                      placeholder="Contanos un poco sobre el hito, su importancia y el contexto."
                       className="resize-none bg-zinc-100 text-black border-zinc-400 placeholder:text-zinc-500"
                       {...field}
                     />
@@ -139,7 +139,7 @@ export function FileUpload({
               name="occurredAt"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Fecha del Hito</FormLabel>
+                  <FormLabel>Fecha del hito</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -153,7 +153,7 @@ export function FileUpload({
                           {field.value ? (
                             format(field.value, "PPP", { locale: es })
                           ) : (
-                            <span>Selecciona una fecha</span>
+                            <span>Elegí una fecha</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -180,7 +180,7 @@ export function FileUpload({
               name="files"
               render={() => (
                 <FormItem>
-                  <FormLabel>Archivos Adjuntos (Opcional)</FormLabel>
+                  <FormLabel>Archivos adjuntos (opcional)</FormLabel>
                   <FormControl>
                     <div className="space-y-3">
                       <div 
@@ -189,7 +189,7 @@ export function FileUpload({
                       >
                         <UploadCloud className="mx-auto h-10 w-10 text-zinc-600" />
                         <p className="mt-2 text-sm text-zinc-600">
-                            Haz clic para seleccionar archivos
+                            Arrastrá tus archivos acá o hacé clic para subirlos
                         </p>
                          <input id="file-input" type="file" className="hidden" multiple onChange={handleFileChange} />
                       </div>
@@ -230,7 +230,7 @@ export function FileUpload({
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-zinc-100 text-black border-zinc-400">
-                        <SelectValue placeholder="Selecciona una categoría" />
+                        <SelectValue placeholder="Seleccioná una categoría" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -256,7 +256,7 @@ export function FileUpload({
                 Cancelar
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Creando...' : 'Crear Hito'}
+                {form.formState.isSubmitting ? 'Guardando...' : 'Crear Hito'}
               </Button>
             </DialogFooter>
           </form>
