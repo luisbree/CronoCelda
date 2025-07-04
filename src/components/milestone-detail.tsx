@@ -179,7 +179,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                 )}
                 <div className="flex items-center pt-1.5">
                     <Select value={milestone.category.id} onValueChange={handleCategoryChange} disabled={!user}>
-                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-xs font-medium text-zinc-700 hover:text-black focus:text-black disabled:cursor-not-allowed disabled:opacity-100">
+                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-xs font-medium text-zinc-700 hover:text-black focus:text-black disabled:cursor-not-allowed disabled:opacity-100 bg-transparent">
                             <SelectValue asChild>
                                 <div className="flex items-center cursor-pointer">
                                     <div
@@ -310,7 +310,9 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                             {milestone.associatedFiles.map(file => (
                                 <li key={file.id} className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 min-w-0">
-                                        <FileIcon type={file.type} />
+                                        <div className="shrink-0">
+                                            <FileIcon type={file.type} />
+                                        </div>
                                         <span className="text-xs font-medium truncate text-black" title={file.name}>{file.name}</span>
                                     </div>
                                     <span className="text-xs text-zinc-700 shrink-0">{file.size}</span>
