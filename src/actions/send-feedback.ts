@@ -39,7 +39,14 @@ export async function sendFeedback(data: FeedbackData) {
     
     const { data: responseData, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', // ¡IMPORTANTE! Para producción, cambia esto a un dominio verificado en tu cuenta de Resend.
-      to: 'eiasambientales@gmail.com',
+      
+      // --- CAMBIO PARA PRUEBAS ---
+      // En el modo de prueba de Resend, solo puedes enviar correos A la misma dirección con la que te registraste.
+      // Para que las pruebas funcionen, usaremos la dirección del formulario como destinatario.
+      // Asegúrate de que el correo que usas para probar sea el mismo que usaste para crear tu cuenta en Resend.
+      // Cuando verifiques tu dominio en Resend, cambia la siguiente línea a tu email de destino (ej: 'eiasambientales@gmail.com').
+      to: userEmail,
+      
       reply_to: userEmail,
       subject: `[DEAS TL: comentario] ${title}`,
       text: `Comentario de: ${userEmail}\n\n${content}`,
@@ -56,7 +63,7 @@ export async function sendFeedback(data: FeedbackData) {
         } else if (error.name === 'authentication_error') {
             userMessage = 'Error de autenticación con Resend. Por favor, revisa que tu RESEND_API_KEY sea correcta.';
         } else if (error.name === 'validation_error') {
-            userMessage = 'Error de validación. Asegúrate de que todos los campos del formulario sean correctos.';
+            userMessage = `Error de validación de Resend. Asegúrate de que el email de destino (${userEmail}) sea el mismo con el que te registraste en Resend.`;
         }
 
         return { success: false, message: userMessage };
