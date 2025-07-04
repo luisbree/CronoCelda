@@ -48,15 +48,26 @@ export async function sendFeedback(data: FeedbackData) {
     if (error) {
         // Log the detailed error from Resend for debugging purposes on the server.
         console.error('Error detallado de Resend al enviar el correo:', JSON.stringify(error, null, 2));
-        return { success: false, message: 'No se pudo enviar el comentario. Por favor, inténtalo más tarde.' };
+        
+        let userMessage = 'No se pudo enviar el comentario. Por favor, inténtalo más tarde.';
+        
+        if (error.message && error.message.includes('You can only send testing emails to your own email address')) {
+            userMessage = 'Error de Resend: Solo puedes enviar correos de prueba a tu propia dirección de email (la que usaste para registrarte en Resend).';
+        } else if (error.name === 'authentication_error') {
+            userMessage = 'Error de autenticación con Resend. Por favor, revisa que tu RESEND_API_KEY sea correcta.';
+        } else if (error.name === 'validation_error') {
+            userMessage = 'Error de validación. Asegúrate de que todos los campos del formulario sean correctos.';
+        }
+
+        return { success: false, message: userMessage };
     }
 
     console.log(`Correo de feedback enviado con éxito. ID de Resend: ${responseData?.id}`);
     return { success: true, message: '¡Comentario enviado con éxito!' };
 
-  } catch (exception) {
+  } catch (exception: any) {
     // This will catch any exceptions during the process, e.g., network errors or Resend SDK issues.
-    console.error('Excepción al procesar el envío con Resend:', exception);
-    return { success: false, message: 'No se pudo enviar el comentario. Por favor, inténtalo más tarde.' };
+    console.error('Excepción al procesar el envío con Resend:', JSON.stringify(exception, null, 2));
+    return { success: false, message: 'Ocurrió una excepción en el servidor al intentar enviar el correo.' };
   }
 }
