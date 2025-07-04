@@ -18,8 +18,7 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-
-const FEEDBACK_EMAIL = 'eiasambientales@gmail.com';
+import { sendFeedback } from '@/actions/send-feedback';
 
 const feedbackSchema = z.object({
   userEmail: z.string().email({ message: 'Por favor, introduce un correo válido.' }),
@@ -52,22 +51,22 @@ export function FeedbackDialog({ isOpen, onOpenChange }: FeedbackDialogProps) {
     }
   }, [form, isOpen]);
 
-  const onSubmit = (data: FeedbackFormValues) => {
-    const subject = encodeURIComponent(`[DEAS TL: comentario] ${data.title}`);
-    const body = encodeURIComponent(
-      `Comentario de: ${data.userEmail}\n\n${data.content}`
-    );
-    const mailtoLink = `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`;
+  const onSubmit = async (data: FeedbackFormValues) => {
+    const result = await sendFeedback(data);
 
-    // This will try to open the user's default email client.
-    window.location.href = mailtoLink;
-    
-    toast({
-        title: "¡Gracias por tu comentario!",
-        description: "Se está abriendo tu cliente de correo para enviar el mensaje.",
-    });
-
-    onOpenChange(false);
+    if (result.success) {
+      toast({
+        title: "¡Comentario enviado!",
+        description: "Gracias por tu feedback, nos ayuda a mejorar.",
+      });
+      onOpenChange(false);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error al enviar",
+        description: result.message,
+      });
+    }
   };
 
   return (
@@ -76,7 +75,7 @@ export function FeedbackDialog({ isOpen, onOpenChange }: FeedbackDialogProps) {
         <DialogHeader>
           <DialogTitle className="font-headline">Enviar Comentarios</DialogTitle>
           <DialogDescription className="text-zinc-700">
-            Tus sugerencias nos ayudan a mejorar. Completa el formulario para enviar tu feedback.
+            Tus sugerencias nos ayudan a mejorar. Completa el formulario y lo enviaremos directamente.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -131,7 +130,7 @@ export function FeedbackDialog({ isOpen, onOpenChange }: FeedbackDialogProps) {
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Enviar Comentario
+                {isSubmitting ? 'Enviando...' : 'Enviar Comentario'}
               </Button>
             </DialogFooter>
           </form>
