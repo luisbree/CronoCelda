@@ -418,7 +418,7 @@ const cardListTitle = (!selectedBoard && !selectedList && cardSearchTerm) ? `Res
                                 <Popover open={openPopoverId === category.id} onOpenChange={(isOpen) => setOpenPopoverId(isOpen ? category.id : null)}>
                                     <PopoverTrigger asChild>
                                         <button
-                                        className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed"
+                                        className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform hover:scale-125 focus:outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                         style={{ backgroundColor: category.color }}
                                         aria-label={`Cambiar color de la categoría ${category.name}`}
                                         disabled={!!editingCategoryId || !user}

@@ -179,7 +179,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                 )}
                 <div className="flex items-center pt-1.5">
                     <Select value={milestone.category.id} onValueChange={handleCategoryChange} disabled={!user}>
-                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-xs font-medium text-zinc-700 hover:text-black focus:text-black disabled:cursor-not-allowed disabled:opacity-100 bg-transparent">
+                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-xs font-medium text-zinc-700 hover:text-black focus:text-black disabled:opacity-100 bg-transparent">
                             <SelectValue asChild>
                                 <div className="flex items-center cursor-pointer">
                                     <div
@@ -214,7 +214,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                 <button 
                     onClick={handleToggleImportant} 
                     disabled={!user}
-                    className="p-1 rounded-full text-zinc-500 hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors disabled:cursor-not-allowed disabled:hover:text-zinc-500 disabled:hover:bg-transparent"
+                    className="p-1 rounded-full text-zinc-500 hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors disabled:hover:text-zinc-500 disabled:hover:bg-transparent"
                     aria-label={milestone.isImportant ? 'Quitar de importantes' : 'Marcar como importante'}
                 >
                     <Star className={cn("h-5 w-5", milestone.isImportant && "fill-yellow-400 text-yellow-400")} />
@@ -265,7 +265,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                                 {tag}
                                 <button 
                                     onClick={() => handleTagRemove(tag)} 
-                                    className="ml-1 rounded-full opacity-50 group-hover/badge:opacity-100 hover:bg-destructive/10 p-0.5 transition-opacity disabled:cursor-not-allowed disabled:hover:bg-transparent text-destructive"
+                                    className="ml-1 rounded-full opacity-50 group-hover/badge:opacity-100 hover:bg-destructive/10 p-0.5 transition-opacity disabled:hover:bg-transparent text-destructive"
                                     aria-label={`Quitar etiqueta ${tag}`}
                                     disabled={!user}
                                 >
