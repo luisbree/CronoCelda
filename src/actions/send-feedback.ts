@@ -46,15 +46,17 @@ export async function sendFeedback(data: FeedbackData) {
     });
 
     if (error) {
-        console.error('Error al enviar el correo con Resend:', error);
+        // Log the detailed error from Resend for debugging purposes on the server.
+        console.error('Error detallado de Resend al enviar el correo:', JSON.stringify(error, null, 2));
         return { success: false, message: 'No se pudo enviar el comentario. Por favor, inténtalo más tarde.' };
     }
 
     console.log(`Correo de feedback enviado con éxito. ID de Resend: ${responseData?.id}`);
     return { success: true, message: '¡Comentario enviado con éxito!' };
 
-  } catch (error) {
-    console.error('Excepción al intentar enviar correo con Resend:', error);
+  } catch (exception) {
+    // This will catch any exceptions during the process, e.g., network errors or Resend SDK issues.
+    console.error('Excepción al procesar el envío con Resend:', exception);
     return { success: false, message: 'No se pudo enviar el comentario. Por favor, inténtalo más tarde.' };
   }
 }
