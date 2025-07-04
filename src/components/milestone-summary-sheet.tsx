@@ -16,6 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Printer, Star } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+  } from '@/components/ui/tooltip';
 
 interface MilestoneSummaryTableProps {
   milestones: Milestone[];
@@ -34,10 +40,18 @@ export function MilestoneSummaryTable({ milestones, projectName }: MilestoneSumm
             <CardTitle className="font-headline text-lg truncate" title={projectName || ''}>
                 {projectName || 'Resumen de Hitos'}
             </CardTitle>
-            <Button onClick={handlePrint} size="sm" variant="outline" className="no-print text-black">
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimir o Guardar como PDF
-            </Button>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button onClick={handlePrint} size="icon" variant="outline" className="no-print text-black">
+                            <Printer className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Imprimir o Guardar como PDF</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         </CardHeader>
         <CardContent className="pt-0">
           <Table>
