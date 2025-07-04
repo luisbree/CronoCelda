@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Paperclip, Tag, X, Star, Pencil, History, UploadCloud, Clock, Lock } from 'lucide-react';
+import { Paperclip, Tag, X, Star, Pencil, History, UploadCloud, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -154,7 +154,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
   };
 
   return (
-    <div className="flex flex-col h-full p-3 overflow-hidden text-foreground">
+    <div className="flex flex-col h-full p-3 overflow-hidden text-black">
         <div className="flex items-start justify-between gap-2 shrink-0">
             <div className="flex-1 min-w-0">
                 {isEditingTitle ? (
@@ -179,7 +179,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                 )}
                 <div className="flex items-center pt-1.5">
                     <Select value={milestone.category.id} onValueChange={handleCategoryChange} disabled={!user}>
-                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-xs font-medium text-muted-foreground hover:text-foreground focus:text-foreground disabled:cursor-not-allowed disabled:opacity-100">
+                        <SelectTrigger className="w-auto border-none shadow-none focus:ring-0 gap-2 h-auto p-0 text-xs font-medium text-zinc-700 hover:text-black focus:text-black disabled:cursor-not-allowed disabled:opacity-100">
                             <SelectValue asChild>
                                 <div className="flex items-center cursor-pointer">
                                     <div
@@ -205,7 +205,7 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         </SelectContent>
                     </Select>
                 </div>
-                 <div className="flex items-center text-xs text-muted-foreground mt-1.5">
+                 <div className="flex items-center text-xs text-zinc-700 mt-1.5">
                     <Clock className="h-3 w-3 mr-1.5" />
                     <span>{format(parseISO(milestone.occurredAt), "PPP 'a las' p", { locale: es })}</span>
                 </div>
@@ -214,18 +214,18 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                 <button 
                     onClick={handleToggleImportant} 
                     disabled={!user}
-                    className="p-1 rounded-full text-muted-foreground hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors disabled:cursor-not-allowed disabled:hover:text-muted-foreground disabled:hover:bg-transparent"
+                    className="p-1 rounded-full text-zinc-500 hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors disabled:cursor-not-allowed disabled:hover:text-zinc-500 disabled:hover:bg-transparent"
                     aria-label={milestone.isImportant ? 'Quitar de importantes' : 'Marcar como importante'}
                 >
                     <Star className={cn("h-5 w-5", milestone.isImportant && "fill-yellow-400 text-yellow-400")} />
                 </button>
-                <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+                <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-zinc-700 hover:text-black">
                     <X className="h-5 w-5" />
                 </Button>
             </div>
         </div>
         
-        <Separator className="my-2 shrink-0" />
+        <Separator className="my-2 shrink-0 bg-zinc-400/50" />
         
         <ScrollArea className="flex-1 -mr-3 pr-3">
             <div className="space-y-3">
@@ -240,32 +240,32 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         setEditableDescription(milestone.description);
                     }
                     }}
-                    className="text-sm leading-normal w-full bg-background border"
+                    className="text-sm leading-normal w-full bg-zinc-100 border-zinc-400 text-black"
                     autoFocus
                     rows={3}
                 />
                 ) : (
                 <div
                     className={cn(
-                        "text-sm text-muted-foreground leading-normal relative",
-                         user && "cursor-pointer hover:bg-accent p-2 -m-2 rounded-md transition-colors group"
+                        "text-sm text-zinc-700 leading-normal relative",
+                         user && "cursor-pointer hover:bg-zinc-400/30 p-2 -m-2 rounded-md transition-colors group"
                     )}
                     onClick={() => user && setIsEditingDescription(true)}
                 >
                     <p className="whitespace-pre-wrap">{milestone.description || (user ? 'Añade una descripción...' : 'Descripción no editable.')}</p>
-                    {user && <Pencil className="h-3 w-3 absolute top-1 right-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />}
+                    {user && <Pencil className="h-3 w-3 absolute top-1 right-1 text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </div>
                 )}
                 
                 <div className="space-y-2">
                     <div className="flex flex-wrap gap-2 items-center">
-                        <Tag className="h-4 w-4 text-muted-foreground" />
+                        <Tag className="h-4 w-4 text-zinc-600" />
                         {(milestone.tags || []).map(tag => (
-                            <Badge key={tag} variant="secondary" className="group/badge relative pl-2.5 pr-1 py-0.5 text-xs">
+                            <Badge key={tag} className="group/badge relative pl-2.5 pr-1 py-0.5 text-xs bg-zinc-200 text-black hover:bg-zinc-200/80 border-transparent">
                                 {tag}
                                 <button 
                                     onClick={() => handleTagRemove(tag)} 
-                                    className="ml-1 rounded-full opacity-50 group-hover/badge:opacity-100 hover:bg-destructive/20 p-0.5 transition-opacity disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                    className="ml-1 rounded-full opacity-50 group-hover/badge:opacity-100 hover:bg-destructive/10 p-0.5 transition-opacity disabled:cursor-not-allowed disabled:hover:bg-transparent text-destructive"
                                     aria-label={`Quitar etiqueta ${tag}`}
                                     disabled={!user}
                                 >
@@ -280,19 +280,19 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                         onChange={(e) => setNewTag(e.target.value)}
                         onKeyDown={handleTagAdd}
                         placeholder={user ? "Añadir etiqueta y presionar Enter..." : "Inicia sesión para editar etiquetas"}
-                        className="h-8 bg-input text-xs"
+                        className="h-8 bg-zinc-100 text-xs border border-zinc-400 text-black placeholder:text-zinc-500"
                         disabled={!user}
                     />
                 </div>
             
-                <Separator />
+                <Separator className="bg-zinc-400/50" />
 
                 <div className="space-y-2">
-                    <h3 className="font-semibold flex items-center justify-between gap-2 text-sm">
+                    <h3 className="font-semibold flex items-center justify-between gap-2 text-sm text-black">
                         <div className="flex items-center gap-2">
                             <Paperclip className="h-4 w-4" /> Archivos Adjuntos
                         </div>
-                        <Button variant="outline" size="sm" className="h-7" onClick={() => fileInputRef.current?.click()} disabled={!user}>
+                        <Button variant="outline" size="sm" className="h-7 text-black border-zinc-400 hover:bg-zinc-200" onClick={() => fileInputRef.current?.click()} disabled={!user}>
                             <UploadCloud className="mr-2 h-3 w-3"/>
                             Añadir
                         </Button>
@@ -308,31 +308,31 @@ export function MilestoneDetail({ milestone, categories, onMilestoneUpdate, onCl
                     {milestone.associatedFiles.length > 0 ? (
                         <ul className="space-y-1.5">
                             {milestone.associatedFiles.map(file => (
-                                <li key={file.id} className="flex items-center justify-between p-1.5 rounded-md bg-secondary">
+                                <li key={file.id} className="flex items-center justify-between p-1.5 rounded-md bg-zinc-200">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <FileIcon type={file.type} />
-                                        <span className="text-xs font-medium truncate" title={file.name}>{file.name}</span>
+                                        <span className="text-xs font-medium truncate text-black" title={file.name}>{file.name}</span>
                                     </div>
-                                    <span className="text-xs text-muted-foreground shrink-0">{file.size}</span>
+                                    <span className="text-xs text-zinc-700 shrink-0">{file.size}</span>
                                 </li>
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-xs text-muted-foreground italic">No hay archivos adjuntos para este hito.</p>
+                        <p className="text-xs text-zinc-700 italic">No hay archivos adjuntos para este hito.</p>
                     )}
                 </div>
                 
-                <Separator />
+                <Separator className="bg-zinc-400/50" />
 
                 <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="history" className="border-b-0">
-                        <AccordionTrigger className="text-sm font-semibold hover:no-underline py-1">
+                        <AccordionTrigger className="text-sm font-semibold hover:no-underline py-1 text-black">
                             <div className="flex items-center gap-2">
                                 <History className="h-4 w-4" /> Historial de Cambios
                             </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                            <ul className="space-y-1.5 text-xs text-muted-foreground pr-4 max-h-24 overflow-y-auto">
+                            <ul className="space-y-1.5 text-xs text-zinc-700 pr-4 max-h-24 overflow-y-auto">
                             {milestone.history.slice().reverse().map((entry, index) => (
                                 <li key={index}>{entry}</li>
                             ))}

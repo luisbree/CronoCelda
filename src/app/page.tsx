@@ -158,7 +158,7 @@ export default function Home() {
 
       const hasBoundsChanged = newBounds.start !== milestoneDateBounds.current?.start || newBounds.end !== milestoneDateBounds.current?.end;
       
-      if (hasBoundsChanged || !dateRange) {
+      if (hasBoundsChanged) {
         milestoneDateBounds.current = newBounds;
         setDateRange({
           start: subMonths(oldest, 1),
@@ -343,6 +343,16 @@ export default function Home() {
 
 
   const handleSetRange = React.useCallback((rangeType: '1D' | '1M' | '1Y' | 'All') => {
+    if (rangeType === 'All') {
+        if (milestoneDateBounds.current) {
+            setDateRange({
+                start: subMonths(parseISO(milestoneDateBounds.current.start), 1),
+                end: addMonths(parseISO(milestoneDateBounds.current.end), 1),
+            });
+        }
+        return;
+    }
+    
     const now = new Date();
     if (rangeType === '1D') {
       setDateRange({ start: startOfDay(now), end: endOfDay(now) });
@@ -350,18 +360,8 @@ export default function Home() {
       setDateRange({ start: subMonths(now, 1), end: now });
     } else if (rangeType === '1Y') {
       setDateRange({ start: subYears(now, 1), end: now });
-    } else {
-      if (milestones.length > 0) {
-        const allDates = milestones.map(m => parseISO(m.occurredAt));
-        const oldest = new Date(Math.min(...allDates.map(d => d.getTime())));
-        const newest = new Date(Math.max(...allDates.map(d => d.getTime())));
-        setDateRange({
-          start: subMonths(oldest, 1),
-          end: addMonths(newest, 1),
-        });
-      }
     }
-  }, [milestones]);
+  }, []);
 
   const handleMilestoneClick = React.useCallback((milestone: Milestone) => {
     setSelectedMilestone(milestone);
@@ -565,7 +565,7 @@ export default function Home() {
                       className="h-2 bg-border cursor-row-resize hover:bg-ring transition-colors flex-shrink-0"
                       title="Arrastrar para redimensionar"
                     />
-                    <div className="flex-1 bg-background shrink-0 overflow-y-auto light-panel">
+                    <div className="flex-1 shrink-0 overflow-y-auto bg-zinc-300">
                         <MilestoneDetail
                             milestone={selectedMilestone}
                             categories={categories}
