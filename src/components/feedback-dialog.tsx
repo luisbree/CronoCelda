@@ -72,10 +72,10 @@ export function FeedbackDialog({ isOpen, onOpenChange }: FeedbackDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] bg-card text-card-foreground">
+      <DialogContent className="sm:max-w-[480px] bg-zinc-300 text-black">
         <DialogHeader>
           <DialogTitle className="font-headline">Enviar Comentarios</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-zinc-700">
             Tus sugerencias nos ayudan a mejorar. Completa el formulario para enviar tu feedback.
           </DialogDescription>
         </DialogHeader>
@@ -88,7 +88,7 @@ export function FeedbackDialog({ isOpen, onOpenChange }: FeedbackDialogProps) {
                 <FormItem>
                   <FormLabel>Tu Correo Electrónico</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="tu.correo@dominio.com" {...field} />
+                    <Input type="email" placeholder="tu.correo@dominio.com" {...field} className="bg-zinc-100 text-black border-zinc-400 placeholder:text-zinc-500" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -101,7 +101,7 @@ export function FeedbackDialog({ isOpen, onOpenChange }: FeedbackDialogProps) {
                 <FormItem>
                   <FormLabel>Asunto</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Sugerencia para la línea de tiempo" {...field} />
+                    <Input placeholder="Ej: Sugerencia para la línea de tiempo" {...field} className="bg-zinc-100 text-black border-zinc-400 placeholder:text-zinc-500" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -116,7 +116,7 @@ export function FeedbackDialog({ isOpen, onOpenChange }: FeedbackDialogProps) {
                   <FormControl>
                     <Textarea
                       placeholder="Describe tu sugerencia o el problema que encontraste."
-                      className="resize-none"
+                      className="resize-none bg-zinc-100 text-black border-zinc-400 placeholder:text-zinc-500"
                       rows={5}
                       {...field}
                     />
@@ -126,7 +126,7 @@ export function FeedbackDialog({ isOpen, onOpenChange }: FeedbackDialogProps) {
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="text-black border-zinc-400 hover:bg-zinc-200">
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
