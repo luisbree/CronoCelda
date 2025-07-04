@@ -33,6 +33,7 @@ export async function sendFeedback(data: FeedbackData) {
   }
 
   const { userEmail, title, content } = validatedData.data;
+  const adminEmail = 'eiasambientales@gmail.com';
 
   try {
     const resend = new Resend(apiKey);
@@ -40,12 +41,9 @@ export async function sendFeedback(data: FeedbackData) {
     const { data: responseData, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', // ¡IMPORTANTE! Para producción, cambia esto a un dominio verificado en tu cuenta de Resend.
       
-      // --- CAMBIO PARA PRUEBAS ---
-      // En el modo de prueba de Resend, solo puedes enviar correos A la misma dirección con la que te registraste.
-      // Para que las pruebas funcionen, usaremos la dirección del formulario como destinatario.
-      // Asegúrate de que el correo que usas para probar sea el mismo que usaste para crear tu cuenta en Resend.
-      // Cuando verifiques tu dominio en Resend, cambia la siguiente línea a tu email de destino (ej: 'eiasambientales@gmail.com').
-      to: userEmail,
+      // En modo de prueba, Resend solo puede enviar correos A la dirección con la que te registraste.
+      // Como tu cuenta es 'eiasambientales@gmail.com', fijamos este destinatario.
+      to: adminEmail,
       
       reply_to: userEmail,
       subject: `[DEAS TL: comentario] ${title}`,
@@ -58,12 +56,13 @@ export async function sendFeedback(data: FeedbackData) {
         
         let userMessage = 'No se pudo enviar el comentario. Por favor, inténtalo más tarde.';
         
+        // This is the most common sandbox error.
         if (error.message && error.message.includes('You can only send testing emails to your own email address')) {
-            userMessage = 'Error de Resend: Solo puedes enviar correos de prueba a tu propia dirección de email (la que usaste para registrarte en Resend).';
+            userMessage = `Error de Resend: Tu cuenta solo puede enviar correos de prueba a tu propia dirección (${adminEmail}). Revisa que el destinatario sea el correcto.`;
         } else if (error.name === 'authentication_error') {
             userMessage = 'Error de autenticación con Resend. Por favor, revisa que tu RESEND_API_KEY sea correcta.';
         } else if (error.name === 'validation_error') {
-            userMessage = `Error de validación de Resend. Asegúrate de que el email de destino (${userEmail}) sea el mismo con el que te registraste en Resend.`;
+            userMessage = `Error de validación de Resend. Esto puede ocurrir si el formato del correo es incorrecto o si la API key es inválida. Error: ${error.message}`;
         }
 
         return { success: false, message: userMessage };
