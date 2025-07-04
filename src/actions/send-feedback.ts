@@ -21,13 +21,14 @@ type FeedbackData = z.infer<typeof feedbackSchema>;
 export async function sendFeedback(data: FeedbackData) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.error('La API Key de Resend no está configurada. Revisa tu archivo .env.');
+    console.error('ERROR: La API Key de Resend (RESEND_API_KEY) no está configurada. Revisa tu archivo .env.');
     return { success: false, message: 'El servicio de correo no está configurado. Contacta al administrador.' };
   }
 
   // Validar los datos también en el lado del servidor
   const validatedData = feedbackSchema.safeParse(data);
   if (!validatedData.success) {
+      console.warn('Validación de feedback fallida en el servidor:', validatedData.error);
       return { success: false, message: 'Los datos enviados no son válidos.' };
   }
 
@@ -36,7 +37,7 @@ export async function sendFeedback(data: FeedbackData) {
   try {
     const resend = new Resend(apiKey);
     
-    await resend.emails.send({
+    const { data: responseData, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', // ¡IMPORTANTE! Para producción, cambia esto a un dominio verificado en tu cuenta de Resend.
       to: 'eiasambientales@gmail.com',
       reply_to: userEmail,
@@ -44,9 +45,16 @@ export async function sendFeedback(data: FeedbackData) {
       text: `Comentario de: ${userEmail}\n\n${content}`,
     });
 
+    if (error) {
+        console.error('Error al enviar el correo con Resend:', error);
+        return { success: false, message: 'No se pudo enviar el comentario. Por favor, inténtalo más tarde.' };
+    }
+
+    console.log(`Correo de feedback enviado con éxito. ID de Resend: ${responseData?.id}`);
     return { success: true, message: '¡Comentario enviado con éxito!' };
+
   } catch (error) {
-    console.error('Error al enviar el correo con Resend:', error);
+    console.error('Excepción al intentar enviar correo con Resend:', error);
     return { success: false, message: 'No se pudo enviar el comentario. Por favor, inténtalo más tarde.' };
   }
 }
