@@ -1,0 +1,20 @@
+{
+  "name": "deas-tl-functions",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && functions-framework --target=get-gee-tiles",
+    "deploy": "npm run build && gcloud functions deploy get-gee-tiles --gen2 --runtime=nodejs20 --region=us-central1 --source=. --entry-point=get-gee-tiles --trigger-http --allow-unauthenticated"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0",
+    "@google/earthengine": "^0.1.393",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.12.2",
+    "typescript": "^5.4.3"
+  }
+}
