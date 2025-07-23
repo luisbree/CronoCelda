@@ -377,7 +377,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
         ))}
 
         {centralMonthLabel && (
-            <div className="absolute bottom-[-30px] w-full text-center">
+            <div className="absolute bottom-[-50px] w-full text-center">
                 <span className="text-lg font-bold text-muted-foreground/50 capitalize">
                     {centralMonthLabel}
                 </span>
