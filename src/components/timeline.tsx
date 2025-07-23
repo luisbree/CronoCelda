@@ -19,6 +19,8 @@ import {
   differenceInDays,
   eachDayOfInterval,
   eachHourOfInterval,
+  startOfMonth,
+  endOfMonth
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Skeleton } from './ui/skeleton';
@@ -44,6 +46,7 @@ interface TimelineData {
   markers: DateMarker[];
   filePositions: Map<string, number>;
   visibleMilestones: Milestone[];
+  centralMonthLabel?: string;
 }
 
 export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: TimelineProps) {
@@ -212,6 +215,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
       const durationInMonths = differenceInMonths(timelineEnd, timelineStart);
   
       let dateMarkers: Omit<DateMarker, 'position'>[] = [];
+      let centralMonthLabel: string | undefined = undefined;
   
       if (durationInDays <= 1) {
         // Show hours (every 2 hours)
@@ -222,15 +226,19 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
             date: hourDate,
             label: format(hourDate, 'HH:mm'),
           }));
-      } else if (durationInMonths <= 1) {
-        // Show days with month below
+      } else if (durationInMonths < 1) {
+        // Show days with a single month label
         const rawDayMarkers = eachDayOfInterval({ start: timelineStart, end: timelineEnd });
         dateMarkers = rawDayMarkers.map(dayDate => ({
             date: dayDate,
             label: '', // Not used in this view
             dayLabel: format(dayDate, 'd'),
-            monthLabel: format(dayDate, 'MMM', { locale: es }),
+            monthLabel: '', // This is handled by centralMonthLabel now
         }));
+        
+        // Determine the central month label
+        const middleDate = new Date(timelineStart.getTime() + (timelineEnd.getTime() - timelineStart.getTime()) / 2);
+        centralMonthLabel = format(middleDate, 'MMMM yyyy', { locale: es });
       } else {
         // Show months (default behavior)
         const durationInYears = durationInMonths / 12;
@@ -276,6 +284,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
         markers: markersWithPosition,
         filePositions,
         visibleMilestones,
+        centralMonthLabel,
       });
     } else {
       setTimelineData({
@@ -311,7 +320,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
     );
   }
 
-  const { markers, filePositions, visibleMilestones } = timelineData;
+  const { markers, filePositions, visibleMilestones, centralMonthLabel } = timelineData;
   
   const milestonesInView = visibleMilestones.filter(milestone => {
     const pos = filePositions.get(milestone.id);
@@ -356,11 +365,8 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
               style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
             >
               <div className="h-2 w-px bg-gray-400" />
-              {dayLabel && monthLabel ? (
-                <div className="absolute top-4 text-center">
-                    <span className="text-xs font-medium text-foreground">{dayLabel}</span>
-                    <span className="block text-[10px] text-muted-foreground -mt-1">{monthLabel}</span>
-                </div>
+              {dayLabel ? (
+                 <span className="absolute top-4 text-xs font-medium text-foreground">{dayLabel}</span>
               ) : (
                 <span className="absolute top-4 text-xs text-muted-foreground whitespace-nowrap">
                     {label}
@@ -369,6 +375,14 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
             </div>
           )
         ))}
+
+        {centralMonthLabel && (
+            <div className="absolute bottom-[-30px] w-full text-center">
+                <span className="text-lg font-bold text-muted-foreground/50 capitalize">
+                    {centralMonthLabel}
+                </span>
+            </div>
+        )}
 
         <TooltipProvider>
           {visibleMilestones.map(milestone => {
