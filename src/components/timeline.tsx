@@ -16,6 +16,10 @@ import {
   differenceInMonths,
   getMonth,
   getYear,
+  differenceInDays,
+  eachDayOfInterval,
+  eachHourOfInterval,
+  differenceInHours,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Skeleton } from './ui/skeleton';
@@ -30,7 +34,7 @@ interface TimelineProps {
 }
 
 interface TimelineData {
-  monthMarkers: { date: Date; label: string; position: number }[];
+  markers: { date: Date; label: string; position: number }[];
   filePositions: Map<string, number>;
   visibleMilestones: Milestone[];
 }
@@ -182,96 +186,91 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
   React.useEffect(() => {
     const timelineStart = viewRange.start;
     const timelineEnd = viewRange.end;
-
+  
     const visibleMilestones = milestones.filter(milestone => {
-        const fileDate = parseISO(milestone.occurredAt);
-        return fileDate >= timelineStart && fileDate <= timelineEnd;
+      const fileDate = parseISO(milestone.occurredAt);
+      return fileDate >= timelineStart && fileDate <= timelineEnd;
     });
-
+  
     if (timelineStart && timelineEnd && timelineEnd > timelineStart) {
       const totalTimelineDuration = differenceInMilliseconds(timelineEnd, timelineStart);
-
+  
       const getPositionOnTimeline = (date: Date) => {
         if (totalTimelineDuration <= 0) return 0;
         const dateOffset = differenceInMilliseconds(date, timelineStart);
         return (dateOffset / totalTimelineDuration) * 100;
       };
-      
+  
+      const durationInDays = differenceInDays(timelineEnd, timelineStart);
       const durationInMonths = differenceInMonths(timelineEnd, timelineStart);
-      const durationInYears = durationInMonths / 12;
-
-      const rawMonthMarkersSource = eachMonthOfInterval({
-        start: timelineStart,
-        end: timelineEnd,
-      });
-
-      let filteredMonths: Date[];
-
-      if (durationInYears >= 2) {
-        const targetMonths = [0]; // Enero
-        filteredMonths = rawMonthMarkersSource.filter(date => targetMonths.includes(getMonth(date)));
-      } else if (durationInYears >= 1) {
-        const targetMonths = [0, 3, 6, 9]; // Ene, Abr, Jul, Oct
-        filteredMonths = rawMonthMarkersSource.filter(date => targetMonths.includes(getMonth(date)));
+  
+      let dateMarkers: { date: Date; label: string }[];
+  
+      if (durationInDays <= 1) {
+        // Show hours (every 2 hours)
+        const rawHourMarkers = eachHourOfInterval({ start: timelineStart, end: timelineEnd });
+        dateMarkers = rawHourMarkers
+          .filter((_, index) => index % 2 === 0)
+          .map(hourDate => ({
+            date: hourDate,
+            label: format(hourDate, 'HH:mm'),
+          }));
+      } else if (durationInMonths <= 2) {
+        // Show days
+        const rawDayMarkers = eachDayOfInterval({ start: timelineStart, end: timelineEnd });
+        dateMarkers = rawDayMarkers.map(dayDate => ({
+          date: dayDate,
+          label: format(dayDate, 'd MMM', { locale: es }),
+        }));
       } else {
-        filteredMonths = rawMonthMarkersSource.filter((date, index) => index % 2 === 0);
-      }
-
-      let lastShownYear: number | null = null;
-      const monthMarkers = filteredMonths.map((monthDate) => {
-        const year = getYear(monthDate);
-        let label: string;
-        const monthIndex = getMonth(monthDate);
-
-        let showYear = false;
-        
-        if (durationInYears < 1) {
-          if (lastShownYear === null || year !== lastShownYear) {
-            showYear = true;
-          }
-          label = format(monthDate, 'MMM', { locale: es });
+        // Show months (default behavior)
+        const durationInYears = durationInMonths / 12;
+        const rawMonthMarkersSource = eachMonthOfInterval({ start: timelineStart, end: timelineEnd });
+  
+        let filteredMonths: Date[];
+        if (durationInYears >= 2) {
+          filteredMonths = rawMonthMarkersSource.filter(date => getMonth(date) % 6 === 0); // Ene, Jul
+        } else if (durationInYears >= 1) {
+          filteredMonths = rawMonthMarkersSource.filter(date => getMonth(date) % 3 === 0); // Ene, Abr, Jul, Oct
         } else {
-          showYear = true;
-          label = format(monthDate, 'MMM', { locale: es });
+            filteredMonths = rawMonthMarkersSource;
         }
 
-        if (monthIndex === 0) { // Siempre mostrar año en Enero
-            showYear = true;
-        }
-
-        if(showYear) {
-            label = format(monthDate, 'MMM yyyy', { locale: es });
-        }
-        
-        lastShownYear = year;
-        
-        return {
-          date: monthDate,
-          label,
-          position: getPositionOnTimeline(monthDate),
-        };
-      }).reduce((acc, marker) => {
-        if (!acc.find(m => m.label === marker.label)) {
-          acc.push(marker);
-        }
-        return acc;
-      }, [] as { date: Date; label: string; position: number }[]);
+        let lastShownYear: number | null = null;
+        dateMarkers = filteredMonths.map(monthDate => {
+            const year = getYear(monthDate);
+            let showYear = false;
+            if (lastShownYear === null || year !== lastShownYear || getMonth(monthDate) === 0) {
+                showYear = true;
+            }
+            lastShownYear = year;
+            return {
+                date: monthDate,
+                label: format(monthDate, showYear ? 'MMM yyyy' : 'MMM', { locale: es }),
+            };
+        });
+      }
       
+      const markers = dateMarkers.map(marker => ({
+          ...marker,
+          position: getPositionOnTimeline(marker.date),
+      }));
+
       const filePositions = new Map<string, number>();
       visibleMilestones.forEach(milestone => {
         const fileDate = parseISO(milestone.occurredAt);
         const position = getPositionOnTimeline(fileDate);
         filePositions.set(milestone.id, position);
       });
-      
+  
       setTimelineData({
-        monthMarkers,
+        markers,
         filePositions,
         visibleMilestones,
       });
     } else {
       setTimelineData({
-        monthMarkers: [],
+        markers: [],
         filePositions: new Map(),
         visibleMilestones: [],
       });
@@ -303,7 +302,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
     );
   }
 
-  const { monthMarkers, filePositions, visibleMilestones } = timelineData;
+  const { markers, filePositions, visibleMilestones } = timelineData;
   
   const milestonesInView = visibleMilestones.filter(milestone => {
     const pos = filePositions.get(milestone.id);
@@ -340,7 +339,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
       >
         <div className="absolute bottom-7 left-0 right-0 h-px bg-gray-400" />
 
-        {monthMarkers.map(({ label, position }) => (
+        {markers.map(({ label, position }) => (
           position >= 0 && position <= 100 && (
             <div
               key={label + position}
@@ -413,3 +412,5 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
     </div>
   );
 }
+
+    
