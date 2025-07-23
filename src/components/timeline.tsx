@@ -327,17 +327,6 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
     return pos !== undefined && pos >= 0 && pos <= 100;
   });
 
-  if (milestonesInView.length === 0 && milestones.length > 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center">
-        <h2 className="text-2xl font-semibold font-headline">No hay hitos en este rango de tiempo.</h2>
-        <p className="mt-2 text-muted-foreground">
-          Intenta alejar el zoom o seleccionar un rango de tiempo diferente.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div 
       ref={timelineContainerRef}
@@ -348,10 +337,19 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
       onMouseLeave={handleMouseLeave}
       onContextMenu={(e) => e.preventDefault()}
       className={cn(
-        "w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16 touch-none cursor-grab",
+        "relative w-full h-full flex items-end justify-start p-4 sm:p-8 pb-16 touch-none",
+        (isPanning || milestones.length > 0) && "cursor-grab",
         isPanning && "cursor-grabbing"
       )}
     >
+        {milestonesInView.length === 0 && milestones.length > 0 && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                <h2 className="text-2xl font-semibold font-headline">No hay hitos en este rango de tiempo.</h2>
+                <p className="mt-2 text-muted-foreground">
+                Intenta alejar el zoom o seleccionar un rango de tiempo diferente.
+                </p>
+            </div>
+        )}
       <div 
         className="relative h-full w-full"
       >
