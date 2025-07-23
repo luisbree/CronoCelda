@@ -19,7 +19,6 @@ import {
   differenceInDays,
   eachDayOfInterval,
   eachHourOfInterval,
-  differenceInHours,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Skeleton } from './ui/skeleton';
@@ -33,8 +32,16 @@ interface TimelineProps {
   onMilestoneClick: (milestone: Milestone) => void;
 }
 
+interface DateMarker {
+    date: Date;
+    label: string; // For hours or month/year
+    dayLabel?: string; // For day number
+    monthLabel?: string; // For month name
+    position: number;
+}
+
 interface TimelineData {
-  markers: { date: Date; label: string; position: number }[];
+  markers: DateMarker[];
   filePositions: Map<string, number>;
   visibleMilestones: Milestone[];
 }
@@ -204,7 +211,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
       const durationInDays = differenceInDays(timelineEnd, timelineStart);
       const durationInMonths = differenceInMonths(timelineEnd, timelineStart);
   
-      let dateMarkers: { date: Date; label: string }[];
+      let dateMarkers: Omit<DateMarker, 'position'>[] = [];
   
       if (durationInDays <= 1) {
         // Show hours (every 2 hours)
@@ -215,12 +222,14 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
             date: hourDate,
             label: format(hourDate, 'HH:mm'),
           }));
-      } else if (durationInMonths <= 2) {
-        // Show days
+      } else if (durationInMonths <= 1) {
+        // Show days with month below
         const rawDayMarkers = eachDayOfInterval({ start: timelineStart, end: timelineEnd });
         dateMarkers = rawDayMarkers.map(dayDate => ({
-          date: dayDate,
-          label: format(dayDate, 'd MMM', { locale: es }),
+            date: dayDate,
+            label: '', // Not used in this view
+            dayLabel: format(dayDate, 'd'),
+            monthLabel: format(dayDate, 'MMM', { locale: es }),
         }));
       } else {
         // Show months (default behavior)
@@ -251,7 +260,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
         });
       }
       
-      const markers = dateMarkers.map(marker => ({
+      const markersWithPosition: DateMarker[] = dateMarkers.map(marker => ({
           ...marker,
           position: getPositionOnTimeline(marker.date),
       }));
@@ -264,7 +273,7 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
       });
   
       setTimelineData({
-        markers,
+        markers: markersWithPosition,
         filePositions,
         visibleMilestones,
       });
@@ -339,17 +348,24 @@ export function Timeline({ milestones, startDate, endDate, onMilestoneClick }: T
       >
         <div className="absolute bottom-7 left-0 right-0 h-px bg-gray-400" />
 
-        {markers.map(({ label, position }) => (
+        {markers.map(({ label, dayLabel, monthLabel, position }, index) => (
           position >= 0 && position <= 100 && (
             <div
-              key={label + position}
+              key={label + position + index}
               className="absolute -bottom-0.5 flex flex-col items-center"
               style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
             >
               <div className="h-2 w-px bg-gray-400" />
-              <span className="absolute top-4 text-xs text-muted-foreground whitespace-nowrap">
-                {label}
-              </span>
+              {dayLabel && monthLabel ? (
+                <div className="absolute top-4 text-center">
+                    <span className="text-xs font-medium text-foreground">{dayLabel}</span>
+                    <span className="block text-[10px] text-muted-foreground -mt-1">{monthLabel}</span>
+                </div>
+              ) : (
+                <span className="absolute top-4 text-xs text-muted-foreground whitespace-nowrap">
+                    {label}
+                </span>
+              )}
             </div>
           )
         ))}
