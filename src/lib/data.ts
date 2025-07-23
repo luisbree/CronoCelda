@@ -11,4 +11,5 @@ export const CATEGORIES: Category[] = [
   { id: 'cat-7', name: 'Capacitaciónes', color: '#FF69B4' },
   { id: 'cat-8', name: 'Programa de Gestión Ambiental (PGA)', color: '#4682B4' },
   { id: 'cat-9', name: 'Hallazgos', color: '#DC143C' },
+  { id: 'cat-sistema', name: 'Sistema', color: '#000000' },
 ];

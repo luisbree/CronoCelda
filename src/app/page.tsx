@@ -30,6 +30,12 @@ import { FeedbackDialog } from '@/components/feedback-dialog';
 
 const DEFAULT_CATEGORY_COLORS = ['#a3e635', '#22c55e', '#14b8a6', '#0ea5e9', '#4f46e5', '#8b5cf6', '#be185d', '#f97316', '#facc15'];
 
+function getTrelloObjectCreationDate(trelloId: string): Date {
+    const timestampHex = trelloId.substring(0, 8);
+    const timestampSeconds = parseInt(timestampHex, 16);
+    return new Date(timestampSeconds * 1000);
+}
+
 export default function Home() {
   const [milestones, setMilestones] = React.useState<Milestone[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
@@ -216,10 +222,25 @@ export default function Home() {
     // Case 3: Any other Trello card is selected.
     setIsLoadingTimeline(true);
     try {
+        const systemCategory = categories.find(c => c.id === 'cat-sistema') || { id: 'cat-sistema', name: 'Sistema', color: '#000000' };
+
+        const creationDate = getTrelloObjectCreationDate(card.id);
+        const creationMilestone: Milestone = {
+          id: `hito-creacion-${card.id}`,
+          name: 'Ingreso al sistema',
+          description: `La tarjeta de Trello fue creada en esta fecha.`,
+          occurredAt: creationDate.toISOString(),
+          category: systemCategory,
+          tags: ['sistema', 'creación'],
+          associatedFiles: [],
+          isImportant: false,
+          history: [`${format(new Date(), "PPpp", { locale: es })} - Hito de creación generado automáticamente.`],
+        };
+
         const attachments = await getCardAttachments(card.id);
         const defaultCategory = categories.find(c => c.name.toLowerCase().includes('trello')) || CATEGORIES[1];
 
-        const newMilestones: Milestone[] = attachments.map(att => {
+        const attachmentMilestones: Milestone[] = attachments.map(att => {
             const fileType: AssociatedFile['type'] = 
                 att.mimeType.startsWith('image/') ? 'image' : 
                 att.mimeType.startsWith('video/') ? 'video' :
@@ -247,10 +268,11 @@ export default function Home() {
                 history: [creationLog],
             };
         });
-
-        setMilestones(newMilestones);
         
-        runAITagging(newMilestones);
+        const allMilestones = [creationMilestone, ...attachmentMilestones];
+        setMilestones(allMilestones);
+        
+        runAITagging(attachmentMilestones);
 
     } catch(error) {
         console.error("Failed to process card attachments:", error);
